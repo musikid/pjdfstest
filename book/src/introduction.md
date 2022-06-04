@@ -6,5 +6,5 @@ PJDFSTest is a file system test suite.
 
 ```sh
 cd rust
-cargo build --release
+cargo run
 ```
