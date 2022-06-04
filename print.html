@@ -76,7 +76,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded "><a href="building.html"><strong aria-hidden="true">1.</strong> Building</a></li><li class="chapter-item expanded "><a href="architecture.html"><strong aria-hidden="true">2.</strong> Architecture</a></li><li class="chapter-item expanded "><a href="writing-tests.html"><strong aria-hidden="true">3.</strong> Writing tests</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="introduction.html">Introduction</a></li><li class="chapter-item expanded "><a href="architecture.html"><strong aria-hidden="true">1.</strong> Architecture</a></li><li class="chapter-item expanded "><a href="writing-tests.html"><strong aria-hidden="true">2.</strong> Writing tests</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -135,7 +135,12 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1 id="building"><a class="header" href="#building">Building</a></h1>
+                        <h1 id="introduction"><a class="header" href="#introduction">Introduction</a></h1>
+<p>PJDFSTest is a file system test suite.</p>
+<h2 id="build"><a class="header" href="#build">Build</a></h2>
+<pre><code class="language-sh">cd rust
+cargo build --release
+</code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="architecture"><a class="header" href="#architecture">Architecture</a></h1>
 <p>The package is made of:</p>
 <ul>
