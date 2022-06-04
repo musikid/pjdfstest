@@ -1,7 +1,0 @@
-[package]
-name = "pjdfs_runner"
-version = "0.1.0"
-edition = "2021"
-
-[dependencies]
-pjdfs_tests = { path = "../tests/" }

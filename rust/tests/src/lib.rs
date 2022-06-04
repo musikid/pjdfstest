@@ -1,2 +1,5 @@
+pub mod test;
+pub mod tests;
 mod macros;
-mod tests;
+//TODO: Export only from the binary?
+mod runner;
