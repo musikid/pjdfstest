@@ -1,4 +1,17 @@
-# PJDFSTest.rs - Rust rewrite
+# pjdfstest.rs - Rust rewrite
+
+pjdfstest is a test suite that helps exercise POSIX system calls.
+
+## Build
+
+```sh
+cd rust
+cargo run
+```
+
+## Documentation
+
+The documentation is available at [https://musikid.github.io/pjdfstest/](https://musikid.github.io/pjdfstest/).
 
 ## Architecture
 
