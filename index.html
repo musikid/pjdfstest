@@ -75,7 +75,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded affix "><a href="introduction.html">Introduction</a></li><li class="chapter-item expanded "><a href="architecture.html"><strong aria-hidden="true">1.</strong> Architecture</a></li><li class="chapter-item expanded "><a href="writing-tests.html"><strong aria-hidden="true">2.</strong> Writing tests</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="introduction.html">Introduction</a></li><li class="chapter-item expanded "><a href="writing-tests.html"><strong aria-hidden="true">1.</strong> Writing tests</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -140,12 +140,23 @@
 <pre><code class="language-sh">cd rust
 cargo run
 </code></pre>
+<h2 id="architecture"><a class="header" href="#architecture">Architecture</a></h2>
+<p>The package is made of:</p>
+<ul>
+<li>a library, which contains all the tests,</li>
+<li>a binary, which is the test runner.</li>
+</ul>
+<h3 id="library"><a class="header" href="#library">Library</a></h3>
+<p>The library exports modules, which contains groups of test cases, generally grouped by syscall.
+A test case is itself composed of multiple test functions. </p>
+<h3 id="binary"><a class="header" href="#binary">Binary</a></h3>
+<p>The binary is the test runner.</p>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="next" href="architecture.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next" href="writing-tests.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <i class="fa fa-angle-right"></i>
                             </a>
                         <div style="clear: both"></div>
@@ -154,7 +165,7 @@ cargo run
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="next" href="architecture.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next" href="writing-tests.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <i class="fa fa-angle-right"></i>
                     </a>
             </nav>
