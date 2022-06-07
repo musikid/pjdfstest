@@ -1,5 +1,8 @@
+use std::fmt::Debug;
+
 use thiserror::Error;
 
+use crate::runner::context::ContextError;
 pub use crate::runner::context::TestContext;
 
 pub type TestResult = std::result::Result<(), TestError>;
@@ -14,10 +17,32 @@ pub struct Test {
 
 /// Error returned bu a test function.
 #[derive(Error, Debug)]
-pub enum TestError {}
+pub enum TestError {
+    #[error("error while creating file")]
+    CreateFile(ContextError),
+    #[error("error while calling syscall")]
+    Nix(#[from] nix::Error),
+    #[error("assertion failed in file {file} at {line}:{column}")]
+    FailedAssertion {
+        file: &'static str,
+        line: u32,
+        column: u32,
+    },
+    #[error(
+        "assertion failed in file {file} at {line}:{column} (left == right)
+left: {left:#?}
+right: {right:#?}"
+    )]
+    FailedEqualAssertion {
+        file: &'static str,
+        line: u32,
+        column: u32,
+        left: Box<dyn Debug>,
+        right: Box<dyn Debug>,
+    },
+}
 
 /// A group of test cases.
-///
 pub struct TestGroup {
     pub name: &'static str,
     pub test_cases: &'static [TestCase],
@@ -33,4 +58,32 @@ pub struct TestCase {
 #[derive(Debug)]
 pub enum Syscall {
     Chmod,
+}
+
+#[macro_export]
+macro_rules! test_assert {
+    ($boolean: expr) => {
+        if !$boolean {
+            return Err(TestError::FailedAssertion {
+                file: file!(),
+                line: line!(),
+                column: column!(),
+            });
+        }
+    };
+}
+
+#[macro_export]
+macro_rules! test_assert_eq {
+    ($a: expr, $b: expr) => {
+        if $a != $b {
+            return Err(TestError::FailedEqualAssertion {
+                file: file!(),
+                line: line!(),
+                column: column!(),
+                left: Box::new($a),
+                right: Box::new($b)
+            });
+        }
+    };
 }
