@@ -7,6 +7,8 @@ edition = "2021"
 tempfile = "3.3.0"
 rand = "0.8.5"
 thiserror = "1.0.31"
+strum = { version = "0.24.0", features = ["derive"] }
+strum_macros = "0.24.0"
 
 [dependencies.nix]
 version = "0.24.1"
