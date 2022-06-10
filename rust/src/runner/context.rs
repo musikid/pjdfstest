@@ -7,13 +7,7 @@ use nix::{
     unistd::{close, mkdir, mkfifo},
 };
 use rand::{distributions::Alphanumeric, thread_rng, Rng};
-use std::{
-    os::unix::{
-        fs::symlink,
-        prelude::{AsRawFd, RawFd},
-    },
-    path::{Path, PathBuf},
-};
+use std::{os::unix::fs::symlink, path::PathBuf};
 use strum_macros::EnumIter;
 use tempfile::{tempdir, TempDir};
 use thiserror::Error;
@@ -104,12 +98,12 @@ impl TestContext {
     ) -> Result<PathBuf, ContextError> {
         let path = self.temp_dir.path().join(name.into());
 
-        let mode = Mode::S_IRUSR | Mode::S_IWUSR | Mode::S_IRGRP | Mode::S_IROTH;
+        let mode = Mode::from_bits_truncate(0o644);
 
         match f_type {
             FileType::Regular => open(&path, OFlag::O_CREAT, mode).and_then(|fd| close(fd)),
-            FileType::Dir => mkdir(&path, Mode::S_IRWXU),
-            FileType::Fifo => mkfifo(&path, Mode::S_IRWXU),
+            FileType::Dir => mkdir(&path, Mode::from_bits_truncate(0o755)),
+            FileType::Fifo => mkfifo(&path, Mode::from_bits_truncate(0o755)),
             FileType::Block(dev) => mknod(
                 &path,
                 SFlag::S_IFBLK,
