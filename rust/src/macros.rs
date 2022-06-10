@@ -1,4 +1,4 @@
-/// Create a group of tests, by creating/exporting a `tests` variable, 
+/// Create a group of tests, by creating/exporting a `tests` variable,
 /// which can then be used with the test runner.
 #[macro_export]
 macro_rules! pjdfs_group {
@@ -29,12 +29,21 @@ macro_rules! pjdfs_group {
 /// An optional argument for executing exclusively on a particular file system can be provided.
 #[macro_export]
 macro_rules! pjdfs_test_case {
-    ($name:path, $( $test:path$( :$fs:path )? ),+ $(,)*) => {
+    ($name:path, $( 
+                    { test: $test:path 
+                    $( , file_system: $fs:path )? 
+                    } 
+                ),+ $(,)*) => {
        #[allow(non_snake_case, non_upper_case_globals)]
         pub const test_case: $crate::test::TestCase = $crate::test::TestCase {
             name: stringify!($name),
             tests: &[
-                $( $crate::pjdfs_test!($test $(, $fs )?) ),+
+                $( 
+                    $crate::pjdfs_test!({
+                        test: $test
+                        $(, file_system: $fs )? 
+                    }) 
+                )+
             ]
         };
     };
@@ -44,7 +53,7 @@ macro_rules! pjdfs_test_case {
 /// An optional argument for executing exclusively on a particular file system can be provided.
 #[macro_export]
 macro_rules! pjdfs_test {
-    ($test: path) => {
+    ({ test: $test: path }) => {
         $crate::test::Test {
             name: stringify!($test),
             fun: $test,
@@ -52,11 +61,11 @@ macro_rules! pjdfs_test {
         }
     };
 
-    ($test: path, $file_system: path) => {
+    ({ test: $test: path, file_system: $file_system: path }) => {
         $crate::test::Test {
             name: stringify!($test),
             fun: $test,
-            file_system: Some(stringify!($file_system)),
+            file_system: Some($file_system),
         }
     };
 }

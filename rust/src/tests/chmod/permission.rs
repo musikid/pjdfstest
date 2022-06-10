@@ -4,7 +4,7 @@ use crate::{
     pjdfs_test_case,
     runner::context::FileType,
     test::{TestContext, TestError, TestResult},
-    test_assert, test_assert_eq,
+    test_assert,
     tests::chmod::chmod,
 };
 use nix::sys::stat::{stat, Mode};
@@ -12,10 +12,7 @@ use strum::IntoEnumIterator;
 
 // chmod/00.t:L58
 fn test_ctime(ctx: &mut TestContext) -> TestResult {
-    for f_type in FileType::iter() {
-        if f_type == FileType::Symlink {
-            continue;
-        }
+    for f_type in FileType::iter().filter(|&ft| ft == FileType::Symlink) {
         let path = ctx.create(f_type).map_err(TestError::CreateFile)?;
         let ctime_before = stat(&path)?.st_ctime;
 
@@ -30,4 +27,4 @@ fn test_ctime(ctx: &mut TestContext) -> TestResult {
     Ok(())
 }
 
-pjdfs_test_case!(permission, test_ctime);
+pjdfs_test_case!(permission, { test: test_ctime });
