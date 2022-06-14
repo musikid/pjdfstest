@@ -1,4 +1,4 @@
-/// Macro which expands to a function, which executes the tests.
+/// Macro which expands to a function which executes the tests.
 #[macro_export]
 macro_rules! pjdfs_main {
     ($( $test:path ),+) => {
