@@ -37,10 +37,45 @@ use crate::{
 
 // chmod/00.t:L58
 fn test_ctime(ctx: &mut TestContext) -> TestResult {
-    println!("testing!");
+  for f_type in FileType::iter().filter(|&ft| ft == FileType::Symlink) {
+      let path = ctx.create(f_type).map_err(TestError::CreateFile)?;
+      let ctime_before = stat(&path)?.st_ctime;
 
-    Ok(())
+      sleep(Duration::from_secs(1));
+
+      chmod(&path, Mode::from_bits_truncate(0o111))?;
+
+      let ctime_after = stat(&path)?.st_ctime;
+      test_assert!(ctime_after > ctime_before);
+  }
+
+  Ok(())
 }
 
-pjdfs_test_case!(permission, test_ctime);
+pjdfs_test_case!(permission, { test: test_ctime });
 ```
+
+## Parameterisation
+
+### File types
+
+Some tests need to test different file types.
+For now, a for loop which iterates on the types is used, but it should change in the future for a
+better structure (especially because of tests with `sleep`, which cannot be easily be parallelised).
+
+```rust
+for f_type in FileType::iter() {
+}
+```
+
+Since it is an iterator, usual functions like `filter` works.
+
+```rust
+for f_type in FileType::iter().filter(|&ft| ft == FileType::Symlink) {
+}
+```
+
+### Root requirement
+
+Some tests may need to be a root user to run. Especially, all the tests which involves creating a
+block/char file need root user.
