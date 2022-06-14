@@ -4,15 +4,61 @@ use crate::{
     pjdfs_test_case,
     runner::context::FileType,
     test::{TestContext, TestError, TestResult},
-    test_assert,
+    test_assert, test_assert_eq,
     tests::chmod::chmod,
 };
-use nix::sys::stat::{stat, Mode};
+use nix::{
+    sys::stat::{lstat, stat, Mode},
+    unistd::{chown, Gid, Uid},
+};
 use strum::IntoEnumIterator;
+
+pjdfs_test_case!(
+    permission,
+    { test: test_ctime, require_root: true },
+    { test: test_change_perm, require_root: true },
+    { test: test_failed_chmod_unchanged_ctime, require_root: true },
+    { test: test_clear_isgid_bit, require_root: true }
+);
+
+const FILE_PERMS: u32 = 0o777;
+
+// chmod/00.t:L24
+fn test_change_perm(ctx: &mut TestContext) -> TestResult {
+    for f_type in FileType::iter().filter(|ft| *ft != FileType::Symlink(None)) {
+        let path = ctx.create(f_type).map_err(TestError::CreateFile)?;
+        let expected_mode = Mode::from_bits_truncate(0o111);
+
+        chmod(&path, expected_mode)?;
+
+        let actual_mode = stat(&path)?.st_mode;
+
+        test_assert_eq!(actual_mode & FILE_PERMS, expected_mode.bits());
+
+        // We test if it applies through symlinks
+        let symlink_path = ctx
+            .create(FileType::Symlink(Some(path.clone())))
+            .map_err(TestError::CreateFile)?;
+        let link_mode = lstat(&symlink_path)?.st_mode;
+        let expected_mode = Mode::from_bits_truncate(0o222);
+
+        chmod(&symlink_path, expected_mode)?;
+
+        let actual_mode = stat(&path)?.st_mode;
+        let actual_sym_mode = stat(&symlink_path)?.st_mode;
+        test_assert_eq!(actual_mode & FILE_PERMS, expected_mode.bits());
+        test_assert_eq!(actual_sym_mode & FILE_PERMS, expected_mode.bits());
+
+        let actual_link_mode = lstat(&symlink_path)?.st_mode;
+        test_assert_eq!(link_mode & FILE_PERMS, actual_link_mode & FILE_PERMS);
+    }
+
+    Ok(())
+}
 
 // chmod/00.t:L58
 fn test_ctime(ctx: &mut TestContext) -> TestResult {
-    for f_type in FileType::iter().filter(|&ft| ft == FileType::Symlink) {
+    for f_type in FileType::iter().filter(|ft| *ft != FileType::Symlink(None)) {
         let path = ctx.create(f_type).map_err(TestError::CreateFile)?;
         let ctime_before = stat(&path)?.st_ctime;
 
@@ -27,4 +73,54 @@ fn test_ctime(ctx: &mut TestContext) -> TestResult {
     Ok(())
 }
 
-pjdfs_test_case!(permission, { test: test_ctime });
+// chmod/00.t:L89
+fn test_failed_chmod_unchanged_ctime(ctx: &mut TestContext) -> TestResult {
+    for f_type in FileType::iter().filter(|ft| *ft != FileType::Symlink(None)) {
+        let path = ctx.create(f_type).map_err(TestError::CreateFile)?;
+        let ctime_before = stat(&path)?.st_ctime;
+
+        sleep(Duration::from_secs(1));
+
+        ctx.as_user(Some(Uid::from_raw(65534)), None, || {
+            test_assert!(chmod(&path, Mode::from_bits_truncate(0o111)).is_err());
+            Ok(())
+        })?;
+
+        let ctime_after = stat(&path)?.st_ctime;
+        test_assert!(ctime_after == ctime_before);
+    }
+
+    Ok(())
+}
+
+fn test_clear_isgid_bit(ctx: &mut TestContext) -> TestResult {
+    let path = ctx
+        .create(FileType::Regular)
+        .map_err(TestError::CreateFile)?;
+    chmod(&path, Mode::from_bits_truncate(0o0755))?;
+
+    let user = Uid::from_raw(65535);
+    let group = Gid::from_raw(65535);
+
+    chown(&path, Some(user), Some(group))?;
+
+    let expected_mode = Mode::from_bits_truncate(0o2755);
+    ctx.as_user(Some(user), Some(group), || {
+        chmod(&path, expected_mode)?;
+        Ok(())
+    })?;
+
+    let actual_mode = stat(&path)?.st_mode;
+    test_assert_eq!(actual_mode & 0o7777, expected_mode.bits());
+
+    let expected_mode = Mode::from_bits_truncate(0o0755);
+    ctx.as_user(Some(user), Some(group), || {
+        chmod(&path, expected_mode)?;
+        Ok(())
+    })?;
+
+    let actual_mode = stat(&path)?.st_mode;
+    test_assert_eq!(actual_mode & 0o7777, expected_mode.bits());
+
+    Ok(())
+}
