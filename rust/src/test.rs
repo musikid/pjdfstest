@@ -13,14 +13,15 @@ pub struct Test {
     pub name: &'static str,
     pub fun: fn(&mut TestContext) -> TestResult,
     pub file_system: Option<String>,
+    pub require_root: bool,
 }
 
 /// Error returned bu a test function.
 #[derive(Error, Debug)]
 pub enum TestError {
-    #[error("error while creating file")]
+    #[error("error while creating file: {0}")]
     CreateFile(ContextError),
-    #[error("error while calling syscall")]
+    #[error("error while calling syscall: {0}")]
     Nix(#[from] nix::Error),
     #[error("assertion failed in file {file} at {line}:{column}")]
     FailedAssertion {

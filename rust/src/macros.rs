@@ -32,6 +32,7 @@ macro_rules! pjdfs_test_case {
     ($name:path, $( 
                     { test: $test:path 
                     $( , file_system: $fs:path )? 
+                    $(, require_root: $require_root: expr)? 
                     } 
                 ),+ $(,)*) => {
        #[allow(non_snake_case, non_upper_case_globals)]
@@ -42,8 +43,9 @@ macro_rules! pjdfs_test_case {
                     $crate::pjdfs_test!({
                         test: $test
                         $(, file_system: $fs )? 
+                        $(, require_root: $require_root)? 
                     }) 
-                )+
+                ),+
             ]
         };
     };
@@ -58,6 +60,7 @@ macro_rules! pjdfs_test {
             name: stringify!($test),
             fun: $test,
             file_system: None,
+            require_root: false,
         }
     };
 
@@ -66,6 +69,25 @@ macro_rules! pjdfs_test {
             name: stringify!($test),
             fun: $test,
             file_system: Some($file_system),
+            require_root: false,
+        }
+    };
+
+    ({ test: $test: path, require_root: $require_root: expr }) => {
+        $crate::test::Test {
+            name: stringify!($test),
+            fun: $test,
+            file_system: None,
+            require_root: $require_root,
+        }
+    };
+
+    ({ test: $test: path, file_system: $file_system: path, require_root: $require_root: expr }) => {
+        $crate::test::Test {
+            name: stringify!($test),
+            fun: $test,
+            file_system: Some($file_system),
+            require_root: $require_root,
         }
     };
 }
