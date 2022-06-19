@@ -4,10 +4,10 @@ use nix::{
         socket::{bind, socket, SockFlag, UnixAddr},
         stat::{makedev, mknod, Mode, SFlag},
     },
-    unistd::{close, mkdir, mkfifo, setegid, seteuid, Gid, Uid},
+    unistd::{close, mkdir, mkfifo, setegid, seteuid, Gid, Uid, pathconf},
 };
 use rand::{distributions::Alphanumeric, thread_rng, Rng};
-use std::{os::unix::fs::symlink, path::PathBuf};
+use std::{os::unix::fs::symlink, path::{PathBuf, Path}};
 use strum_macros::EnumIter;
 use tempfile::{tempdir, TempDir};
 use thiserror::Error;
@@ -177,17 +177,17 @@ impl TestContext {
 
 
     /// Create a file in a temp folder with the given name.
-    pub fn create_named<S: Into<String>>(
+    pub fn create_named<P: AsRef<Path>>(
         &mut self,
         f_type: FileType,
-        name: S,
+        name: P,
     ) -> Result<PathBuf, TestError> {
-        let path = self.temp_dir.path().join(name.into());
+        let path = self.temp_dir.path().join(name.as_ref());
 
         let mode = Mode::from_bits_truncate(0o644);
 
         match f_type {
-            FileType::Regular => open(&path, OFlag::O_CREAT, mode).and_then(|fd| close(fd)),
+            FileType::Regular => open(&path, OFlag::O_CREAT, mode).and_then(close),
             FileType::Dir => mkdir(&path, Mode::from_bits_truncate(0o755)),
             FileType::Fifo => mkfifo(&path, Mode::from_bits_truncate(0o755)),
             FileType::Block(dev) => mknod(
