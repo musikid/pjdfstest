@@ -29,23 +29,23 @@ macro_rules! pjdfs_group {
 /// An optional argument for executing exclusively on a particular file system can be provided.
 #[macro_export]
 macro_rules! pjdfs_test_case {
-    ($name:path, $( 
-                    { test: $test:path 
-                    $( , file_system: $fs:path )? 
-                    $(, require_root: $require_root: expr)? 
-                    } 
-                ),+ $(,)*) => {
+    ($name:path $(,)? $(
+                    { test: $test:path
+                    $(, file_system: $fs:path)?
+                    $(, require_root: $require_root:expr)?
+                    }
+                ),* $(,)*) => {
        #[allow(non_snake_case, non_upper_case_globals)]
         pub const test_case: $crate::test::TestCase = $crate::test::TestCase {
             name: stringify!($name),
             tests: &[
-                $( 
+                $(
                     $crate::pjdfs_test!({
                         test: $test
-                        $(, file_system: $fs )? 
-                        $(, require_root: $require_root)? 
-                    }) 
-                ),+
+                        $(, file_system: $fs )?
+                        $(, require_root: $require_root)?
+                    })
+                ),*
             ]
         };
     };

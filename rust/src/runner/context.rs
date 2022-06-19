@@ -4,10 +4,13 @@ use nix::{
         socket::{bind, socket, SockFlag, UnixAddr},
         stat::{makedev, mknod, Mode, SFlag},
     },
-    unistd::{close, mkdir, mkfifo, setegid, seteuid, Gid, Uid, pathconf},
+    unistd::{close, mkdir, mkfifo, pathconf, setegid, seteuid, Gid, Uid},
 };
 use rand::{distributions::Alphanumeric, thread_rng, Rng};
-use std::{os::unix::fs::symlink, path::{PathBuf, Path}};
+use std::{
+    os::unix::fs::symlink,
+    path::{Path, PathBuf},
+};
 use strum_macros::EnumIter;
 use tempfile::{tempdir, TempDir};
 use thiserror::Error;
@@ -129,7 +132,8 @@ impl TestContext {
 
     pub fn create_max(&mut self, f_type: FileType) -> Result<PathBuf, TestError> {
         //TODO: const?
-        let max_name_len = pathconf(self.temp_dir.path(), nix::unistd::PathconfVar::NAME_MAX)?.unwrap();
+        let max_name_len =
+            pathconf(self.temp_dir.path(), nix::unistd::PathconfVar::NAME_MAX)?.unwrap();
 
         let path = self.temp_dir.path().join(
             thread_rng()
@@ -174,7 +178,6 @@ impl TestContext {
 
         Ok(path)
     }
-
 
     /// Create a file in a temp folder with the given name.
     pub fn create_named<P: AsRef<Path>>(
