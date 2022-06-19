@@ -1,5 +1,6 @@
 mod lchmod;
 mod permission;
+mod errno;
 
 /// Wrapper for `fchmodat(None, path, mode, FchmodatFlags::FollowSymlink)`.
 fn chmod<P: ?Sized + nix::NixPath>(path: &P, mode: nix::sys::stat::Mode) -> nix::Result<()> {
@@ -11,4 +12,4 @@ fn chmod<P: ?Sized + nix::NixPath>(path: &P, mode: nix::sys::stat::Mode) -> nix:
     )
 }
 
-crate::pjdfs_group!(chmod; permission::test_case);
+crate::pjdfs_group!(chmod; permission::test_case, errno::test_case);
