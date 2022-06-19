@@ -76,7 +76,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded affix "><a href="introduction.html">Introduction</a></li><li class="chapter-item expanded "><a href="writing-tests.html"><strong aria-hidden="true">1.</strong> Writing tests</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="introduction.html">Introduction</a></li><li class="chapter-item expanded affix "><li class="part-title">Running</li><li class="chapter-item expanded "><a href="configuration.html"><strong aria-hidden="true">1.</strong> Configuration</a></li><li class="chapter-item expanded affix "><li class="part-title">Writing tests</li><li class="chapter-item expanded "><a href="tests-structure.html"><strong aria-hidden="true">2.</strong> Structure</a></li><li class="chapter-item expanded "><a href="test-declaration.html"><strong aria-hidden="true">3.</strong> Declaration</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -140,6 +140,7 @@
 It was originally written to validate the ZFS port to FreeBSD,
 but it now supports multiple operating systems and file systems.
 This is a complete rewrite of the original test suite in Rust.</p>
+<h3 id="note-the-documentation-is-still-a-work-in-progress"><a class="header" href="#note-the-documentation-is-still-a-work-in-progress">NOTE: The documentation is still a work-in-progress.</a></h3>
 <h2 id="build"><a class="header" href="#build">Build</a></h2>
 <pre><code class="language-sh">cd rust
 cargo run
@@ -155,7 +156,8 @@ cargo run
 A test case is itself composed of multiple test functions. </p>
 <h3 id="binary"><a class="header" href="#binary">Binary</a></h3>
 <p>The binary is the test runner.</p>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="writing-tests"><a class="header" href="#writing-tests">Writing tests</a></h1>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="configuration"><a class="header" href="#configuration">Configuration</a></h1>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="structure"><a class="header" href="#structure">Structure</a></h1>
 <p>The tests should be grouped by syscalls, in the <code>tests/</code> folder.
 Each folder then have a <code>mod.rs</code> file, 
 which contains declarations of the modules inside this folder,
@@ -209,11 +211,43 @@ fn test_ctime(ctx: &amp;mut TestContext) -&gt; TestResult {
 pjdfs_test_case!(permission, { test: test_ctime });
 <span class="boring">}
 </span></code></pre></pre>
-<h2 id="parameterisation"><a class="header" href="#parameterisation">Parameterisation</a></h2>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="test-declaration"><a class="header" href="#test-declaration">Test declaration</a></h1>
+<p>Each module inside a group should export a test case (with <code>pjdfs_test_case</code>),
+which contains a list of test functions.
+In our example, <code>chmod/permission.rs</code> would be:</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use crate::{
+    pjdfs_test_case,
+    test::{TestContext, TestResult},
+};
+
+// chmod/00.t:L58
+fn test_ctime(ctx: &amp;mut TestContext) -&gt; TestResult {
+  for f_type in FileType::iter().filter(|&amp;ft| ft == FileType::Symlink) {
+      let path = ctx.create(f_type).map_err(TestError::CreateFile)?;
+      let ctime_before = stat(&amp;path)?.st_ctime;
+
+      sleep(Duration::from_secs(1));
+
+      chmod(&amp;path, Mode::from_bits_truncate(0o111))?;
+
+      let ctime_after = stat(&amp;path)?.st_ctime;
+      test_assert!(ctime_after &gt; ctime_before);
+  }
+
+  Ok(())
+}
+
+pjdfs_test_case!(permission, { test: test_ctime });
+<span class="boring">}
+</span></code></pre></pre>
+<h2 id="parameterization"><a class="header" href="#parameterization">Parameterization</a></h2>
 <h3 id="file-types"><a class="header" href="#file-types">File types</a></h3>
 <p>Some tests need to test different file types.
 For now, a for loop which iterates on the types is used, but it should change in the future for a
-better structure (especially because of tests with <code>sleep</code>, which cannot be easily be parallelised).</p>
+better structure (especially because of tests with <code>sleep</code>, which cannot be easily parallelized with a loop, see <a href="https://github.com/musikid/pjdfstest/issues/1">#1</a>).</p>
 <pre><pre class="playground"><code class="language-rust">
 <span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
@@ -230,8 +264,16 @@ better structure (especially because of tests with <code>sleep</code>, which can
 <span class="boring">}
 </span></code></pre></pre>
 <h3 id="root-requirement"><a class="header" href="#root-requirement">Root requirement</a></h3>
-<p>Some tests may need to be a root user to run. Especially, all the tests which involves creating a
-block/char file need root user.</p>
+<p>Some tests may need to be root to run. 
+Especially, all the tests which involves creating a block/char file need root user.</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>pjdfs_test_case!(permission, { test: test_ctime, require_root: true });
+<span class="boring">}
+</span></code></pre></pre>
+<h2 id="platform-specific-functions"><a class="header" href="#platform-specific-functions">Platform-specific functions</a></h2>
+<p>Some functions (like <code>lchmod</code>) are not supported on every UNIX operating system.</p>
 
                     </main>
 
