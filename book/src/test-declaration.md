@@ -30,6 +30,27 @@ fn test_ctime(ctx: &mut TestContext) -> TestResult {
 pjdfs_test_case!(permission, { test: test_ctime });
 ```
 
+A test function take a `&mut TestContext` parameter and returns a `TestResult`.
+
+```cpp
+// chmod/00.t:L58
+fn test_ctime(ctx: &mut TestContext) -> TestResult {
+  for f_type in FileType::iter().filter(|&ft| ft == FileType::Symlink) {
+      let path = ctx.create(f_type).map_err(TestError::CreateFile)?;
+      let ctime_before = stat(&path)?.st_ctime;
+
+      sleep(Duration::from_secs(1));
+
+      chmod(&path, Mode::from_bits_truncate(0o111))?;
+
+      let ctime_after = stat(&path)?.st_ctime;
+      test_assert!(ctime_after > ctime_before);
+  }
+
+  Ok(())
+}
+```
+
 ## Parameterization
 
 ### File types
@@ -62,4 +83,4 @@ pjdfs_test_case!(permission, { test: test_ctime, require_root: true });
 
 ## Platform-specific functions
 
-Some functions (like `lchmod`) are not supported on every UNIX operating system.
+Some functions (like `lchmod`) are not supported on every UNIX.
