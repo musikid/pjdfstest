@@ -3,7 +3,7 @@ use std::{thread::sleep, time::Duration};
 use crate::{
     pjdfs_test_case,
     runner::context::FileType,
-    test::{TestContext, TestError, TestResult},
+    test::{TestContext, TestResult},
     test_assert, test_assert_eq,
     tests::chmod::chmod,
 };
@@ -25,7 +25,7 @@ const FILE_PERMS: u32 = 0o777;
 
 // chmod/00.t:L24
 fn test_change_perm(ctx: &mut TestContext) -> TestResult {
-    for f_type in FileType::iter() {
+    for f_type in FileType::iter().filter(|ft| *ft != FileType::Symlink(None)) {
         let path = ctx.create(f_type)?;
         let expected_mode = Mode::from_bits_truncate(0o111);
 
@@ -85,7 +85,7 @@ fn test_failed_chmod_unchanged_ctime(ctx: &mut TestContext) -> TestResult {
         })?;
 
         let ctime_after = stat(&path)?.st_ctime;
-        test_assert!(ctime_after == ctime_before);
+        test_assert_eq!(ctime_after, ctime_before);
     }
 
     Ok(())
