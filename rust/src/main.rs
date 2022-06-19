@@ -1,5 +1,3 @@
-use pjdfs_tests::{test::TestContext, tests::chmod, pjdfs_main};
+use pjdfs_tests::{pjdfs_main, test::TestContext, tests::chmod};
 
-fn main() {
-    pjdfs_main!(chmod::tests);
-}
+pjdfs_main!(chmod::tests);

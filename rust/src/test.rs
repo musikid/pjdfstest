@@ -16,7 +16,7 @@ pub struct Test {
     pub require_root: bool,
 }
 
-/// Error returned bu a test function.
+/// Error returned by a test function.
 #[derive(Error, Debug)]
 pub enum TestError {
     #[error("error while creating file: {0}")]
@@ -38,8 +38,8 @@ right: {right:#?}"
         file: &'static str,
         line: u32,
         column: u32,
-        left: Box<dyn Debug>,
-        right: Box<dyn Debug>,
+        left: Box<dyn Debug + Send + Sync>,
+        right: Box<dyn Debug + Send + Sync>,
     },
 }
 
@@ -83,7 +83,7 @@ macro_rules! test_assert_eq {
                 line: line!(),
                 column: column!(),
                 left: Box::new($a),
-                right: Box::new($b)
+                right: Box::new($b),
             });
         }
     };
