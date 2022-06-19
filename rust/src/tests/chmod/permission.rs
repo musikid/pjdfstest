@@ -18,15 +18,15 @@ pjdfs_test_case!(
     { test: test_ctime, require_root: true },
     { test: test_change_perm, require_root: true },
     { test: test_failed_chmod_unchanged_ctime, require_root: true },
-    { test: test_clear_isgid_bit, require_root: true }
+    { test: test_clear_isgid_bit }
 );
 
 const FILE_PERMS: u32 = 0o777;
 
 // chmod/00.t:L24
 fn test_change_perm(ctx: &mut TestContext) -> TestResult {
-    for f_type in FileType::iter().filter(|ft| *ft != FileType::Symlink(None)) {
-        let path = ctx.create(f_type).map_err(TestError::CreateFile)?;
+    for f_type in FileType::iter() {
+        let path = ctx.create(f_type)?;
         let expected_mode = Mode::from_bits_truncate(0o111);
 
         chmod(&path, expected_mode)?;
@@ -36,9 +36,7 @@ fn test_change_perm(ctx: &mut TestContext) -> TestResult {
         test_assert_eq!(actual_mode & FILE_PERMS, expected_mode.bits());
 
         // We test if it applies through symlinks
-        let symlink_path = ctx
-            .create(FileType::Symlink(Some(path.clone())))
-            .map_err(TestError::CreateFile)?;
+        let symlink_path = ctx.create(FileType::Symlink(Some(path.clone())))?;
         let link_mode = lstat(&symlink_path)?.st_mode;
         let expected_mode = Mode::from_bits_truncate(0o222);
 
@@ -59,7 +57,7 @@ fn test_change_perm(ctx: &mut TestContext) -> TestResult {
 // chmod/00.t:L58
 fn test_ctime(ctx: &mut TestContext) -> TestResult {
     for f_type in FileType::iter().filter(|ft| *ft != FileType::Symlink(None)) {
-        let path = ctx.create(f_type).map_err(TestError::CreateFile)?;
+        let path = ctx.create(f_type)?;
         let ctime_before = stat(&path)?.st_ctime;
 
         sleep(Duration::from_secs(1));
@@ -76,7 +74,7 @@ fn test_ctime(ctx: &mut TestContext) -> TestResult {
 // chmod/00.t:L89
 fn test_failed_chmod_unchanged_ctime(ctx: &mut TestContext) -> TestResult {
     for f_type in FileType::iter().filter(|ft| *ft != FileType::Symlink(None)) {
-        let path = ctx.create(f_type).map_err(TestError::CreateFile)?;
+        let path = ctx.create(f_type)?;
         let ctime_before = stat(&path)?.st_ctime;
 
         sleep(Duration::from_secs(1));
@@ -94,9 +92,7 @@ fn test_failed_chmod_unchanged_ctime(ctx: &mut TestContext) -> TestResult {
 }
 
 fn test_clear_isgid_bit(ctx: &mut TestContext) -> TestResult {
-    let path = ctx
-        .create(FileType::Regular)
-        .map_err(TestError::CreateFile)?;
+    let path = ctx.create(FileType::Regular)?;
     chmod(&path, Mode::from_bits_truncate(0o0755))?;
 
     let user = Uid::from_raw(65535);
@@ -121,6 +117,7 @@ fn test_clear_isgid_bit(ctx: &mut TestContext) -> TestResult {
 
     let actual_mode = stat(&path)?.st_mode;
     test_assert_eq!(actual_mode & 0o7777, expected_mode.bits());
+    //TODO: FreeBSD "S_ISGID should be removed and chmod(2) should success and FreeBSD returns EPERM."
 
     Ok(())
 }

@@ -82,7 +82,7 @@ impl TestContext {
     }
 
     /// Create a file in a temp folder with a random name.
-    pub fn create(&mut self, f_type: FileType) -> Result<PathBuf, ContextError> {
+    pub fn create(&mut self, f_type: FileType) -> Result<PathBuf, TestError> {
         let path = self.temp_dir.path().join(
             thread_rng()
                 .sample_iter(&Alphanumeric)
@@ -122,8 +122,7 @@ impl TestContext {
             //TODO: error type?
             FileType::Symlink(target) => symlink(target.unwrap_or(PathBuf::from("test")), &path)
                 .map_err(|e| nix::Error::try_from(e).unwrap_or(nix::errno::Errno::UnknownErrno)),
-        }
-        .map_err(ContextError::Nix)?;
+        }?;
 
         Ok(path)
     }
@@ -133,7 +132,7 @@ impl TestContext {
         &mut self,
         f_type: FileType,
         name: S,
-    ) -> Result<PathBuf, ContextError> {
+    ) -> Result<PathBuf, TestError> {
         let path = self.temp_dir.path().join(name.into());
 
         let mode = Mode::from_bits_truncate(0o644);
@@ -167,8 +166,7 @@ impl TestContext {
             //TODO: error type
             FileType::Symlink(target) => symlink(target.unwrap_or(PathBuf::from("test")), &path)
                 .map_err(|e| nix::Error::try_from(e).unwrap_or(nix::errno::Errno::UnknownErrno)),
-        }
-        .map_err(ContextError::Nix)?;
+        }?;
 
         Ok(path)
     }
