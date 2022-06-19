@@ -166,6 +166,24 @@ fn test_ctime(ctx: &amp;mut TestContext) -&gt; TestResult {
 pjdfs_test_case!(permission, { test: test_ctime });
 <span class="boring">}
 </span></code></pre></pre>
+<p>A test function take a <code>&amp;mut TestContext</code> parameter and returns a <code>TestResult</code>.</p>
+<pre><code class="language-cpp">// chmod/00.t:L58
+fn test_ctime(ctx: &amp;mut TestContext) -&gt; TestResult {
+  for f_type in FileType::iter().filter(|&amp;ft| ft == FileType::Symlink) {
+      let path = ctx.create(f_type).map_err(TestError::CreateFile)?;
+      let ctime_before = stat(&amp;path)?.st_ctime;
+
+      sleep(Duration::from_secs(1));
+
+      chmod(&amp;path, Mode::from_bits_truncate(0o111))?;
+
+      let ctime_after = stat(&amp;path)?.st_ctime;
+      test_assert!(ctime_after &gt; ctime_before);
+  }
+
+  Ok(())
+}
+</code></pre>
 <h2 id="parameterization"><a class="header" href="#parameterization">Parameterization</a></h2>
 <h3 id="file-types"><a class="header" href="#file-types">File types</a></h3>
 <p>Some tests need to test different file types.
@@ -196,7 +214,7 @@ Especially, all the tests which involves creating a block/char file need root us
 <span class="boring">}
 </span></code></pre></pre>
 <h2 id="platform-specific-functions"><a class="header" href="#platform-specific-functions">Platform-specific functions</a></h2>
-<p>Some functions (like <code>lchmod</code>) are not supported on every UNIX operating system.</p>
+<p>Some functions (like <code>lchmod</code>) are not supported on every UNIX.</p>
 
                     </main>
 
