@@ -127,6 +127,55 @@ impl TestContext {
         Ok(path)
     }
 
+    pub fn create_max(&mut self, f_type: FileType) -> Result<PathBuf, TestError> {
+        //TODO: const?
+        let max_name_len = pathconf(self.temp_dir.path(), nix::unistd::PathconfVar::NAME_MAX)?.unwrap();
+
+        let path = self.temp_dir.path().join(
+            thread_rng()
+                .sample_iter(&Alphanumeric)
+                .take(max_name_len as usize)
+                .map(char::from)
+                .collect::<String>(),
+        );
+
+        let mode = Mode::from_bits_truncate(0o644);
+
+        match f_type {
+            FileType::Regular => open(&path, OFlag::O_CREAT, mode).and_then(|fd| close(fd)),
+            FileType::Dir => mkdir(&path, Mode::from_bits_truncate(0o755)),
+            FileType::Fifo => mkfifo(&path, mode),
+            FileType::Block(dev) => mknod(
+                &path,
+                SFlag::S_IFBLK,
+                mode,
+                dev.map_or(0, |(major, minor)| makedev(major, minor)),
+            ),
+            FileType::Char(dev) => mknod(
+                &path,
+                SFlag::S_IFCHR,
+                mode,
+                dev.map_or(0, |(major, minor)| makedev(major, minor)),
+            ),
+            FileType::Socket => {
+                let fd = socket(
+                    nix::sys::socket::AddressFamily::Unix,
+                    nix::sys::socket::SockType::Stream,
+                    SockFlag::empty(),
+                    None,
+                )?;
+                let sockaddr = UnixAddr::new(&path)?;
+                bind(fd, &sockaddr)
+            }
+            //TODO: error type?
+            FileType::Symlink(target) => symlink(target.unwrap_or(PathBuf::from("test")), &path)
+                .map_err(|e| nix::Error::try_from(e).unwrap_or(nix::errno::Errno::UnknownErrno)),
+        }?;
+
+        Ok(path)
+    }
+
+
     /// Create a file in a temp folder with the given name.
     pub fn create_named<S: Into<String>>(
         &mut self,
