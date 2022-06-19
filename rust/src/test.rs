@@ -65,7 +65,7 @@ pub enum Syscall {
 macro_rules! test_assert {
     ($boolean: expr) => {
         if !$boolean {
-            return Err(TestError::FailedAssertion {
+            return Err($crate::test::TestError::FailedAssertion {
                 file: file!(),
                 line: line!(),
                 column: column!(),
@@ -78,7 +78,7 @@ macro_rules! test_assert {
 macro_rules! test_assert_eq {
     ($a: expr, $b: expr) => {
         if $a != $b {
-            return Err(TestError::FailedEqualAssertion {
+            return Err($crate::test::TestError::FailedEqualAssertion {
                 file: file!(),
                 line: line!(),
                 column: column!(),
