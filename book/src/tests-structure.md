@@ -1,4 +1,4 @@
-# Writing tests
+# Structure
 
 The tests should be grouped by syscalls, in the `tests/` folder.
 Each folder then have a `mod.rs` file, 
@@ -54,28 +54,3 @@ fn test_ctime(ctx: &mut TestContext) -> TestResult {
 
 pjdfs_test_case!(permission, { test: test_ctime });
 ```
-
-## Parameterisation
-
-### File types
-
-Some tests need to test different file types.
-For now, a for loop which iterates on the types is used, but it should change in the future for a
-better structure (especially because of tests with `sleep`, which cannot be easily be parallelised).
-
-```rust
-for f_type in FileType::iter() {
-}
-```
-
-Since it is an iterator, usual functions like `filter` works.
-
-```rust
-for f_type in FileType::iter().filter(|&ft| ft == FileType::Symlink) {
-}
-```
-
-### Root requirement
-
-Some tests may need to be a root user to run. Especially, all the tests which involves creating a
-block/char file need root user.
