@@ -13,4 +13,4 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
-    - run: cd rust && cargo run
+    - run: cd rust && cargo build --release && sudo target/release/pjdfs_runner 
