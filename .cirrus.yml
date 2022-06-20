@@ -1,0 +1,26 @@
+cargo_cache:
+  folder: $CARGO_HOME/registry
+  fingerprint_script: cat Cargo.lock || echo ""
+
+build: &BUILD
+  build_script:
+    - . $HOME/.cargo/env || true
+    - cargo check --all-targets
+    - cargo build --all-targets --release
+    - sudo target/release/pjdfs_runner 
+
+task:
+  name: FreeBSD
+  freebsd_instance:
+    image: freebsd-12-3-release-amd64
+  setup_script:
+    - fetch https://sh.rustup.rs -o rustup.sh
+    - sh rustup.sh -y --profile=minimal
+    - . $HOME/.cargo/env
+  << : *BUILD
+
+task:
+  name: Linux
+  container:
+   image: rust:latest
+  << : *BUILD
