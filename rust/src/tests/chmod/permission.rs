@@ -21,6 +21,11 @@ pjdfs_test_case!(
     { test: test_clear_isgid_bit }
 );
 
+//TODO: We shouldn't have to use platform-specific types,
+// especially for a simple constant
+#[cfg(target_os = "freebsd")]
+const FILE_PERMS: u16 = 0o777;
+#[cfg(not(target_os = "freebsd"))]
 const FILE_PERMS: u32 = 0o777;
 
 // chmod/00.t:L24
