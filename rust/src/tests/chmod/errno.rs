@@ -19,8 +19,8 @@ fn test_enotdir(ctx: &mut TestContext) -> TestResult {
     for f_type in [
         FileType::Regular,
         FileType::Fifo,
-        FileType::Block(None),
-        FileType::Char(None),
+        FileType::Block,
+        FileType::Char,
         FileType::Socket,
     ] {
         let not_dir = ctx.create(f_type)?;

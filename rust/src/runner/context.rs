@@ -2,7 +2,7 @@ use nix::{
     fcntl::{open, OFlag},
     sys::{
         socket::{bind, socket, SockFlag, UnixAddr},
-        stat::{makedev, mknod, Mode, SFlag},
+        stat::{mknod, Mode, SFlag},
     },
     unistd::{close, mkdir, mkfifo, pathconf, setegid, seteuid, Gid, Uid},
 };
@@ -23,8 +23,8 @@ pub enum FileType {
     Regular,
     Dir,
     Fifo,
-    Block(Option<(u64, u64)>),
-    Char(Option<(u64, u64)>),
+    Block,
+    Char,
     Socket,
     Symlink(Option<PathBuf>),
 }
@@ -100,18 +100,8 @@ impl TestContext {
             FileType::Regular => open(&path, OFlag::O_CREAT, mode).and_then(|fd| close(fd)),
             FileType::Dir => mkdir(&path, Mode::from_bits_truncate(0o755)),
             FileType::Fifo => mkfifo(&path, mode),
-            FileType::Block(dev) => mknod(
-                &path,
-                SFlag::S_IFBLK,
-                mode,
-                dev.map_or(makedev(1, 2), |(major, minor)| makedev(major, minor)),
-            ),
-            FileType::Char(dev) => mknod(
-                &path,
-                SFlag::S_IFCHR,
-                mode,
-                dev.map_or(makedev(1, 2), |(major, minor)| makedev(major, minor)),
-            ),
+            FileType::Block => mknod(&path, SFlag::S_IFBLK, mode, 0),
+            FileType::Char => mknod(&path, SFlag::S_IFCHR, mode, 0),
             FileType::Socket => {
                 let fd = socket(
                     nix::sys::socket::AddressFamily::Unix,
@@ -149,18 +139,8 @@ impl TestContext {
             FileType::Regular => open(&path, OFlag::O_CREAT, mode).and_then(|fd| close(fd)),
             FileType::Dir => mkdir(&path, Mode::from_bits_truncate(0o755)),
             FileType::Fifo => mkfifo(&path, mode),
-            FileType::Block(dev) => mknod(
-                &path,
-                SFlag::S_IFBLK,
-                mode,
-                dev.map_or(0, |(major, minor)| makedev(major, minor)),
-            ),
-            FileType::Char(dev) => mknod(
-                &path,
-                SFlag::S_IFCHR,
-                mode,
-                dev.map_or(0, |(major, minor)| makedev(major, minor)),
-            ),
+            FileType::Block => mknod(&path, SFlag::S_IFBLK, mode, 0),
+            FileType::Char => mknod(&path, SFlag::S_IFCHR, mode, 0),
             FileType::Socket => {
                 let fd = socket(
                     nix::sys::socket::AddressFamily::Unix,
@@ -193,18 +173,8 @@ impl TestContext {
             FileType::Regular => open(&path, OFlag::O_CREAT, mode).and_then(close),
             FileType::Dir => mkdir(&path, Mode::from_bits_truncate(0o755)),
             FileType::Fifo => mkfifo(&path, Mode::from_bits_truncate(0o755)),
-            FileType::Block(dev) => mknod(
-                &path,
-                SFlag::S_IFBLK,
-                mode,
-                dev.map_or(0, |(major, minor)| makedev(major, minor)),
-            ),
-            FileType::Char(dev) => mknod(
-                &path,
-                SFlag::S_IFCHR,
-                mode,
-                dev.map_or(0, |(major, minor)| makedev(major, minor)),
-            ),
+            FileType::Block => mknod(&path, SFlag::S_IFBLK, mode, 0),
+            FileType::Char => mknod(&path, SFlag::S_IFCHR, mode, 0),
             FileType::Socket => {
                 let fd = socket(
                     nix::sys::socket::AddressFamily::Unix,
