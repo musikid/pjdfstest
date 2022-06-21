@@ -5,6 +5,7 @@ cargo_cache:
 build: &BUILD
   build_script:
     - . $HOME/.cargo/env || true
+    - cd rust
     - cargo check --all-targets
     - cargo build --all-targets --release
     - sudo target/release/pjdfs_runner 
