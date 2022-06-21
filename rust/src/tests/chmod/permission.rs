@@ -8,8 +8,7 @@ use crate::{
     tests::chmod::chmod,
 };
 use nix::{
-    libc::mode_t,
-    sys::stat::{lstat, stat, Mode},
+    sys::stat::{lstat, mode_t, stat, Mode},
     unistd::{chown, Gid, Uid},
 };
 use strum::IntoEnumIterator;
