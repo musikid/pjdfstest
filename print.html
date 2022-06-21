@@ -247,7 +247,7 @@ pjdfs_test_case!(permission, { test: test_ctime });
 <pre><code class="language-cpp">// chmod/00.t:L58
 fn test_ctime(ctx: &amp;mut TestContext) -&gt; TestResult {
   for f_type in FileType::iter().filter(|&amp;ft| ft == FileType::Symlink) {
-      let path = ctx.create(f_type).map_err(TestError::CreateFile)?;
+      let path = ctx.create(f_type)?;
       let ctime_before = stat(&amp;path)?.st_ctime;
 
       sleep(Duration::from_secs(1));
@@ -281,9 +281,12 @@ better structure (especially because of tests with <code>sleep</code>, which can
 }
 <span class="boring">}
 </span></code></pre></pre>
-<h3 id="root-requirement"><a class="header" href="#root-requirement">Root requirement</a></h3>
-<p>Some tests may need to be root to run. 
-Especially, all the tests which involves creating a block/char file need root user.</p>
+<h3 id="root-privileges"><a class="header" href="#root-privileges">Root privileges</a></h3>
+<p>Some tests may need to root privileges to run. 
+Especially, all the tests which involves creating a block/char file need those.</p>
+<p>To declare that a test function require root privileges, 
+<code>require_root: true</code> should be added to the test declaration.</p>
+<p>For example:</p>
 <pre><pre class="playground"><code class="language-rust">
 <span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
