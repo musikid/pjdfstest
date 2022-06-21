@@ -8,6 +8,7 @@ use crate::{
     tests::chmod::chmod,
 };
 use nix::{
+    libc::mode_t,
     sys::stat::{lstat, stat, Mode},
     unistd::{chown, Gid, Uid},
 };
@@ -21,12 +22,7 @@ pjdfs_test_case!(
     { test: test_clear_isgid_bit }
 );
 
-//TODO: We shouldn't have to use platform-specific types,
-// especially for a simple constant
-#[cfg(target_os = "freebsd")]
-const FILE_PERMS: u16 = 0o777;
-#[cfg(not(target_os = "freebsd"))]
-const FILE_PERMS: u32 = 0o777;
+const FILE_PERMS: mode_t = 0o777;
 
 // chmod/00.t:L24
 fn test_change_perm(ctx: &mut TestContext) -> TestResult {
