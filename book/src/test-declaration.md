@@ -36,7 +36,7 @@ A test function take a `&mut TestContext` parameter and returns a `TestResult`.
 // chmod/00.t:L58
 fn test_ctime(ctx: &mut TestContext) -> TestResult {
   for f_type in FileType::iter().filter(|&ft| ft == FileType::Symlink) {
-      let path = ctx.create(f_type).map_err(TestError::CreateFile)?;
+      let path = ctx.create(f_type)?;
       let ctime_before = stat(&path)?.st_ctime;
 
       sleep(Duration::from_secs(1));
@@ -71,11 +71,15 @@ for f_type in FileType::iter().filter(|&ft| ft == FileType::Symlink) {
 }
 ```
 
-### Root requirement
+### Root privileges
 
-Some tests may need to be root to run. 
-Especially, all the tests which involves creating a block/char file need root user.
+Some tests may need to root privileges to run. 
+Especially, all the tests which involves creating a block/char file need those.
 
+To declare that a test function require root privileges, 
+`require_root: true` should be added to the test declaration.
+
+For example:
 
 ```rust
 pjdfs_test_case!(permission, { test: test_ctime, require_root: true });
