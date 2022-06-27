@@ -1,4 +1,4 @@
-# pjdfstest.rs - Rust rewrite
+# pjdfstest - Rust rewrite
 
 pjdfstest is a test suite that helps exercise POSIX system calls.
 
