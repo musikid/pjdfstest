@@ -75,7 +75,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded affix "><a href="introduction.html">Introduction</a></li><li class="chapter-item expanded affix "><li class="part-title">Running</li><li class="chapter-item expanded "><a href="configuration.html"><strong aria-hidden="true">1.</strong> Configuration</a></li><li class="chapter-item expanded affix "><li class="part-title">Writing tests</li><li class="chapter-item expanded "><a href="tests-structure.html" class="active"><strong aria-hidden="true">2.</strong> Structure</a></li><li class="chapter-item expanded "><a href="test-declaration.html"><strong aria-hidden="true">3.</strong> Declaration</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="introduction.html">Introduction</a></li><li class="chapter-item expanded affix "><li class="part-title">Running</li><li class="chapter-item expanded "><a href="configuration-file.html"><strong aria-hidden="true">1.</strong> Configuration file</a></li><li class="chapter-item expanded affix "><li class="part-title">Writing tests</li><li class="chapter-item expanded "><a href="tests-structure.html" class="active"><strong aria-hidden="true">2.</strong> Structure</a></li><li class="chapter-item expanded "><a href="test-declaration.html"><strong aria-hidden="true">3.</strong> Declaration</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -141,29 +141,21 @@ which contains declarations of the modules inside this folder,
 and a <code>pjdfs_group!</code> statement to export the test cases from these modules.
 For example:</p>
 <h3 id="layout"><a class="header" href="#layout">Layout</a></h3>
-<pre><code>chmod
-├── lchmod
-│   └── mod.rs
-├── mod.rs
-└── permission.rs
+<pre><code>chmod (syscall/test group)
+├── errno.rs (test case)
+├── mod.rs (test group declaration)
+└── permission.rs (test case)
 </code></pre>
 <h3 id="modrs"><a class="header" href="#modrs">mod.rs</a></h3>
-<pre><pre class="playground"><code class="language-rust">
-<span class="boring">#![allow(unused)]
-</span><span class="boring">fn main() {
-</span>mod permission;
+<pre><code class="language-rust ignore">mod permission;
 mod lchmod;
 
-crate::pjdfs_group!(chmod; permission::test_case, lchmod::test_case);
-<span class="boring">}
-</span></code></pre></pre>
+crate::pjdfs_group!(chmod; permission::test_case, errno::test_case);
+</code></pre>
 <p>Each module inside a group should export a test case (with <code>pjdfs_test_case</code>),
 which contains a list of test functions.
 In our example, <code>chmod/permission.rs</code> would be:</p>
-<pre><pre class="playground"><code class="language-rust">
-<span class="boring">#![allow(unused)]
-</span><span class="boring">fn main() {
-</span>use crate::{
+<pre><code class="language-rust ignore">use crate::{
     pjdfs_test_case,
     test::{TestContext, TestResult},
 };
@@ -186,14 +178,13 @@ fn test_ctime(ctx: &amp;mut TestContext) -&gt; TestResult {
 }
 
 pjdfs_test_case!(permission, { test: test_ctime });
-<span class="boring">}
-</span></code></pre></pre>
+</code></pre>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="configuration.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="configuration-file.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <i class="fa fa-angle-left"></i>
                             </a>
                             <a rel="next" href="test-declaration.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
@@ -205,7 +196,7 @@ pjdfs_test_case!(permission, { test: test_ctime });
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="configuration.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="configuration-file.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <i class="fa fa-angle-left"></i>
                     </a>
                     <a rel="next" href="test-declaration.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
@@ -226,5 +217,7 @@ pjdfs_test_case!(permission, { test: test_ctime });
         <script src="book.js" type="text/javascript" charset="utf-8"></script>
 
         <!-- Custom JS scripts -->
+        <script type="text/javascript" src="mermaid.min.js"></script>
+        <script type="text/javascript" src="mermaid-init.js"></script>
     </body>
 </html>

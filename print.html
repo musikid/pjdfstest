@@ -76,7 +76,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded affix "><a href="introduction.html">Introduction</a></li><li class="chapter-item expanded affix "><li class="part-title">Running</li><li class="chapter-item expanded "><a href="configuration.html"><strong aria-hidden="true">1.</strong> Configuration</a></li><li class="chapter-item expanded affix "><li class="part-title">Writing tests</li><li class="chapter-item expanded "><a href="tests-structure.html"><strong aria-hidden="true">2.</strong> Structure</a></li><li class="chapter-item expanded "><a href="test-declaration.html"><strong aria-hidden="true">3.</strong> Declaration</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="introduction.html">Introduction</a></li><li class="chapter-item expanded affix "><li class="part-title">Running</li><li class="chapter-item expanded "><a href="configuration-file.html"><strong aria-hidden="true">1.</strong> Configuration file</a></li><li class="chapter-item expanded affix "><li class="part-title">Writing tests</li><li class="chapter-item expanded "><a href="tests-structure.html"><strong aria-hidden="true">2.</strong> Structure</a></li><li class="chapter-item expanded "><a href="test-declaration.html"><strong aria-hidden="true">3.</strong> Declaration</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -145,48 +145,116 @@ This is a complete rewrite of the original test suite in Rust.</p>
 <pre><code class="language-sh">cd rust
 cargo run
 </code></pre>
+<h3 id="run-as-root"><a class="header" href="#run-as-root">Run as root</a></h3>
+<pre><code>cd rust
+cargo build &amp;&amp; sudo ./target/debug/pjdfs_runner
+</code></pre>
 <h2 id="architecture"><a class="header" href="#architecture">Architecture</a></h2>
-<p>The package is made of:</p>
+<p>The package is made of the tests, and a test runner to launch them.</p>
+<h3 id="tests-tests"><a class="header" href="#tests-tests">Tests (tests/)</a></h3>
+<p>To present how tests are organized, we take the <code>chmod</code> syscall as example.</p>
+<p>For each syscall being tested, 
+a test group which contains all the test cases 
+related to this syscall should be created.</p>
+<p>The hierarchy is like this:</p>
+<pre><code class="language-mermaid">graph TD
+TG[Test group&lt;br /&gt;&lt;i&gt;chmod&lt;/i&gt;] --&gt; TC1[Test case&lt;br /&gt;&lt;i&gt;errno&lt;/i&gt;]
+
+TC1 --&gt; TC1F1[Test function]
+TC1 --&gt; TC1F2[Test function]
+TC1 --&gt; TC1F3[Test function]
+TC1 --&gt; TC1F4[Test function]
+
+TG --&gt; TC2[Test case&lt;br /&gt;&lt;i&gt;permission&lt;/i&gt;]
+
+TC2 --&gt; TC2F1[Test function]
+TC2 --&gt; TC2F2[Test function]
+</code></pre>
+<h3 id="layout"><a class="header" href="#layout">Layout</a></h3>
+<pre><code>src/tests
+├── chmod (syscall/test group)
+│   ├── errno.rs (test case)
+│   ├── mod.rs (test group declaration)
+│   └── permission.rs (test case)
+└── mod.rs (test groups modules declarations)
+</code></pre>
+<h4 id="testsmodrs"><a class="header" href="#testsmodrs">tests/mod.rs</a></h4>
+<p>All the modules for the test groups should be declared in this file.</p>
+<pre><code class="language-rust ignore">pub mod chmod;
+</code></pre>
+<h4 id="test-group"><a class="header" href="#test-group">Test group</a></h4>
+<p>A test group contains test cases related to a specific syscall.
+Its declaration should be in the <code>mod.rs</code> file 
+of the relevant folder (<code>chmod/</code> in our case).</p>
+<pre><code class="language-rust ignore">crate::pjdfs_group!(chmod; permission::test_case, errno::test_case);
+</code></pre>
+<h4 id="test-case"><a class="header" href="#test-case">Test case</a></h4>
+<p>A test case is made of test functions
+related to a specific functionality.
+All the test functions and the test case declaration 
+should be grouped in a single module.
+It means, either:</p>
 <ul>
-<li>a library, which contains all the tests,</li>
-<li>a binary, which is the test runner.</li>
+<li>in a single file, which contains all the test functions and the case declaration,</li>
+<li>in a folder, which can contains itself multiple modules for the test functions and a <code>mod.rs</code> file, which contains the declaration of the case.</li>
 </ul>
-<h3 id="library"><a class="header" href="#library">Library</a></h3>
-<p>The library exports modules, which contains groups of test cases, generally grouped by syscall.
-A test case is itself composed of multiple test functions. </p>
-<h3 id="binary"><a class="header" href="#binary">Binary</a></h3>
-<p>The binary is the test runner.</p>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="configuration"><a class="header" href="#configuration">Configuration</a></h1>
+<p>Except in the case of a very large set of test functions, the first architecture should be privileged.</p>
+<p>For example, in <code>chmod/permission.rs</code>, the test case declaration would be:</p>
+<pre><code class="language-rust ignore">pjdfs_test_case!(permission, { test: test_ctime });
+</code></pre>
+<h4 id="test-function"><a class="header" href="#test-function">Test function</a></h4>
+<p>For now, a test function take a <code>&amp;mut TestContext</code> parameter and returns a <code>TestResult</code>.</p>
+<pre><code class="language-rust ignore">// chmod/00.t:L58
+fn test_ctime(ctx: &amp;mut TestContext) -&gt; TestResult {
+    for f_type in FileType::iter().filter(|ft| *ft != FileType::Symlink(None)) {
+        let path = ctx.create(f_type)?;
+        let ctime_before = stat(&amp;path)?.st_ctime;
+
+        sleep(Duration::from_secs(1));
+
+        chmod(&amp;path, Mode::from_bits_truncate(0o111))?;
+
+        let ctime_after = stat(&amp;path)?.st_ctime;
+        test_assert!(ctime_after &gt; ctime_before);
+    }
+
+    Ok(())
+}
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="configuration-file"><a class="header" href="#configuration-file">Configuration file</a></h1>
+<p>The test runner can read a configuration file.</p>
+<h2 id="sections"><a class="header" href="#sections">Sections</a></h2>
+<h3 id="features"><a class="header" href="#features">[features]</a></h3>
+<p>Some syscalls cannot be run on all combinations of file systems/platforms.
+Their execution is opt-in,
+as in the user should enable them by adding the key in this section.
+A list of these opt-in groups should be provided 
+when executing the runner with <code>-l</code> argument.</p>
+<pre><code class="language-toml">[features]
+posix_fallocate = true
+</code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="structure"><a class="header" href="#structure">Structure</a></h1>
 <p>The tests should be grouped by syscalls, in the <code>tests/</code> folder.
 Each folder then have a <code>mod.rs</code> file, 
 which contains declarations of the modules inside this folder,
 and a <code>pjdfs_group!</code> statement to export the test cases from these modules.
 For example:</p>
-<h3 id="layout"><a class="header" href="#layout">Layout</a></h3>
-<pre><code>chmod
-├── lchmod
-│   └── mod.rs
-├── mod.rs
-└── permission.rs
+<h3 id="layout-1"><a class="header" href="#layout-1">Layout</a></h3>
+<pre><code>chmod (syscall/test group)
+├── errno.rs (test case)
+├── mod.rs (test group declaration)
+└── permission.rs (test case)
 </code></pre>
 <h3 id="modrs"><a class="header" href="#modrs">mod.rs</a></h3>
-<pre><pre class="playground"><code class="language-rust">
-<span class="boring">#![allow(unused)]
-</span><span class="boring">fn main() {
-</span>mod permission;
+<pre><code class="language-rust ignore">mod permission;
 mod lchmod;
 
-crate::pjdfs_group!(chmod; permission::test_case, lchmod::test_case);
-<span class="boring">}
-</span></code></pre></pre>
+crate::pjdfs_group!(chmod; permission::test_case, errno::test_case);
+</code></pre>
 <p>Each module inside a group should export a test case (with <code>pjdfs_test_case</code>),
 which contains a list of test functions.
 In our example, <code>chmod/permission.rs</code> would be:</p>
-<pre><pre class="playground"><code class="language-rust">
-<span class="boring">#![allow(unused)]
-</span><span class="boring">fn main() {
-</span>use crate::{
+<pre><code class="language-rust ignore">use crate::{
     pjdfs_test_case,
     test::{TestContext, TestResult},
 };
@@ -209,42 +277,10 @@ fn test_ctime(ctx: &amp;mut TestContext) -&gt; TestResult {
 }
 
 pjdfs_test_case!(permission, { test: test_ctime });
-<span class="boring">}
-</span></code></pre></pre>
+</code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="test-declaration"><a class="header" href="#test-declaration">Test declaration</a></h1>
-<p>Each module inside a group should export a test case (with <code>pjdfs_test_case</code>),
-which contains a list of test functions.
-In our example, <code>chmod/permission.rs</code> would be:</p>
-<pre><pre class="playground"><code class="language-rust">
-<span class="boring">#![allow(unused)]
-</span><span class="boring">fn main() {
-</span>use crate::{
-    pjdfs_test_case,
-    test::{TestContext, TestResult},
-};
-
-// chmod/00.t:L58
-fn test_ctime(ctx: &amp;mut TestContext) -&gt; TestResult {
-  for f_type in FileType::iter().filter(|&amp;ft| ft == FileType::Symlink) {
-      let path = ctx.create(f_type).map_err(TestError::CreateFile)?;
-      let ctime_before = stat(&amp;path)?.st_ctime;
-
-      sleep(Duration::from_secs(1));
-
-      chmod(&amp;path, Mode::from_bits_truncate(0o111))?;
-
-      let ctime_after = stat(&amp;path)?.st_ctime;
-      test_assert!(ctime_after &gt; ctime_before);
-  }
-
-  Ok(())
-}
-
-pjdfs_test_case!(permission, { test: test_ctime });
-<span class="boring">}
-</span></code></pre></pre>
 <p>A test function take a <code>&amp;mut TestContext</code> parameter and returns a <code>TestResult</code>.</p>
-<pre><code class="language-cpp">// chmod/00.t:L58
+<pre><code class="language-rust ignore">// chmod/00.t:L58
 fn test_ctime(ctx: &amp;mut TestContext) -&gt; TestResult {
   for f_type in FileType::iter().filter(|&amp;ft| ft == FileType::Symlink) {
       let path = ctx.create(f_type)?;
@@ -266,26 +302,18 @@ fn test_ctime(ctx: &amp;mut TestContext) -&gt; TestResult {
 <p>Some tests need to test different file types.
 For now, a for loop which iterates on the types is used, but it should change in the future for a
 better structure (especially because of tests with <code>sleep</code>, which cannot be easily parallelized with a loop, see <a href="https://github.com/musikid/pjdfstest/issues/1">#1</a>).</p>
-<pre><pre class="playground"><code class="language-rust">
-<span class="boring">#![allow(unused)]
-</span><span class="boring">fn main() {
-</span>for f_type in FileType::iter() {
+<pre><code class="language-rust ignore">for f_type in FileType::iter() {
 }
-<span class="boring">}
-</span></code></pre></pre>
+</code></pre>
 <p>Since it is an iterator, usual functions like <code>filter</code> works.</p>
-<pre><pre class="playground"><code class="language-rust">
-<span class="boring">#![allow(unused)]
-</span><span class="boring">fn main() {
-</span>for f_type in FileType::iter().filter(|&amp;ft| ft == FileType::Symlink) {
+<pre><code class="language-rust ignore">for f_type in FileType::iter().filter(|&amp;ft| ft == FileType::Symlink) {
 }
-<span class="boring">}
-</span></code></pre></pre>
+</code></pre>
 <h3 id="root-privileges"><a class="header" href="#root-privileges">Root privileges</a></h3>
-<p>Some tests may need to root privileges to run. 
+<p>Some tests may need root privileges to run. 
 Especially, all the tests which involves creating a block/char file need those.</p>
 <p>To declare that a test function require root privileges, 
-<code>require_root: true</code> should be added to the test declaration.</p>
+<code>require_root: true</code> should be added to its declaration.</p>
 <p>For example:</p>
 <pre><pre class="playground"><code class="language-rust">
 <span class="boring">#![allow(unused)]
@@ -294,7 +322,7 @@ Especially, all the tests which involves creating a block/char file need those.<
 <span class="boring">}
 </span></code></pre></pre>
 <h2 id="platform-specific-functions"><a class="header" href="#platform-specific-functions">Platform-specific functions</a></h2>
-<p>Some functions (like <code>lchmod</code>) are not supported on every UNIX.</p>
+<p>Some functions (like <code>lchmod</code>) are not supported on every platform.</p>
 
                     </main>
 
@@ -321,6 +349,8 @@ Especially, all the tests which involves creating a block/char file need those.<
         <script src="book.js" type="text/javascript" charset="utf-8"></script>
 
         <!-- Custom JS scripts -->
+        <script type="text/javascript" src="mermaid.min.js"></script>
+        <script type="text/javascript" src="mermaid-init.js"></script>
         <script type="text/javascript">
         window.addEventListener('load', function() {
             window.setTimeout(window.print, 100);

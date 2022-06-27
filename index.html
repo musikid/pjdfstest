@@ -75,7 +75,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded affix "><a href="introduction.html">Introduction</a></li><li class="chapter-item expanded affix "><li class="part-title">Running</li><li class="chapter-item expanded "><a href="configuration.html"><strong aria-hidden="true">1.</strong> Configuration</a></li><li class="chapter-item expanded affix "><li class="part-title">Writing tests</li><li class="chapter-item expanded "><a href="tests-structure.html"><strong aria-hidden="true">2.</strong> Structure</a></li><li class="chapter-item expanded "><a href="test-declaration.html"><strong aria-hidden="true">3.</strong> Declaration</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="introduction.html">Introduction</a></li><li class="chapter-item expanded affix "><li class="part-title">Running</li><li class="chapter-item expanded "><a href="configuration-file.html"><strong aria-hidden="true">1.</strong> Configuration file</a></li><li class="chapter-item expanded affix "><li class="part-title">Writing tests</li><li class="chapter-item expanded "><a href="tests-structure.html"><strong aria-hidden="true">2.</strong> Structure</a></li><li class="chapter-item expanded "><a href="test-declaration.html"><strong aria-hidden="true">3.</strong> Declaration</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -144,23 +144,88 @@ This is a complete rewrite of the original test suite in Rust.</p>
 <pre><code class="language-sh">cd rust
 cargo run
 </code></pre>
+<h3 id="run-as-root"><a class="header" href="#run-as-root">Run as root</a></h3>
+<pre><code>cd rust
+cargo build &amp;&amp; sudo ./target/debug/pjdfs_runner
+</code></pre>
 <h2 id="architecture"><a class="header" href="#architecture">Architecture</a></h2>
-<p>The package is made of:</p>
+<p>The package is made of the tests, and a test runner to launch them.</p>
+<h3 id="tests-tests"><a class="header" href="#tests-tests">Tests (tests/)</a></h3>
+<p>To present how tests are organized, we take the <code>chmod</code> syscall as example.</p>
+<p>For each syscall being tested, 
+a test group which contains all the test cases 
+related to this syscall should be created.</p>
+<p>The hierarchy is like this:</p>
+<pre><code class="language-mermaid">graph TD
+TG[Test group&lt;br /&gt;&lt;i&gt;chmod&lt;/i&gt;] --&gt; TC1[Test case&lt;br /&gt;&lt;i&gt;errno&lt;/i&gt;]
+
+TC1 --&gt; TC1F1[Test function]
+TC1 --&gt; TC1F2[Test function]
+TC1 --&gt; TC1F3[Test function]
+TC1 --&gt; TC1F4[Test function]
+
+TG --&gt; TC2[Test case&lt;br /&gt;&lt;i&gt;permission&lt;/i&gt;]
+
+TC2 --&gt; TC2F1[Test function]
+TC2 --&gt; TC2F2[Test function]
+</code></pre>
+<h3 id="layout"><a class="header" href="#layout">Layout</a></h3>
+<pre><code>src/tests
+├── chmod (syscall/test group)
+│   ├── errno.rs (test case)
+│   ├── mod.rs (test group declaration)
+│   └── permission.rs (test case)
+└── mod.rs (test groups modules declarations)
+</code></pre>
+<h4 id="testsmodrs"><a class="header" href="#testsmodrs">tests/mod.rs</a></h4>
+<p>All the modules for the test groups should be declared in this file.</p>
+<pre><code class="language-rust ignore">pub mod chmod;
+</code></pre>
+<h4 id="test-group"><a class="header" href="#test-group">Test group</a></h4>
+<p>A test group contains test cases related to a specific syscall.
+Its declaration should be in the <code>mod.rs</code> file 
+of the relevant folder (<code>chmod/</code> in our case).</p>
+<pre><code class="language-rust ignore">crate::pjdfs_group!(chmod; permission::test_case, errno::test_case);
+</code></pre>
+<h4 id="test-case"><a class="header" href="#test-case">Test case</a></h4>
+<p>A test case is made of test functions
+related to a specific functionality.
+All the test functions and the test case declaration 
+should be grouped in a single module.
+It means, either:</p>
 <ul>
-<li>a library, which contains all the tests,</li>
-<li>a binary, which is the test runner.</li>
+<li>in a single file, which contains all the test functions and the case declaration,</li>
+<li>in a folder, which can contains itself multiple modules for the test functions and a <code>mod.rs</code> file, which contains the declaration of the case.</li>
 </ul>
-<h3 id="library"><a class="header" href="#library">Library</a></h3>
-<p>The library exports modules, which contains groups of test cases, generally grouped by syscall.
-A test case is itself composed of multiple test functions. </p>
-<h3 id="binary"><a class="header" href="#binary">Binary</a></h3>
-<p>The binary is the test runner.</p>
+<p>Except in the case of a very large set of test functions, the first architecture should be privileged.</p>
+<p>For example, in <code>chmod/permission.rs</code>, the test case declaration would be:</p>
+<pre><code class="language-rust ignore">pjdfs_test_case!(permission, { test: test_ctime });
+</code></pre>
+<h4 id="test-function"><a class="header" href="#test-function">Test function</a></h4>
+<p>For now, a test function take a <code>&amp;mut TestContext</code> parameter and returns a <code>TestResult</code>.</p>
+<pre><code class="language-rust ignore">// chmod/00.t:L58
+fn test_ctime(ctx: &amp;mut TestContext) -&gt; TestResult {
+    for f_type in FileType::iter().filter(|ft| *ft != FileType::Symlink(None)) {
+        let path = ctx.create(f_type)?;
+        let ctime_before = stat(&amp;path)?.st_ctime;
+
+        sleep(Duration::from_secs(1));
+
+        chmod(&amp;path, Mode::from_bits_truncate(0o111))?;
+
+        let ctime_after = stat(&amp;path)?.st_ctime;
+        test_assert!(ctime_after &gt; ctime_before);
+    }
+
+    Ok(())
+}
+</code></pre>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="next" href="configuration.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next" href="configuration-file.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <i class="fa fa-angle-right"></i>
                             </a>
                         <div style="clear: both"></div>
@@ -169,7 +234,7 @@ A test case is itself composed of multiple test functions. </p>
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="next" href="configuration.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next" href="configuration-file.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <i class="fa fa-angle-right"></i>
                     </a>
             </nav>
@@ -187,5 +252,7 @@ A test case is itself composed of multiple test functions. </p>
         <script src="book.js" type="text/javascript" charset="utf-8"></script>
 
         <!-- Custom JS scripts -->
+        <script type="text/javascript" src="mermaid.min.js"></script>
+        <script type="text/javascript" src="mermaid-init.js"></script>
     </body>
 </html>
