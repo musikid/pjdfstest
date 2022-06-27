@@ -88,7 +88,7 @@ should be grouped in a single module.
 It means, either:
 
 - in a single file, which contains all the test functions and the case declaration,
-- in a folder, which can contains itself multiple modules for the test functions and a `mod.rs` file, which contains the declaration of the case.
+- in a folder, which contains multiple modules for the test functions and a `mod.rs` file, which contains the declaration of the case.
 
 Except in the case of a very large set of test functions, the first architecture should be privileged.
 
