@@ -156,7 +156,7 @@ cargo build &amp;&amp; sudo ./target/debug/pjdfs_runner
 a test group which contains all the test cases 
 related to this syscall should be created.</p>
 <p>The hierarchy is like this:</p>
-<pre><code class="language-mermaid">graph TD
+<pre class="mermaid">graph TD
 TG[Test group&lt;br /&gt;&lt;i&gt;chmod&lt;/i&gt;] --&gt; TC1[Test case&lt;br /&gt;&lt;i&gt;errno&lt;/i&gt;]
 
 TC1 --&gt; TC1F1[Test function]
@@ -168,7 +168,7 @@ TG --&gt; TC2[Test case&lt;br /&gt;&lt;i&gt;permission&lt;/i&gt;]
 
 TC2 --&gt; TC2F1[Test function]
 TC2 --&gt; TC2F2[Test function]
-</code></pre>
+</pre>
 <h3 id="layout"><a class="header" href="#layout">Layout</a></h3>
 <pre><code>src/tests
 ├── chmod (syscall/test group)
