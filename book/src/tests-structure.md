@@ -9,27 +9,26 @@ For example:
 ### Layout
 
 ```
-chmod
-├── lchmod
-│   └── mod.rs
-├── mod.rs
-└── permission.rs
+chmod (syscall/test group)
+├── errno.rs (test case)
+├── mod.rs (test group declaration)
+└── permission.rs (test case)
 ```
 
 ### mod.rs
 
-```rust
+```rust,ignore
 mod permission;
 mod lchmod;
 
-crate::pjdfs_group!(chmod; permission::test_case, lchmod::test_case);
+crate::pjdfs_group!(chmod; permission::test_case, errno::test_case);
 ```
 
 Each module inside a group should export a test case (with `pjdfs_test_case`),
 which contains a list of test functions.
 In our example, `chmod/permission.rs` would be:
 
-```rust
+```rust,ignore
 use crate::{
     pjdfs_test_case,
     test::{TestContext, TestResult},

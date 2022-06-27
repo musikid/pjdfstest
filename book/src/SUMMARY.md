@@ -4,7 +4,7 @@
 
 # Running
 
-- [Configuration](configuration.md)
+- [Configuration file](configuration-file.md)
 
 # Writing tests
 
