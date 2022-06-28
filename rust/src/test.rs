@@ -11,8 +11,7 @@ pub type TestResult = std::result::Result<(), TestError>;
 /// Can also be run exclusively on a particular file system.
 pub struct Test {
     pub name: &'static str,
-    pub fun: fn(&mut TestContext) -> TestResult,
-    pub file_system: Option<String>,
+    pub fun: fn(&mut TestContext),
     pub require_root: bool,
 }
 
@@ -23,24 +22,6 @@ pub enum TestError {
     CreateFile(ContextError),
     #[error("error while calling syscall: {0}")]
     Nix(#[from] nix::Error),
-    #[error("assertion failed in file {file} at {line}:{column}")]
-    FailedAssertion {
-        file: &'static str,
-        line: u32,
-        column: u32,
-    },
-    #[error(
-        "assertion failed in file {file} at {line}:{column} (left == right)
-left: {left:#?}
-right: {right:#?}"
-    )]
-    FailedEqualAssertion {
-        file: &'static str,
-        line: u32,
-        column: u32,
-        left: Box<dyn Debug + Send + Sync>,
-        right: Box<dyn Debug + Send + Sync>,
-    },
 }
 
 /// A group of test cases.
@@ -56,35 +37,8 @@ pub struct TestCase {
     pub tests: &'static [Test],
 }
 
-#[derive(Debug)]
+#[derive(Debug, strum::AsRefStr)]
+#[strum(serialize_all = "snake_case")]
 pub enum Syscall {
     Chmod,
-}
-
-#[macro_export]
-macro_rules! test_assert {
-    ($boolean: expr) => {
-        if !$boolean {
-            return Err($crate::test::TestError::FailedAssertion {
-                file: file!(),
-                line: line!(),
-                column: column!(),
-            });
-        }
-    };
-}
-
-#[macro_export]
-macro_rules! test_assert_eq {
-    ($a: expr, $b: expr) => {
-        if $a != $b {
-            return Err($crate::test::TestError::FailedEqualAssertion {
-                file: file!(),
-                line: line!(),
-                column: column!(),
-                left: Box::new($a),
-                right: Box::new($b),
-            });
-        }
-    };
 }

@@ -59,7 +59,6 @@ macro_rules! pjdfs_test {
         $crate::test::Test {
             name: stringify!($test),
             fun: $test,
-            file_system: None,
             require_root: false,
         }
     };
@@ -68,7 +67,6 @@ macro_rules! pjdfs_test {
         $crate::test::Test {
             name: stringify!($test),
             fun: $test,
-            file_system: Some($file_system),
             require_root: false,
         }
     };
@@ -77,7 +75,6 @@ macro_rules! pjdfs_test {
         $crate::test::Test {
             name: stringify!($test),
             fun: $test,
-            file_system: None,
             require_root: $require_root,
         }
     };
@@ -86,7 +83,6 @@ macro_rules! pjdfs_test {
         $crate::test::Test {
             name: stringify!($test),
             fun: $test,
-            file_system: Some($file_system),
             require_root: $require_root,
         }
     };
