@@ -9,6 +9,7 @@ use nix::{
 use rand::{distributions::Alphanumeric, thread_rng, Rng};
 use std::{
     os::unix::fs::symlink,
+    panic::{catch_unwind, resume_unwind, UnwindSafe},
     path::{Path, PathBuf},
 };
 use strum_macros::EnumIter;
@@ -48,13 +49,11 @@ impl TestContext {
         TestContext { temp_dir }
     }
 
-    // pub(super) fn clean() -> Result<(), ContextError> {}
-
-    //TODO: Maybe better as a macro?
+    //TODO: Maybe better as a macro? unwrap?
     /// Execute the function as another user/group.
-    pub fn as_user<F>(&self, uid: Option<Uid>, gid: Option<Gid>, mut f: F) -> Result<(), TestError>
+    pub fn as_user<F>(&self, uid: Option<Uid>, gid: Option<Gid>, mut f: F)
     where
-        F: FnMut() -> Result<(), TestError>,
+        F: FnMut() + UnwindSafe,
     {
         if uid.is_none() && gid.is_none() {
             return f();
@@ -64,24 +63,27 @@ impl TestContext {
         let original_egid = Gid::effective();
 
         if let Some(gid) = gid {
-            setegid(gid)?;
+            setegid(gid).unwrap();
         }
 
         if let Some(uid) = uid {
-            seteuid(uid)?;
+            seteuid(uid).unwrap();
         }
 
-        let res = f();
+        let res = catch_unwind(move || f());
 
         if uid.is_some() {
-            seteuid(original_euid)?;
+            seteuid(original_euid).unwrap();
         }
 
         if gid.is_some() {
-            setegid(original_egid)?;
+            setegid(original_egid).unwrap();
         }
 
-        res
+        //TODO: Should we resume?
+        if let Err(e) = res {
+            resume_unwind(e)
+        }
     }
 
     /// Create a file in a temp folder with a random name.
