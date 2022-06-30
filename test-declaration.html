@@ -135,22 +135,22 @@
                 <div id="content" class="content">
                     <main>
                         <h1 id="test-declaration"><a class="header" href="#test-declaration">Test declaration</a></h1>
-<p>A test function take a <code>&amp;mut TestContext</code> parameter and returns a <code>TestResult</code>.</p>
+<p>A test function should take a <code>&amp;mut TestContext</code> parameter.
+It has the same anatomy than usual Rust tests, that is <code>unwrap</code>ing <code>Result</code>s and using assertion macros (<code>assert</code> and <code>assert_eq</code>).
+For example:</p>
 <pre><code class="language-rust ignore">// chmod/00.t:L58
-fn test_ctime(ctx: &amp;mut TestContext) -&gt; TestResult {
-  for f_type in FileType::iter().filter(|&amp;ft| ft == FileType::Symlink) {
-      let path = ctx.create(f_type)?;
-      let ctime_before = stat(&amp;path)?.st_ctime;
+fn test_ctime(ctx: &amp;mut TestContext) {
+    for f_type in FileType::iter().filter(|ft| *ft != FileType::Symlink(None)) {
+        let path = ctx.create(f_type).unwrap();
+        let ctime_before = stat(&amp;path).unwrap().st_ctime;
 
-      sleep(Duration::from_secs(1));
+        sleep(Duration::from_secs(1));
 
-      chmod(&amp;path, Mode::from_bits_truncate(0o111))?;
+        chmod(&amp;path, Mode::from_bits_truncate(0o111)).unwrap();
 
-      let ctime_after = stat(&amp;path)?.st_ctime;
-      test_assert!(ctime_after &gt; ctime_before);
-  }
-
-  Ok(())
+        let ctime_after = stat(&amp;path).unwrap().st_ctime;
+        assert!(ctime_after &gt; ctime_before);
+    }
 }
 </code></pre>
 <h2 id="parameterization"><a class="header" href="#parameterization">Parameterization</a></h2>
@@ -166,7 +166,7 @@ better structure (especially because of tests with <code>sleep</code>, which can
 }
 </code></pre>
 <h3 id="root-privileges"><a class="header" href="#root-privileges">Root privileges</a></h3>
-<p>Some tests may need root privileges to run. 
+<p>Some tests may need root privileges to run.
 Especially, all the tests which involves creating a block/char file need those.</p>
 <p>To declare that a test function require root privileges, 
 <code>require_root: true</code> should be added to its declaration.</p>
@@ -177,7 +177,7 @@ Especially, all the tests which involves creating a block/char file need those.<
 </span>pjdfs_test_case!(permission, { test: test_ctime, require_root: true });
 <span class="boring">}
 </span></code></pre></pre>
-<h2 id="platform-specific-functions"><a class="header" href="#platform-specific-functions">Platform-specific functions</a></h2>
+<h2 id="todo-platform-specific-functions"><a class="header" href="#todo-platform-specific-functions">TODO: Platform-specific functions</a></h2>
 <p>Some functions (like <code>lchmod</code>) are not supported on every platform.</p>
 
                     </main>

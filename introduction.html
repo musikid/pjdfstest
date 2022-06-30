@@ -202,23 +202,26 @@ It means, either:</p>
 <pre><code class="language-rust ignore">pjdfs_test_case!(permission, { test: test_ctime });
 </code></pre>
 <h4 id="test-function"><a class="header" href="#test-function">Test function</a></h4>
-<p>For now, a test function take a <code>&amp;mut TestContext</code> parameter and returns a <code>TestResult</code>.</p>
+<p>For now, a test function take a <code>&amp;mut TestContext</code> parameter.</p>
 <pre><code class="language-rust ignore">// chmod/00.t:L58
-fn test_ctime(ctx: &amp;mut TestContext) -&gt; TestResult {
+fn test_ctime(ctx: &amp;mut TestContext) {
     for f_type in FileType::iter().filter(|ft| *ft != FileType::Symlink(None)) {
-        let path = ctx.create(f_type)?;
-        let ctime_before = stat(&amp;path)?.st_ctime;
+        let path = ctx.create(f_type).unwrap();
+        let ctime_before = stat(&amp;path).unwrap().st_ctime;
 
         sleep(Duration::from_secs(1));
 
-        chmod(&amp;path, Mode::from_bits_truncate(0o111))?;
+        chmod(&amp;path, Mode::from_bits_truncate(0o111)).unwrap();
 
-        let ctime_after = stat(&amp;path)?.st_ctime;
-        test_assert!(ctime_after &gt; ctime_before);
+        let ctime_after = stat(&amp;path).unwrap().st_ctime;
+        assert!(ctime_after &gt; ctime_before);
     }
-
-    Ok(())
 }
+</code></pre>
+<h3 id="test-runner-mainrs"><a class="header" href="#test-runner-mainrs">Test runner (main.rs)</a></h3>
+<p>The test runner has to run the tests, and provide a command-line interface to allow the user to modify how the tests should be run.
+It takes the tests from the specified test groups.</p>
+<pre><code class="language-rust ignore">for group in [chmod::tests] {
 </code></pre>
 
                     </main>
