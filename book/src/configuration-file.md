@@ -1,4 +1,4 @@
-# Configuration file
+# TODO: Configuration file
 
 The test runner can read a configuration file.
 
