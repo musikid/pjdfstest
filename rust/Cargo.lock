@@ -89,11 +89,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "once_cell"
+version = "1.12.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7709cef83f0c1f58f666e746a08b21e0085f7440fa6a29cc194d68aac97a4225"
+
+[[package]]
 name = "pjdfs_tests"
 version = "0.1.0"
 dependencies = [
  "anyhow",
  "nix",
+ "once_cell",
  "rand",
  "strum",
  "strum_macros",
