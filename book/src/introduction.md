@@ -100,7 +100,7 @@ pjdfs_test_case!(permission, { test: test_ctime });
 
 #### Test function
 
-For now, a test function take a `&mut TestContext` parameter and returns a `TestResult`.
+For now, a test function take a `&mut TestContext` parameter.
 
 ```rust,ignore
 // chmod/00.t:L58
@@ -117,4 +117,13 @@ fn test_ctime(ctx: &mut TestContext) {
         assert!(ctime_after > ctime_before);
     }
 }
+```
+
+### Test runner (main.rs)
+
+The test runner has to run the tests, and provide a command-line interface to allow the user to modify how the tests should be run.
+It takes the tests from the specified test groups.
+
+```rust,ignore
+for group in [chmod::tests] {
 ```
