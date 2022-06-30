@@ -1,23 +1,23 @@
 # Test declaration
 
-A test function take a `&mut TestContext` parameter and returns a `TestResult`.
+A test function should take a `&mut TestContext` parameter.
+It has the same anatomy than usual Rust tests, that is `unwrap`ing `Result`s and using assertion macros (`assert` and `assert_eq`).
+For example:
 
 ```rust,ignore
 // chmod/00.t:L58
-fn test_ctime(ctx: &mut TestContext) -> TestResult {
-  for f_type in FileType::iter().filter(|&ft| ft == FileType::Symlink) {
-      let path = ctx.create(f_type)?;
-      let ctime_before = stat(&path)?.st_ctime;
+fn test_ctime(ctx: &mut TestContext) {
+    for f_type in FileType::iter().filter(|ft| *ft != FileType::Symlink(None)) {
+        let path = ctx.create(f_type).unwrap();
+        let ctime_before = stat(&path).unwrap().st_ctime;
 
-      sleep(Duration::from_secs(1));
+        sleep(Duration::from_secs(1));
 
-      chmod(&path, Mode::from_bits_truncate(0o111))?;
+        chmod(&path, Mode::from_bits_truncate(0o111)).unwrap();
 
-      let ctime_after = stat(&path)?.st_ctime;
-      test_assert!(ctime_after > ctime_before);
-  }
-
-  Ok(())
+        let ctime_after = stat(&path).unwrap().st_ctime;
+        assert!(ctime_after > ctime_before);
+    }
 }
 ```
 
@@ -43,7 +43,7 @@ for f_type in FileType::iter().filter(|&ft| ft == FileType::Symlink) {
 
 ### Root privileges
 
-Some tests may need root privileges to run. 
+Some tests may need root privileges to run.
 Especially, all the tests which involves creating a block/char file need those.
 
 To declare that a test function require root privileges, 
@@ -55,6 +55,6 @@ For example:
 pjdfs_test_case!(permission, { test: test_ctime, require_root: true });
 ```
 
-## Platform-specific functions
+## TODO: Platform-specific functions 
 
 Some functions (like `lchmod`) are not supported on every platform.
