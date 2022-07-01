@@ -92,23 +92,21 @@ pjdfs_test_case!(permission, { test: test_ctime });
 
 #### Test function
 
-For now, a test function take a `&mut TestContext` parameter and returns a `TestResult`.
+For now, a test function take a `&mut TestContext` parameter.
 
-```rust
+```rust,ignore
 // chmod/00.t:L58
-fn test_ctime(ctx: &mut TestContext) -> TestResult {
+fn test_ctime(ctx: &mut TestContext) {
     for f_type in FileType::iter().filter(|ft| *ft != FileType::Symlink(None)) {
-        let path = ctx.create(f_type)?;
-        let ctime_before = stat(&path)?.st_ctime;
+        let path = ctx.create(f_type).unwrap();
+        let ctime_before = stat(&path).unwrap().st_ctime;
 
         sleep(Duration::from_secs(1));
 
-        chmod(&path, Mode::from_bits_truncate(0o111))?;
+        chmod(&path, Mode::from_bits_truncate(0o111)).unwrap();
 
-        let ctime_after = stat(&path)?.st_ctime;
-        test_assert!(ctime_after > ctime_before);
+        let ctime_after = stat(&path).unwrap().st_ctime;
+        assert!(ctime_after > ctime_before);
     }
-
-    Ok(())
 }
 ```
