@@ -82,7 +82,7 @@ It means, either:
 - in a single file, which contains all the test functions and the case declaration,
 - in a folder, which contains multiple modules for the test functions and a `mod.rs` file, in which the case is declared.
 
-Except in the case of a very large set of test functions, the first architecture should be privileged.
+Though, except in the case of a very large set of test functions, it is better to write all in a single file.
 
 For example, in `chmod/permission.rs`, the test case declaration would be:
 
