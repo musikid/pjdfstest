@@ -6,7 +6,8 @@ For example:
 
 ```rust,ignore
 // chmod/00.t:L58
-fn test_ctime(ctx: &mut TestContext) {
+crate::test_case!{Syscall::Chmod, ctime}
+fn ctime(ctx: &mut TestContext) {
     for f_type in FileType::iter().filter(|ft| *ft != FileType::Symlink(None)) {
         let path = ctx.create(f_type).unwrap();
         let ctime_before = stat(&path).unwrap().st_ctime;
@@ -52,7 +53,7 @@ To declare that a test function require root privileges,
 For example:
 
 ```rust
-pjdfs_test_case!(permission, { test: test_ctime, require_root: true });
+test_case!{change_perm, root, Syscall::Chmod}
 ```
 
 ## TODO: Platform-specific functions 

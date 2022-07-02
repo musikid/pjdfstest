@@ -3,14 +3,13 @@ use nix::{
     sys::stat::{stat, Mode},
 };
 
-use crate::{pjdfs_test_case, runner::context::FileType, test::TestContext};
+use crate::{runner::context::FileType, test::{Syscall, TestContext}};
 
 use super::chmod;
 
-pjdfs_test_case!(errno, { test: test_enotdir, require_root: true }, { test: test_enametoolong });
-
+crate::test_case!{enotdir, root, Syscall::Chmod}
 /// Returns ENOTDIR if a component of the path prefix is not a directory
-fn test_enotdir(ctx: &mut TestContext) {
+fn enotdir(ctx: &mut TestContext) {
     for f_type in [
         FileType::Regular,
         FileType::Fifo,
@@ -26,8 +25,9 @@ fn test_enotdir(ctx: &mut TestContext) {
     }
 }
 
+crate::test_case!{enametoolong, Syscall::Chmod}
 /// chmod returns ENAMETOOLONG if a component of a pathname exceeded {NAME_MAX} characters
-fn test_enametoolong(ctx: &mut TestContext) {
+fn enametoolong(ctx: &mut TestContext) {
     let path = ctx.create_max(FileType::Regular).unwrap();
     let expected_mode = 0o620;
     chmod(&path, Mode::from_bits_truncate(expected_mode)).unwrap();
