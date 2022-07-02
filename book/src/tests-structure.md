@@ -3,7 +3,7 @@
 The tests should be grouped by syscalls, in the `tests/` folder.
 Each folder then have a `mod.rs` file, 
 which contains declarations of the modules inside this folder,
-and a `pjdfs_group!` statement to export the test cases from these modules.
+and a `group!` statement to export the test cases from these modules.
 For example:
 
 ### Layout
@@ -20,22 +20,20 @@ chmod (syscall/test group)
 ```rust,ignore
 mod permission;
 mod lchmod;
-
-crate::pjdfs_group!(chmod; permission::test_case, errno::test_case);
 ```
 
-Each module inside a group should export a test case (with `pjdfs_test_case`),
-which contains a list of test functions.
+Each module inside a group should register its test cases with `test_case!`.
 In our example, `chmod/permission.rs` would be:
 
 ```rust,ignore
+test_case!{ctime, root, Syscall::Chmod}
 use crate::{
-    pjdfs_test_case,
+    test_case,
     test::{TestContext, TestResult},
 };
 
 // chmod/00.t:L58
-fn test_ctime(ctx: &mut TestContext) -> TestResult {
+fn ctime(ctx: &mut TestContext) -> TestResult {
   for f_type in FileType::iter().filter(|&ft| ft == FileType::Symlink) {
       let path = ctx.create(f_type).map_err(TestError::CreateFile)?;
       let ctime_before = stat(&path)?.st_ctime;
@@ -50,6 +48,4 @@ fn test_ctime(ctx: &mut TestContext) -> TestResult {
 
   Ok(())
 }
-
-pjdfs_test_case!(permission, { test: test_ctime });
 ```

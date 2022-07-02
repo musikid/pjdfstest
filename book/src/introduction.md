@@ -29,36 +29,36 @@ The package is made of the tests, and a test runner to launch them.
 
 To present how tests are organized, we take the `chmod` syscall as example.
 
-For each syscall being tested, 
-a test group which contains all the test cases 
-related to this syscall should be created.
+There is a separate module for each syscall being tested.  Within each of those
+modules, there may be either a single file, or a separate file for each aspect
+of the syscall.
 
 The hierarchy is like this:
 
 ```mermaid
 graph TD
-TG[Test group<br /><i>chmod</i>] --> TC1[Test case<br /><i>errno</i>]
+TG[Syscall module<br /><i>chmod</i>] --> TC1[Aspect<br /><i>errno</i>]
 
-TC1 --> TC1F1[Test function]
-TC1 --> TC1F2[Test function]
-TC1 --> TC1F3[Test function]
-TC1 --> TC1F4[Test function]
+TC1 --> TC1F1[Test case]
+TC1 --> TC1F2[Test case]
+TC1 --> TC1F3[Test case]
+TC1 --> TC1F4[Test case]
 
-TG --> TC2[Test case<br /><i>permission</i>]
+TG --> TC2[Aspect<br /><i>permission</i>]
 
-TC2 --> TC2F1[Test function]
-TC2 --> TC2F2[Test function]
+TC2 --> TC2F1[Test case]
+TC2 --> TC2F2[Test case]
 ```
 
 ### Layout
 
 ```
 src/tests
-├── chmod (syscall/test group)
-│   ├── errno.rs (test case)
-│   ├── mod.rs (test group declaration)
-│   └── permission.rs (test case)
-└── mod.rs (test groups modules declarations)
+├── chmod (syscall)
+│   ├── errno.rs (aspect)
+│   ├── mod.rs (syscall declaration)
+│   └── permission.rs (aspect)
+└── mod.rs (glues syscalls together)
 ```
 
 #### tests/mod.rs
@@ -69,23 +69,30 @@ All the modules for the test groups should be declared in this file.
 pub mod chmod;
 ```
 
-#### Test group
+#### Syscall module
 
-A test group contains test cases related to a specific syscall.
+A syscall module contains test cases related to a specific syscall.
 Its declaration should be in the `mod.rs` file 
 of the relevant folder (`chmod/` in our case).
+Common syscall-specific helpers can go here.
 
-```rust,ignore
-crate::pjdfs_group!(chmod; permission::test_case, errno::test_case);
-```
+### Aspect
+
+An optional aspect module contains test cases that all relate to a common
+aspect of the syscall.
+Here "aspect" is a subjective area of related functionality.
+The aspect module may be either:
+
+- in a single file, which contains all the test functions and the case declaration,
+- in a folder, which contains multiple modules for the test functions and a `mod.rs` file, in which the case is declared.
+
+Except in the case of a very large set of test functions, the first style
+should be preferred.
 
 #### Test case
 
-A test case is made of test functions
-related to a specific functionality.
-All the test functions and the test case declaration 
-should be grouped in a single module.
-It means, either:
+Each test case exercises a minimal piece of the syscall's functionality.
+Each must be registered with the `test_case!` macro.
 
 - in a single file, which contains all the test functions and the case declaration,
 - in a folder, which contains multiple modules for the test functions and a `mod.rs` file, which contains the declaration of the case.
@@ -100,11 +107,12 @@ pjdfs_test_case!(permission, { test: test_ctime });
 
 #### Test function
 
-For now, a test function take a `&mut TestContext` parameter.
+For now, a test function takes a `&mut TestContext` parameter.
 
 ```rust,ignore
 // chmod/00.t:L58
-fn test_ctime(ctx: &mut TestContext) {
+crate::test_case!{ctime, Syscall::Chmod}
+fn ctime(ctx: &mut TestContext) {
     for f_type in FileType::iter().filter(|ft| *ft != FileType::Symlink(None)) {
         let path = ctx.create(f_type).unwrap();
         let ctime_before = stat(&path).unwrap().st_ctime;
@@ -117,9 +125,7 @@ fn test_ctime(ctx: &mut TestContext) {
         assert!(ctime_after > ctime_before);
     }
 }
-```
-
-### Test runner (main.rs)
+```### Test runner (main.rs)
 
 The test runner has to run the tests, and provide a command-line interface to allow the user to modify how the tests should be run.
 It takes the tests from the specified test groups.

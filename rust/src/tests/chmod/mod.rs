@@ -11,5 +11,3 @@ fn chmod<P: ?Sized + nix::NixPath>(path: &P, mode: nix::sys::stat::Mode) -> nix:
         nix::sys::stat::FchmodatFlags::FollowSymlink,
     )
 }
-
-crate::pjdfs_group!(chmod; permission::test_case, errno::test_case);

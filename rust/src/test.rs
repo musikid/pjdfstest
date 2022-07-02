@@ -25,20 +25,17 @@ pub enum TestError {
     Nix(#[from] nix::Error),
 }
 
-/// A group of test cases.
-pub struct TestGroup {
-    pub name: &'static str,
-    pub test_cases: &'static [TestCase],
-    pub syscall: Option<Syscall>,
-}
-
-/// A test case, which is made of multiple test functions.
+/// A single minimal test case
 pub struct TestCase {
     pub name: &'static str,
-    pub tests: &'static [Test],
+    pub require_root: bool,
+    pub fun: fn(&mut TestContext),
+    pub syscall: Option<Syscall>
 }
 
 #[derive(Debug)]
 pub enum Syscall {
     Chmod,
 }
+
+inventory::collect!{TestCase}
