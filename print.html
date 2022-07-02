@@ -198,7 +198,7 @@ It means, either:</p>
 <li>in a single file, which contains all the test functions and the case declaration,</li>
 <li>in a folder, which contains multiple modules for the test functions and a <code>mod.rs</code> file, which contains the declaration of the case.</li>
 </ul>
-<p>Except in the case of a very large set of test functions, the first architecture should be privileged.</p>
+<p>Except in the case of a very large set of test functions, it is better to use a single file.</p>
 <p>For example, in <code>chmod/permission.rs</code>, the test case declaration would be:</p>
 <pre><code class="language-rust ignore">pjdfs_test_case!(permission, { test: test_ctime });
 </code></pre>
@@ -318,8 +318,7 @@ Especially, all the tests which involves creating a block/char file need those.<
 <p>To declare that a test function require root privileges, 
 <code>require_root: true</code> should be added to its declaration.</p>
 <p>For example:</p>
-<pre><pre class="playground"><code class="language-rust">
-<span class="boring">#![allow(unused)]
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>pjdfs_test_case!(permission, { test: test_ctime, require_root: true });
 <span class="boring">}
