@@ -90,7 +90,7 @@ It means, either:
 - in a single file, which contains all the test functions and the case declaration,
 - in a folder, which contains multiple modules for the test functions and a `mod.rs` file, which contains the declaration of the case.
 
-Except in the case of a very large set of test functions, the first architecture should be privileged.
+Except in the case of a very large set of test functions, it is better to use a single file.
 
 For example, in `chmod/permission.rs`, the test case declaration would be:
 
