@@ -10,67 +10,61 @@ use strum::IntoEnumIterator;
 const FILE_PERMS: mode_t = 0o777;
 
 // chmod/00.t:L24
-crate::test_case! {change_perm, root}
-fn change_perm(ctx: &mut TestContext) {
-    for f_type in FileType::iter().filter(|ft| *ft != FileType::Symlink(None)) {
-        let path = ctx.create(f_type).unwrap();
-        let expected_mode = Mode::from_bits_truncate(0o111);
+crate::test_case! {change_perm => [FileType::Regular, FileType::Fifo, FileType::Block, FileType::Char, FileType::Socket]}
+fn change_perm(ctx: &mut TestContext, f_type: FileType) {
+    let path = ctx.create(f_type).unwrap();
+    let expected_mode = Mode::from_bits_truncate(0o111);
 
-        chmod(&path, expected_mode).unwrap();
+    chmod(&path, expected_mode).unwrap();
 
-        let actual_mode = stat(&path).unwrap().st_mode;
+    let actual_mode = stat(&path).unwrap().st_mode;
 
-        assert_eq!(actual_mode & FILE_PERMS, expected_mode.bits());
+    assert_eq!(actual_mode & FILE_PERMS, expected_mode.bits());
 
-        // We test if it applies through symlinks
-        let symlink_path = ctx.create(FileType::Symlink(Some(path.clone()))).unwrap();
-        let link_mode = lstat(&symlink_path).unwrap().st_mode;
-        let expected_mode = Mode::from_bits_truncate(0o222);
+    // We test if it applies through symlinks
+    let symlink_path = ctx.create(FileType::Symlink(Some(path.clone()))).unwrap();
+    let link_mode = lstat(&symlink_path).unwrap().st_mode;
+    let expected_mode = Mode::from_bits_truncate(0o222);
 
-        chmod(&symlink_path, expected_mode).unwrap();
+    chmod(&symlink_path, expected_mode).unwrap();
 
-        let actual_mode = stat(&path).unwrap().st_mode;
-        let actual_sym_mode = stat(&symlink_path).unwrap().st_mode;
-        assert_eq!(actual_mode & FILE_PERMS, expected_mode.bits());
-        assert_eq!(actual_sym_mode & FILE_PERMS, expected_mode.bits());
+    let actual_mode = stat(&path).unwrap().st_mode;
+    let actual_sym_mode = stat(&symlink_path).unwrap().st_mode;
+    assert_eq!(actual_mode & FILE_PERMS, expected_mode.bits());
+    assert_eq!(actual_sym_mode & FILE_PERMS, expected_mode.bits());
 
-        let actual_link_mode = lstat(&symlink_path).unwrap().st_mode;
-        assert_eq!(link_mode & FILE_PERMS, actual_link_mode & FILE_PERMS);
-    }
+    let actual_link_mode = lstat(&symlink_path).unwrap().st_mode;
+    assert_eq!(link_mode & FILE_PERMS, actual_link_mode & FILE_PERMS);
 }
 
 // chmod/00.t:L58
-crate::test_case! {ctime, root}
-fn ctime(ctx: &mut TestContext) {
-    for f_type in FileType::iter().filter(|ft| *ft != FileType::Symlink(None)) {
-        let path = ctx.create(f_type).unwrap();
-        let ctime_before = stat(&path).unwrap().st_ctime;
+crate::test_case! {ctime => [FileType::Regular, FileType::Fifo, FileType::Block, FileType::Char, FileType::Socket]}
+fn ctime(ctx: &mut TestContext, f_type: FileType) {
+    let path = ctx.create(f_type).unwrap();
+    let ctime_before = stat(&path).unwrap().st_ctime;
 
-        sleep(Duration::from_secs(1));
+    sleep(Duration::from_secs(1));
 
-        chmod(&path, Mode::from_bits_truncate(0o111)).unwrap();
+    chmod(&path, Mode::from_bits_truncate(0o111)).unwrap();
 
-        let ctime_after = stat(&path).unwrap().st_ctime;
-        assert!(ctime_after > ctime_before);
-    }
+    let ctime_after = stat(&path).unwrap().st_ctime;
+    assert!(ctime_after > ctime_before);
 }
 
 // chmod/00.t:L89
-crate::test_case! {failed_chmod_unchanged_ctime, root}
-fn failed_chmod_unchanged_ctime(ctx: &mut TestContext) {
-    for f_type in FileType::iter().filter(|ft| *ft != FileType::Symlink(None)) {
-        let path = ctx.create(f_type).unwrap();
-        let ctime_before = stat(&path).unwrap().st_ctime;
+crate::test_case! {failed_chmod_unchanged_ctime => [FileType::Regular, FileType::Fifo, FileType::Block, FileType::Char, FileType::Socket]}
+fn failed_chmod_unchanged_ctime(ctx: &mut TestContext, f_type: FileType) {
+    let path = ctx.create(f_type).unwrap();
+    let ctime_before = stat(&path).unwrap().st_ctime;
 
-        sleep(Duration::from_secs(1));
+    sleep(Duration::from_secs(1));
 
-        ctx.as_user(Some(Uid::from_raw(65534)), None, || {
-            assert!(chmod(&path, Mode::from_bits_truncate(0o111)).is_err());
-        });
+    ctx.as_user(Some(Uid::from_raw(65534)), None, || {
+        assert!(chmod(&path, Mode::from_bits_truncate(0o111)).is_err());
+    });
 
-        let ctime_after = stat(&path).unwrap().st_ctime;
-        assert_eq!(ctime_after, ctime_before);
-    }
+    let ctime_after = stat(&path).unwrap().st_ctime;
+    assert_eq!(ctime_after, ctime_before);
 }
 
 crate::test_case! {clear_isgid_bit}

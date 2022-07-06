@@ -30,6 +30,21 @@ pub enum FileType {
     Symlink(Option<PathBuf>),
 }
 
+impl FileType {
+    pub const fn privileged(&self) -> bool {
+        match self {
+            FileType::Regular => false,
+            FileType::Dir => false,
+            //TODO: Not sure for FIFO
+            FileType::Fifo => false,
+            FileType::Block => true,
+            FileType::Char => true,
+            FileType::Socket => false,
+            FileType::Symlink(..) => false,
+        }
+    }
+}
+
 const NUM_RAND_CHARS: usize = 32;
 
 #[derive(Error, Debug)]

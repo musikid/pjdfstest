@@ -9,14 +9,14 @@ This is a complete rewrite of the original test suite in Rust.
 
 ## Build
 
-```sh
+```bash
 cd rust
 cargo run
 ```
 
 ### Run as root
 
-```
+```bash
 cd rust
 cargo build && sudo ./target/debug/pjdfs_runner
 ```
