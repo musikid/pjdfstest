@@ -125,7 +125,9 @@ fn ctime(ctx: &mut TestContext) {
         assert!(ctime_after > ctime_before);
     }
 }
-```### Test runner (main.rs)
+```
+
+### Test runner (main.rs)
 
 The test runner has to run the tests, and provide a command-line interface to allow the user to modify how the tests should be run.
 It takes the tests from the specified test groups.
