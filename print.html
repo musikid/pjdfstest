@@ -232,8 +232,9 @@ fn ctime(ctx: &amp;mut TestContext) {
 It takes the tests from the specified test groups.</p>
 <pre><code class="language-rust ignore">for group in [chmod::tests] {
 </code></pre>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="todo-configuration-file"><a class="header" href="#todo-configuration-file">TODO: Configuration file</a></h1>
-<p>The test runner can read a configuration file.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="configuration-file"><a class="header" href="#configuration-file">Configuration file</a></h1>
+<p>The test runner can read a configuration file. For now, only the TOML format is supported.
+Its path can be specified by using the <code>-c PATH</code> flag.</p>
 <h2 id="sections"><a class="header" href="#sections">Sections</a></h2>
 <h3 id="features"><a class="header" href="#features">[features]</a></h3>
 <p>Some syscalls cannot be run on all combinations of file systems/platforms.
@@ -242,8 +243,13 @@ as in the user should enable them by adding the key in this section.
 A list of these opt-in groups should be provided 
 when executing the runner with <code>-l</code> argument.</p>
 <pre><code class="language-toml">[features]
-posix_fallocate = true
+posix_fallocate = {}
+
+# Can also be specified by using key notation
+[features.posix_fallocate]
 </code></pre>
+<h4 id="feature-configuration"><a class="header" href="#feature-configuration">Feature configuration</a></h4>
+<p>TODO</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="structure"><a class="header" href="#structure">Structure</a></h1>
 <p>The tests should be grouped by syscalls, in the <code>tests/</code> folder.
 Each folder then have a <code>mod.rs</code> file, 
