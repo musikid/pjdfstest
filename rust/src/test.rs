@@ -31,13 +31,14 @@ pub struct TestCase {
     pub name: &'static str,
     pub require_root: bool,
     pub fun: fn(&mut TestContext),
-    pub syscall: Option<Syscall>,
+    pub syscall: Option<ExclSyscall>,
 }
 
 #[distributed_slice]
 pub static TEST_CASES: [TestCase] = [..];
 
-#[derive(Debug)]
-pub enum Syscall {
-    Chmod,
+/// Syscalls which are not available on every OS/file system combination.
+#[derive(Debug, strum::IntoStaticStr)]
+pub enum ExclSyscall {
+    PosixFallocate,
 }
