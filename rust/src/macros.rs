@@ -3,6 +3,9 @@ macro_rules! test_case {
     ( $f:ident, root, $syscall:path ) => {
         $crate::test_case! {$f, Some($syscall), true}
     };
+    ( $f:ident, root ) => {
+        $crate::test_case! {$f, None, true}
+    };
     ( $f:ident, $syscall:path ) => {
         $crate::test_case! {$f, Some($syscall), false}
     };

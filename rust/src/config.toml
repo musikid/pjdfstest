@@ -1,5 +1,0 @@
-# Configuration for pjdfs_runner
-
-# This section allows to enable opt-in test groups.
-# A list of these groups should be provided when executing the runner with `-l`.
-[features]

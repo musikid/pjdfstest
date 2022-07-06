@@ -1,6 +1,6 @@
 use std::{thread::sleep, time::Duration};
 
-use crate::{runner::context::FileType, test::{Syscall, TestContext}, tests::chmod::chmod};
+use crate::{runner::context::FileType, test::TestContext, tests::chmod::chmod};
 use nix::{
     sys::stat::{lstat, mode_t, stat, Mode},
     unistd::{chown, Gid, Uid},
@@ -10,7 +10,7 @@ use strum::IntoEnumIterator;
 const FILE_PERMS: mode_t = 0o777;
 
 // chmod/00.t:L24
-crate::test_case!{change_perm, root, Syscall::Chmod}
+crate::test_case! {change_perm, root}
 fn change_perm(ctx: &mut TestContext) {
     for f_type in FileType::iter().filter(|ft| *ft != FileType::Symlink(None)) {
         let path = ctx.create(f_type).unwrap();
@@ -40,7 +40,7 @@ fn change_perm(ctx: &mut TestContext) {
 }
 
 // chmod/00.t:L58
-crate::test_case!{ctime, root, Syscall::Chmod}
+crate::test_case! {ctime, root}
 fn ctime(ctx: &mut TestContext) {
     for f_type in FileType::iter().filter(|ft| *ft != FileType::Symlink(None)) {
         let path = ctx.create(f_type).unwrap();
@@ -56,7 +56,7 @@ fn ctime(ctx: &mut TestContext) {
 }
 
 // chmod/00.t:L89
-crate::test_case!{failed_chmod_unchanged_ctime, root, Syscall::Chmod}
+crate::test_case! {failed_chmod_unchanged_ctime, root}
 fn failed_chmod_unchanged_ctime(ctx: &mut TestContext) {
     for f_type in FileType::iter().filter(|ft| *ft != FileType::Symlink(None)) {
         let path = ctx.create(f_type).unwrap();
@@ -73,7 +73,7 @@ fn failed_chmod_unchanged_ctime(ctx: &mut TestContext) {
     }
 }
 
-crate::test_case!{clear_isgid_bit, Syscall::Chmod}
+crate::test_case! {clear_isgid_bit}
 fn clear_isgid_bit(ctx: &mut TestContext) {
     let path = ctx.create(FileType::Regular).unwrap();
     chmod(&path, Mode::from_bits_truncate(0o0755)).unwrap();

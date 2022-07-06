@@ -3,11 +3,11 @@ use nix::{
     sys::stat::{stat, Mode},
 };
 
-use crate::{runner::context::FileType, test::{Syscall, TestContext}};
+use crate::{runner::context::FileType, test::TestContext};
 
 use super::chmod;
 
-crate::test_case!{enotdir, root, Syscall::Chmod}
+crate::test_case! {enotdir, root}
 /// Returns ENOTDIR if a component of the path prefix is not a directory
 fn enotdir(ctx: &mut TestContext) {
     for f_type in [
@@ -25,7 +25,7 @@ fn enotdir(ctx: &mut TestContext) {
     }
 }
 
-crate::test_case!{enametoolong, Syscall::Chmod}
+crate::test_case! {enametoolong}
 /// chmod returns ENAMETOOLONG if a component of a pathname exceeded {NAME_MAX} characters
 fn enametoolong(ctx: &mut TestContext) {
     let path = ctx.create_max(FileType::Regular).unwrap();

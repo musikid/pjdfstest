@@ -8,15 +8,6 @@ pub use crate::runner::context::TestContext;
 
 pub type TestResult = std::result::Result<(), TestError>;
 
-/// A single test function.
-/// Can also be run exclusively on a particular file system.
-pub struct Test {
-    pub name: &'static str,
-    pub fun: fn(&mut TestContext),
-    pub file_system: Option<String>,
-    pub require_root: bool,
-}
-
 /// Error returned by a test function.
 #[derive(Error, Debug)]
 pub enum TestError {
@@ -31,13 +22,15 @@ pub struct TestCase {
     pub name: &'static str,
     pub require_root: bool,
     pub fun: fn(&mut TestContext),
-    pub syscall: Option<Syscall>,
+    pub syscall: Option<ExclFeature>,
 }
 
 #[distributed_slice]
 pub static TEST_CASES: [TestCase] = [..];
 
-#[derive(Debug)]
-pub enum Syscall {
-    Chmod,
+/// Syscalls which are not available on every OS/file system combination.
+#[derive(Debug, PartialEq, Eq, Hash, strum::EnumString, strum::Display, strum::EnumIter)]
+#[strum(serialize_all = "snake_case")]
+pub enum ExclFeature {
+    PosixFallocate,
 }
