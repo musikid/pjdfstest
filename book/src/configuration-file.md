@@ -1,6 +1,7 @@
-# TODO: Configuration file
+# Configuration file
 
-The test runner can read a configuration file.
+The test runner can read a configuration file. For now, only the TOML format is supported.
+Its path can be specified by using the `-c PATH` flag.
 
 ## Sections
 
@@ -14,5 +15,12 @@ when executing the runner with `-l` argument.
 
 ```toml
 [features]
-posix_fallocate = true
+posix_fallocate = {}
+
+# Can also be specified by using key notation
+[features.posix_fallocate]
 ```
+
+#### Feature configuration
+
+TODO

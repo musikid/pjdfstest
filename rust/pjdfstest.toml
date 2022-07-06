@@ -1,0 +1,8 @@
+# Configuration for the test runner
+
+# This section allows enabling opt-in syscalls.
+# A list of these syscalls is provided when executing the runner with `-l`.
+[features]
+
+# Here is an example with the `posix_fallocate` syscall.
+[features.posix_fallocate]

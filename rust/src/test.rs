@@ -22,14 +22,15 @@ pub struct TestCase {
     pub name: &'static str,
     pub require_root: bool,
     pub fun: fn(&mut TestContext),
-    pub syscall: Option<ExclSyscall>,
+    pub syscall: Option<ExclFeature>,
 }
 
 #[distributed_slice]
 pub static TEST_CASES: [TestCase] = [..];
 
 /// Syscalls which are not available on every OS/file system combination.
-#[derive(Debug, strum::IntoStaticStr)]
-pub enum ExclSyscall {
+#[derive(Debug, PartialEq, Eq, Hash, strum::EnumString, strum::Display, strum::EnumIter)]
+#[strum(serialize_all = "snake_case")]
+pub enum ExclFeature {
     PosixFallocate,
 }
