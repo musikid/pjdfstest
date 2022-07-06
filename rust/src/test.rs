@@ -1,5 +1,6 @@
 use std::fmt::Debug;
 
+use linkme::distributed_slice;
 use thiserror::Error;
 
 use crate::runner::context::ContextError;
@@ -30,12 +31,13 @@ pub struct TestCase {
     pub name: &'static str,
     pub require_root: bool,
     pub fun: fn(&mut TestContext),
-    pub syscall: Option<Syscall>
+    pub syscall: Option<Syscall>,
 }
+
+#[distributed_slice]
+pub static TEST_CASES: [TestCase] = [..];
 
 #[derive(Debug)]
 pub enum Syscall {
     Chmod,
 }
-
-inventory::collect!{TestCase}

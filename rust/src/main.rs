@@ -4,7 +4,10 @@ use std::{
 };
 
 use once_cell::sync::OnceCell;
-use pjdfs_tests::{pjdfs_main, test::{TestCase, TestContext}};
+use pjdfs_tests::{
+    pjdfs_main,
+    test::{TestCase, TestContext, TEST_CASES},
+};
 
 struct PanicLocation(u32, u32, String);
 
@@ -23,14 +26,14 @@ fn main() -> anyhow::Result<()> {
         }
     }));
 
-    for tc2 in inventory::iter::<TestCase> {
-        print!("{}\t", tc2.name);
+    for test_case in TEST_CASES {
+        print!("{}\t", test_case.name);
         stdout().lock().flush()?;
         let mut context = TestContext::new();
         //TODO: AssertUnwindSafe should be used with caution
         let mut ctx_wrapper = AssertUnwindSafe(&mut context);
         match catch_unwind(move || {
-            (tc2.fun)(&mut ctx_wrapper);
+            (test_case.fun)(&mut ctx_wrapper);
         }) {
             Ok(_) => println!("success"),
             Err(e) => {
