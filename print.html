@@ -226,13 +226,11 @@ fn ctime(ctx: &amp;mut TestContext) {
         assert!(ctime_after &gt; ctime_before);
     }
 }
-```### Test runner (main.rs)
-
-The test runner has to run the tests, and provide a command-line interface to allow the user to modify how the tests should be run.
-It takes the tests from the specified test groups.
-
-```rust,ignore
-for group in [chmod::tests] {
+</code></pre>
+<h3 id="test-runner-mainrs"><a class="header" href="#test-runner-mainrs">Test runner (main.rs)</a></h3>
+<p>The test runner has to run the tests, and provide a command-line interface to allow the user to modify how the tests should be run.
+It takes the tests from the specified test groups.</p>
+<pre><code class="language-rust ignore">for group in [chmod::tests] {
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="todo-configuration-file"><a class="header" href="#todo-configuration-file">TODO: Configuration file</a></h1>
 <p>The test runner can read a configuration file.</p>
