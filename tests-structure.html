@@ -138,7 +138,7 @@
 <p>The tests should be grouped by syscalls, in the <code>tests/</code> folder.
 Each folder then have a <code>mod.rs</code> file, 
 which contains declarations of the modules inside this folder,
-and a <code>pjdfs_group!</code> statement to export the test cases from these modules.
+and a <code>group!</code> statement to export the test cases from these modules.
 For example:</p>
 <h3 id="layout"><a class="header" href="#layout">Layout</a></h3>
 <pre><code>chmod (syscall/test group)
@@ -149,19 +149,17 @@ For example:</p>
 <h3 id="modrs"><a class="header" href="#modrs">mod.rs</a></h3>
 <pre><code class="language-rust ignore">mod permission;
 mod lchmod;
-
-crate::pjdfs_group!(chmod; permission::test_case, errno::test_case);
 </code></pre>
-<p>Each module inside a group should export a test case (with <code>pjdfs_test_case</code>),
-which contains a list of test functions.
+<p>Each module inside a group should register its test cases with <code>test_case!</code>.
 In our example, <code>chmod/permission.rs</code> would be:</p>
-<pre><code class="language-rust ignore">use crate::{
-    pjdfs_test_case,
+<pre><code class="language-rust ignore">test_case!{ctime, root, Syscall::Chmod}
+use crate::{
+    test_case,
     test::{TestContext, TestResult},
 };
 
 // chmod/00.t:L58
-fn test_ctime(ctx: &amp;mut TestContext) -&gt; TestResult {
+fn ctime(ctx: &amp;mut TestContext) -&gt; TestResult {
   for f_type in FileType::iter().filter(|&amp;ft| ft == FileType::Symlink) {
       let path = ctx.create(f_type).map_err(TestError::CreateFile)?;
       let ctime_before = stat(&amp;path)?.st_ctime;
@@ -176,8 +174,6 @@ fn test_ctime(ctx: &amp;mut TestContext) -&gt; TestResult {
 
   Ok(())
 }
-
-pjdfs_test_case!(permission, { test: test_ctime });
 </code></pre>
 
                     </main>
