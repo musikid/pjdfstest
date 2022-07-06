@@ -8,15 +8,6 @@ pub use crate::runner::context::TestContext;
 
 pub type TestResult = std::result::Result<(), TestError>;
 
-/// A single test function.
-/// Can also be run exclusively on a particular file system.
-pub struct Test {
-    pub name: &'static str,
-    pub fun: fn(&mut TestContext),
-    pub file_system: Option<String>,
-    pub require_root: bool,
-}
-
 /// Error returned by a test function.
 #[derive(Error, Debug)]
 pub enum TestError {
