@@ -135,48 +135,52 @@
                 <div id="content" class="content">
                     <main>
                         <h1 id="test-declaration"><a class="header" href="#test-declaration">Test declaration</a></h1>
-<p>A test function should take a <code>&amp;mut TestContext</code> parameter.
-It has the same anatomy than usual Rust tests, that is <code>unwrap</code>ing <code>Result</code>s and using assertion macros (<code>assert</code> and <code>assert_eq</code>).
-For example:</p>
+<p>Test cases have the same anatomy than usual Rust tests, 
+that is <code>unwrap</code>ing <code>Result</code>s and using assertion macros (<code>assert</code> and <code>assert_eq</code>),
+the exception being that it should take a <code>&amp;mut TestContext</code> parameter.
+It might also take a <code>FileType</code> argument if required.
+It also needs an additional declaration with the <code>test_case!</code> macro alongside the function, 
+with the function name being the only mandatory argument.</p>
+<p>For example:</p>
 <pre><code class="language-rust ignore">// chmod/00.t:L58
-crate::test_case!{Syscall::Chmod, ctime}
-fn ctime(ctx: &amp;mut TestContext) {
-    for f_type in FileType::iter().filter(|ft| *ft != FileType::Symlink(None)) {
-        let path = ctx.create(f_type).unwrap();
-        let ctime_before = stat(&amp;path).unwrap().st_ctime;
+crate::test_case! {ctime =&gt; [FileType::Regular, FileType::Fifo, FileType::Block, FileType::Char, FileType::Socket]}
+fn ctime(ctx: &amp;mut TestContext, f_type: FileType) {
+    let path = ctx.create(f_type).unwrap();
+    let ctime_before = stat(&amp;path).unwrap().st_ctime;
 
-        sleep(Duration::from_secs(1));
+    sleep(Duration::from_secs(1));
 
-        chmod(&amp;path, Mode::from_bits_truncate(0o111)).unwrap();
+    chmod(&amp;path, Mode::from_bits_truncate(0o111)).unwrap();
 
-        let ctime_after = stat(&amp;path).unwrap().st_ctime;
-        assert!(ctime_after &gt; ctime_before);
-    }
+    let ctime_after = stat(&amp;path).unwrap().st_ctime;
+    assert!(ctime_after &gt; ctime_before);
 }
 </code></pre>
 <h2 id="parameterization"><a class="header" href="#parameterization">Parameterization</a></h2>
 <h3 id="file-types"><a class="header" href="#file-types">File types</a></h3>
-<p>Some tests need to test different file types.
-For now, a for loop which iterates on the types is used, but it should change in the future for a
-better structure (especially because of tests with <code>sleep</code>, which cannot be easily parallelized with a loop, see <a href="https://github.com/musikid/pjdfstest/issues/1">#1</a>).</p>
-<pre><code class="language-rust ignore">for f_type in FileType::iter() {
-}
-</code></pre>
-<p>Since it is an iterator, usual functions like <code>filter</code> works.</p>
-<pre><code class="language-rust ignore">for f_type in FileType::iter().filter(|&amp;ft| ft == FileType::Symlink) {
-}
-</code></pre>
-<h3 id="root-privileges"><a class="header" href="#root-privileges">Root privileges</a></h3>
-<p>Some tests may need root privileges to run.
-Especially, all the tests which involves creating a block/char file need those.</p>
-<p>To declare that a test function require root privileges, 
-<code>require_root: true</code> should be added to its declaration.</p>
+<p>Some test cases need to test over different file types.
+The file types should be added at the end of the test case declaration,
+with brackets and an fat arrow before (<code>=&gt; [FileType::Regular]</code>).
+The test function should also accept a <code>FileType</code> parameter to operate on.</p>
 <p>For example:</p>
 <pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
-</span>test_case!{change_perm, root, Syscall::Chmod}
+</span>crate::test_case! {change_perm =&gt; [FileType::Regular, FileType::Fifo, FileType::Block, FileType::Char, FileType::Socket]}
+fn change_perm(ctx: &amp;mut TestContext, f_type: FileType) {
 <span class="boring">}
 </span></code></pre></pre>
+<h3 id="root-privileges"><a class="header" href="#root-privileges">Root privileges</a></h3>
+<p>Some tests may need root privileges to run.
+To declare that a test function require root privileges, 
+<code>root</code> should be added to its declaration.
+For example:</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>crate::test_case!{change_perm, root}
+<span class="boring">}
+</span></code></pre></pre>
+<p>The root requirement is automatically added for privileged file types,
+namely block and char.</p>
 <h2 id="todo-platform-specific-functions"><a class="header" href="#todo-platform-specific-functions">TODO: Platform-specific functions</a></h2>
 <p>Some functions (like <code>lchmod</code>) are not supported on every platform.</p>
 
