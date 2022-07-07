@@ -7,22 +7,14 @@ use crate::{runner::context::FileType, test::TestContext};
 
 use super::chmod;
 
-crate::test_case! {enotdir, root}
+crate::test_case! {enotdir => [FileType::Regular, FileType::Fifo, FileType::Block, FileType::Char, FileType::Socket]}
 /// Returns ENOTDIR if a component of the path prefix is not a directory
-fn enotdir(ctx: &mut TestContext) {
-    for f_type in [
-        FileType::Regular,
-        FileType::Fifo,
-        FileType::Block,
-        FileType::Char,
-        FileType::Socket,
-    ] {
-        let not_dir = ctx.create(f_type).unwrap();
-        let fake_path = not_dir.join("test");
-        let res = chmod(&fake_path, Mode::from_bits_truncate(0o0644));
-        assert!(res.is_err());
-        assert_eq!(res.unwrap_err(), Errno::ENOTDIR);
-    }
+fn enotdir(ctx: &mut TestContext, f_type: FileType) {
+    let not_dir = ctx.create(f_type).unwrap();
+    let fake_path = not_dir.join("test");
+    let res = chmod(&fake_path, Mode::from_bits_truncate(0o0644));
+    assert!(res.is_err());
+    assert_eq!(res.unwrap_err(), Errno::ENOTDIR);
 }
 
 crate::test_case! {enametoolong}

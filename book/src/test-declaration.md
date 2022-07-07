@@ -1,24 +1,27 @@
 # Test declaration
 
-A test function should take a `&mut TestContext` parameter.
-It has the same anatomy than usual Rust tests, that is `unwrap`ing `Result`s and using assertion macros (`assert` and `assert_eq`).
+Test cases have the same anatomy than usual Rust tests, 
+that is `unwrap`ing `Result`s and using assertion macros (`assert` and `assert_eq`),
+the exception being that it should take a `&mut TestContext` parameter.
+It might also take a `FileType` argument if required.
+It also needs an additional declaration with the `test_case!` macro alongside the function, 
+with the function name being the only mandatory argument.
+
 For example:
 
 ```rust,ignore
 // chmod/00.t:L58
-crate::test_case!{Syscall::Chmod, ctime}
-fn ctime(ctx: &mut TestContext) {
-    for f_type in FileType::iter().filter(|ft| *ft != FileType::Symlink(None)) {
-        let path = ctx.create(f_type).unwrap();
-        let ctime_before = stat(&path).unwrap().st_ctime;
+crate::test_case! {ctime => [FileType::Regular, FileType::Fifo, FileType::Block, FileType::Char, FileType::Socket]}
+fn ctime(ctx: &mut TestContext, f_type: FileType) {
+    let path = ctx.create(f_type).unwrap();
+    let ctime_before = stat(&path).unwrap().st_ctime;
 
-        sleep(Duration::from_secs(1));
+    sleep(Duration::from_secs(1));
 
-        chmod(&path, Mode::from_bits_truncate(0o111)).unwrap();
+    chmod(&path, Mode::from_bits_truncate(0o111)).unwrap();
 
-        let ctime_after = stat(&path).unwrap().st_ctime;
-        assert!(ctime_after > ctime_before);
-    }
+    let ctime_after = stat(&path).unwrap().st_ctime;
+    assert!(ctime_after > ctime_before);
 }
 ```
 
@@ -26,35 +29,31 @@ fn ctime(ctx: &mut TestContext) {
 
 ### File types
 
-Some tests need to test different file types.
-For now, a for loop which iterates on the types is used, but it should change in the future for a
-better structure (especially because of tests with `sleep`, which cannot be easily parallelized with a loop, see [#1](https://github.com/musikid/pjdfstest/issues/1)).
+Some test cases need to test over different file types.
+The file types should be added at the end of the test case declaration,
+with brackets and an fat arrow before (`=> [FileType::Regular]`).
+The test function should also accept a `FileType` parameter to operate on.
 
-```rust,ignore
-for f_type in FileType::iter() {
-}
-```
+For example:
 
-Since it is an iterator, usual functions like `filter` works.
-
-```rust,ignore
-for f_type in FileType::iter().filter(|&ft| ft == FileType::Symlink) {
-}
+```rust
+crate::test_case! {change_perm => [FileType::Regular, FileType::Fifo, FileType::Block, FileType::Char, FileType::Socket]}
+fn change_perm(ctx: &mut TestContext, f_type: FileType) {
 ```
 
 ### Root privileges
 
 Some tests may need root privileges to run.
-Especially, all the tests which involves creating a block/char file need those.
-
 To declare that a test function require root privileges, 
-`require_root: true` should be added to its declaration.
-
+`root` should be added to its declaration.
 For example:
 
 ```rust
-test_case!{change_perm, root, Syscall::Chmod}
+crate::test_case!{change_perm, root}
 ```
+
+The root requirement is automatically added for privileged file types,
+namely block and char.
 
 ## TODO: Platform-specific functions 
 
