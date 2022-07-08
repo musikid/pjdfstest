@@ -14,11 +14,20 @@ use gumdrop::Options;
 use once_cell::sync::OnceCell;
 use strum::IntoEnumIterator;
 
+#[cfg(any(
+    target_os = "openbsd",
+    target_os = "netbsd",
+    target_os = "freebsd",
+    target_os = "dragonfly",
+    target_os = "macos",
+    target_os = "ios",
+    target_os = "watchos",
+))]
+use pjdfs_tests::test::FileFlags;
 use pjdfs_tests::{
     pjdfs_main,
-    test::{ExclFeature, TestCase, TestContext, TEST_CASES},
+    test::{FileSystemFeature, TestCase, TestContext, TEST_CASES},
 };
-
 mod config;
 
 struct PanicLocation(u32, u32, String);
@@ -41,7 +50,7 @@ fn main() -> anyhow::Result<()> {
     let args = ArgOptions::parse_args_default_or_exit();
 
     if args.list_syscalls {
-        for feature in ExclFeature::iter() {
+        for feature in FileSystemFeature::iter() {
             println!("{}", feature);
         }
         return Ok(());
@@ -55,11 +64,26 @@ fn main() -> anyhow::Result<()> {
         ))
         .extract()?;
 
-    let enabled_features: HashSet<ExclFeature> = config
-        .features
-        .keys()
-        .filter_map(|k| k.as_str().try_into().ok())
-        .collect();
+    let mut enabled_features: Vec<FileSystemFeature> =
+        config.features.fs_features.keys().cloned().collect();
+
+    #[cfg(any(
+        target_os = "openbsd",
+        target_os = "netbsd",
+        target_os = "freebsd",
+        target_os = "dragonfly",
+        target_os = "macos",
+        target_os = "ios",
+        target_os = "watchos",
+    ))]
+    if let Some(flags) = config.features.file_flags {
+        let flags: Vec<_> = flags.iter().cloned().collect();
+        let flags = Box::new(flags);
+        // TODO: It's not going to change for the program lifetime, but is there a better alternative than leaking?
+        enabled_features.push(FileSystemFeature::FileFlags(Box::leak(flags)));
+    }
+
+    let enabled_features: HashSet<_> = enabled_features.into_iter().collect();
 
     set_hook(Box::new(|ctx| {
         if let Some(location) = ctx.location() {
@@ -74,12 +98,43 @@ fn main() -> anyhow::Result<()> {
     }));
 
     for test_case in TEST_CASES {
-        if let Some(sc) = &test_case.syscall {
-            if !enabled_features.contains(sc) {
+        if let Some(features) = &test_case.required_features {
+            let features = features.iter().cloned().collect::<HashSet<_>>();
+            let missing_features = features.difference(&enabled_features);
+            if !missing_features.clone().count() > 0 {
                 println!(
-                    "skipped {}: please add it to the configuration file if you want to run it",
-                    sc
+                    "skipped {}, please add the following features to your configuration:",
+                    test_case.name
                 );
+                for feature in missing_features {
+                    println!(
+                        "{}\n",
+                        match feature {
+                            #[cfg(any(
+                                target_os = "openbsd",
+                                target_os = "netbsd",
+                                target_os = "freebsd",
+                                target_os = "dragonfly",
+                                target_os = "macos",
+                                target_os = "ios",
+                                target_os = "watchos",
+                            ))]
+                            FileSystemFeature::FileFlags(flags) => {
+                                let flags = flags.iter().map(|f| f.to_string()).fold(
+                                    String::new(),
+                                    |mut acc, s| {
+                                        acc.push_str("\t");
+                                        acc.extend(s.chars());
+                                        acc.push_str(" = true\n");
+                                        acc
+                                    },
+                                );
+                                format!("[features.file_flags]\n{}", flags)
+                            }
+                            _ => format!("[features.{}]", feature.to_string()),
+                        }
+                    );
+                }
                 continue;
             }
         }

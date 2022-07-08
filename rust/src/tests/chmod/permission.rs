@@ -5,7 +5,6 @@ use nix::{
     sys::stat::{lstat, mode_t, stat, Mode},
     unistd::{chown, Gid, Uid},
 };
-use strum::IntoEnumIterator;
 
 const FILE_PERMS: mode_t = 0o777;
 
