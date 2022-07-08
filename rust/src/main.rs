@@ -122,7 +122,7 @@ fn main() -> anyhow::Result<()> {
                             FileSystemFeature::FileFlags(flags) => {
                                 let flags = flags
                                     .iter()
-                                    .map(|f| format(r#""{}""#, f))
+                                    .map(|f| format!(r#""{}""#, f))
                                     .collect::<Vec<_>>()
                                     .join(", ");
                                 format!("[features]\nfile_flags = [{}]", flags)
