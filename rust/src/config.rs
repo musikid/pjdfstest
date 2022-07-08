@@ -16,6 +16,8 @@ use serde::Deserialize;
 #[derive(Debug, Deserialize)]
 pub struct CommonFeatureConfig {}
 
+/// Configuration for file-system specific features.
+/// Please see the book for more details.
 #[derive(Debug, Deserialize)]
 pub struct FeaturesConfig {
     #[cfg(any(

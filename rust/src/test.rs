@@ -18,7 +18,7 @@ pub enum TestError {
     Nix(#[from] nix::Error),
 }
 
-/// A single minimal test case
+/// A single minimal test case.
 pub struct TestCase {
     pub name: &'static str,
     pub require_root: bool,
@@ -50,6 +50,7 @@ pub static TEST_CASES: [TestCase] = [..];
     strum::EnumIter,
     Deserialize,
 )]
+/// File flags (see https://docs.freebsd.org/en/books/handbook/basics/#permissions).
 pub enum FileFlags {
     UF_SETTABLE,
     UF_NODUMP,
@@ -133,6 +134,7 @@ pub enum FileSystemFeature {
         target_os = "ios",
         target_os = "watchos",
     ))]
+    //TODO: Create another structure for flags? or directly add them into this enum?
     FileFlags(&'static [FileFlags]),
     PosixFallocate,
     RenameCtime,

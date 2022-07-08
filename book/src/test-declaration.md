@@ -27,16 +27,55 @@ fn ctime(ctx: &mut TestContext, f_type: FileType) {
 
 ## Parameterization
 
+It is possible to give additional parameters to the test case macro,
+to modify the execution of the tests or add requirements.
+
+### File-system exclusive features
+
+Some features are not available for every file system.
+For tests requiring such features, the execution becomes opt-in.
+They can be declared by adding them after eventual `root` requirement
+and before the file types.
+Every variant of `FileSystemFeature` can be specified.
+
+```rust,ignore
+#[cfg(target_os = "freebsd")]
+crate::test_case! {eperm_immutable_flag, FileSystemFeature::Chflags, FileSystemFeature::FileFlags(&[FileFlags::SF_IMMUTABLE])}
+#[cfg(target_os = "freebsd")]
+fn eperm_immutable_flag(ctx: &mut TestContext) {
+    let path = ctx.create(FileType::Regular).unwrap();
+    //TODO: Complete
+}
+```
+
+#### File flags (MIGHT CHANGE)
+
+It is possible to specify individual file flags for the tests which
+requires it. `FileSystemFeature::FileFlags` takes a slice parameter,
+which is made of the used file flags.
+
+##### Warning: There is also a `FileFlags` defined for `nix`.
+
+```rust,ignore
+test_case! { ..., FileSystemFeature::FileFlags(&[FileFlags::UF_IMMUTABLE, FileFlags::SF_IMMUTABLE])} }
+```
+
+##### NOTE: The file flags feature is the only one to have a parameter, and probably should stay that way.
+
+#### Adding features
+
+
+
 ### File types
 
 Some test cases need to test over different file types.
 The file types should be added at the end of the test case declaration,
-with brackets and an fat arrow before (`=> [FileType::Regular]`).
+within brackets, with a fat arrow before (`=> [FileType::Regular]`).
 The test function should also accept a `FileType` parameter to operate on.
 
 For example:
 
-```rust
+```rust,ignore
 crate::test_case! {change_perm => [FileType::Regular, FileType::Fifo, FileType::Block, FileType::Char, FileType::Socket]}
 fn change_perm(ctx: &mut TestContext, f_type: FileType) {
 ```
@@ -48,7 +87,7 @@ To declare that a test function require root privileges,
 `root` should be added to its declaration.
 For example:
 
-```rust
+```rust,ignore
 crate::test_case!{change_perm, root}
 ```
 
