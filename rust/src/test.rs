@@ -50,8 +50,6 @@ pub static TEST_CASES: [TestCase] = [..];
     strum::EnumIter,
     Deserialize,
 )]
-#[strum(serialize_all = "snake_case")]
-#[serde(rename_all = "snake_case")]
 pub enum FileFlags {
     UF_SETTABLE,
     UF_NODUMP,

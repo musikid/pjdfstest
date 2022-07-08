@@ -101,7 +101,7 @@ fn main() -> anyhow::Result<()> {
         if let Some(features) = &test_case.required_features {
             let features = features.iter().cloned().collect::<HashSet<_>>();
             let missing_features = features.difference(&enabled_features);
-            if !missing_features.clone().count() > 0 {
+            if missing_features.clone().count() > 0 {
                 println!(
                     "skipped {}, please add the following features to your configuration:",
                     test_case.name
@@ -120,16 +120,12 @@ fn main() -> anyhow::Result<()> {
                                 target_os = "watchos",
                             ))]
                             FileSystemFeature::FileFlags(flags) => {
-                                let flags = flags.iter().map(|f| f.to_string()).fold(
-                                    String::new(),
-                                    |mut acc, s| {
-                                        acc.push_str("\t");
-                                        acc.extend(s.chars());
-                                        acc.push_str(" = true\n");
-                                        acc
-                                    },
-                                );
-                                format!("[features.file_flags]\n{}", flags)
+                                let flags = flags
+                                    .iter()
+                                    .map(|f| format(r#""{}""#, f))
+                                    .collect::<Vec<_>>()
+                                    .join(", ");
+                                format!("[features]\nfile_flags = [{}]", flags)
                             }
                             _ => format!("[features.{}]", feature.to_string()),
                         }
