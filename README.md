@@ -61,14 +61,14 @@ All the modules for the test groups should be declared in this file.
 pub mod chmod;
 ```
 
-#### Syscall module
+### Syscall module
 
 A syscall module contains test cases related to a specific syscall.
 Its declaration should be in the `mod.rs` file 
 of the relevant folder (`chmod/` in our case).
 Common syscall-specific helpers can go here.
 
-### Aspect
+#### Aspect
 
 An optional aspect module contains test cases that all relate to a common
 aspect of the syscall.
@@ -89,18 +89,16 @@ For now, a test function takes a `&mut TestContext` parameter.
 
 ```rust,ignore
 // chmod/00.t:L58
-crate::test_case!{ctime, Syscall::Chmod}
-fn ctime(ctx: &mut TestContext) {
-    for f_type in FileType::iter().filter(|ft| *ft != FileType::Symlink(None)) {
-        let path = ctx.create(f_type).unwrap();
-        let ctime_before = stat(&path).unwrap().st_ctime;
+crate::test_case! {ctime => [FileType::Regular, FileType::Fifo, FileType::Block, FileType::Char, FileType::Socket]}
+fn ctime(ctx: &mut TestContext, f_type: FileType) {
+    let path = ctx.create(f_type).unwrap();
+    let ctime_before = stat(&path).unwrap().st_ctime;
 
-        sleep(Duration::from_secs(1));
+    sleep(Duration::from_secs(1));
 
-        chmod(&path, Mode::from_bits_truncate(0o111)).unwrap();
+    chmod(&path, Mode::from_bits_truncate(0o111)).unwrap();
 
-        let ctime_after = stat(&path).unwrap().st_ctime;
-        assert!(ctime_after > ctime_before);
-    }
+    let ctime_after = stat(&path).unwrap().st_ctime;
+    assert!(ctime_after > ctime_before);
 }
 ```
