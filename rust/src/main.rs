@@ -117,7 +117,7 @@ fn main() -> anyhow::Result<()> {
 
         print!("{}\t", test_case.name);
         stdout().lock().flush()?;
-        let mut context = TestContext::new();
+        let mut context = TestContext::new(&config.settings.naptime);
         //TODO: AssertUnwindSafe should be used with caution
         let mut ctx_wrapper = AssertUnwindSafe(&mut context);
         match catch_unwind(move || {

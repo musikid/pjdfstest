@@ -1,6 +1,8 @@
-use std::{thread::sleep, time::Duration};
-
-use crate::{runner::context::FileType, test::TestContext, tests::chmod::chmod};
+use crate::{
+    runner::context::FileType,
+    test::TestContext,
+    tests::{assert_ctime_changed, assert_ctime_unchanged, chmod::chmod}
+};
 use nix::{
     sys::stat::{lstat, mode_t, stat, Mode},
     unistd::{chown, Gid, Uid},
@@ -40,30 +42,20 @@ fn change_perm(ctx: &mut TestContext, f_type: FileType) {
 crate::test_case! {ctime => [FileType::Regular, FileType::Dir, FileType::Fifo, FileType::Block, FileType::Char, FileType::Socket]}
 fn ctime(ctx: &mut TestContext, f_type: FileType) {
     let path = ctx.create(f_type).unwrap();
-    let ctime_before = stat(&path).unwrap().st_ctime;
-
-    sleep(Duration::from_secs(1));
-
-    chmod(&path, Mode::from_bits_truncate(0o111)).unwrap();
-
-    let ctime_after = stat(&path).unwrap().st_ctime;
-    assert!(ctime_after > ctime_before);
+    assert_ctime_changed(ctx, &path, || {
+        chmod(&path, Mode::from_bits_truncate(0o111)).unwrap()
+    });
 }
 
 // chmod/00.t:L89
 crate::test_case! {failed_chmod_unchanged_ctime => [FileType::Regular, FileType::Dir, FileType::Fifo, FileType::Block, FileType::Char, FileType::Socket]}
 fn failed_chmod_unchanged_ctime(ctx: &mut TestContext, f_type: FileType) {
     let path = ctx.create(f_type).unwrap();
-    let ctime_before = stat(&path).unwrap().st_ctime;
-
-    sleep(Duration::from_secs(1));
-
-    ctx.as_user(Some(Uid::from_raw(65534)), None, || {
-        assert!(chmod(&path, Mode::from_bits_truncate(0o111)).is_err());
+    assert_ctime_unchanged(ctx, &path, || {
+        ctx.as_user(Some(Uid::from_raw(65534)), None, || {
+            assert!(chmod(&path, Mode::from_bits_truncate(0o111)).is_err());
+        });
     });
-
-    let ctime_after = stat(&path).unwrap().st_ctime;
-    assert_eq!(ctime_after, ctime_before);
 }
 
 crate::test_case! {clear_isgid_bit}
