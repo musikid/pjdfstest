@@ -1,6 +1,5 @@
 use std::fmt::Debug;
 
-use linkme::distributed_slice;
 use serde::Deserialize;
 use thiserror::Error;
 
@@ -27,8 +26,7 @@ pub struct TestCase {
     pub required_file_flags: &'static [FileFlags],
 }
 
-#[distributed_slice]
-pub static TEST_CASES: [TestCase] = [..];
+inventory::collect!(TestCase);
 
 #[allow(non_camel_case_types)]
 #[derive(

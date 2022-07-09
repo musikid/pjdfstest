@@ -14,7 +14,7 @@ use gumdrop::Options;
 use once_cell::sync::OnceCell;
 use strum::IntoEnumIterator;
 
-use pjdfs_tests::test::{FileSystemFeature, TestContext, TEST_CASES};
+use pjdfs_tests::test::{FileSystemFeature, TestCase, TestContext};
 
 mod config;
 
@@ -68,7 +68,7 @@ fn main() -> anyhow::Result<()> {
 
     let enabled_flags: HashSet<_> = config.features.file_flags.iter().collect();
 
-    for test_case in TEST_CASES {
+    for test_case in inventory::iter::<TestCase> {
         //TODO: There's probably a better way to do this...
         let mut should_skip = false;
 
