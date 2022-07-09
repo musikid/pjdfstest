@@ -39,6 +39,7 @@ pub struct TestCase {
 #[distributed_slice]
 pub static TEST_CASES: [TestCase] = [..];
 
+// ANCHOR: file_flags_os
 #[cfg(any(
     target_os = "openbsd",
     target_os = "netbsd",
@@ -48,6 +49,7 @@ pub static TEST_CASES: [TestCase] = [..];
     target_os = "ios",
     target_os = "watchos",
 ))]
+// ANCHOR_END: file_flags_os
 #[allow(non_camel_case_types)]
 #[derive(
     Debug,

@@ -48,7 +48,7 @@ crate::test_case! {eperm_immutable_flag, FileSystemFeature::Chflags, FileSystemF
 #### File flags
 
 **NOTE: This feature is not supported by all POSIX systems, 
-therefore its use needs a `#[cfg(target_os = ...)]` attribute, specifying supported system(s).
+therefore its use needs a `#[cfg(target_os = ...)]` attribute specifying supported system(s).
 Please see [Rust reference](https://doc.rust-lang.org/reference/conditional-compilation.html#target_os) for more information.**
 
 It is possible to specify individual file flags for the tests which
@@ -56,12 +56,33 @@ require it. They can be specified by appending `FileFlags` variants after a `;` 
 after (eventual) `root` and features.
 
 ```rust,ignore
+#[cfg(target_os = "freebsd")]
 crate::test_case! {eperm_immutable_flag, root, FileSystemFeature::Chflags; FileFlags::SF_IMMUTABLE, FileFlags::UF_IMMUTABLE}
+```
+
+Here is a list of the OS which support file flags:
+
+```rust,ignore
+{{#include ../../rust/src/test.rs:file_flags_os}}
 ```
 
 #### Adding features
 
 New features can be added to the `FileSystemFeature` enum.
+
+### Root privileges
+
+Some tests may need root privileges to run.
+To declare that a test function require root privileges, 
+`root` should be added to its declaration.
+For example:
+
+```rust,ignore
+crate::test_case!{change_perm, root}
+```
+
+The root requirement is automatically added for privileged file types,
+namely block and char.
 
 ### File types
 
@@ -77,20 +98,6 @@ crate::test_case! {change_perm, root, FileSystemFeature::Chflags; FileFlags::SF_
 => [FileType::Regular, FileType::Fifo, FileType::Block, FileType::Char, FileType::Socket]}
 fn change_perm(ctx: &mut TestContext, f_type: FileType) {
 ```
-
-### Root privileges
-
-Some tests may need root privileges to run.
-To declare that a test function require root privileges, 
-`root` should be added to its declaration.
-For example:
-
-```rust,ignore
-crate::test_case!{change_perm, root}
-```
-
-The root requirement is automatically added for privileged file types,
-namely block and char.
 
 ## TODO: Platform-specific functions 
 
