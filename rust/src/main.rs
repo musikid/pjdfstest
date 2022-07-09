@@ -74,12 +74,13 @@ fn main() -> anyhow::Result<()> {
 
         let mut message = None;
 
-        let features = test_case.required_features.iter().collect::<HashSet<_>>();
-        let missing_features = features.difference(&enabled_features);
-        if missing_features.clone().count() > 0 {
+        let features: HashSet<_> = test_case.required_features.iter().collect();
+        let missing_features: Vec<_> = features.difference(&enabled_features).collect();
+        if !missing_features.is_empty() {
             should_skip = true;
 
             let features = &missing_features
+                .iter()
                 .map(|feature| format!("{}", feature))
                 .collect::<Vec<_>>()
                 .join(", ");
@@ -91,12 +92,12 @@ fn main() -> anyhow::Result<()> {
         }
 
         let required_flags: HashSet<_> = test_case.required_file_flags.iter().collect();
-        let missing_flags = required_flags.difference(&enabled_flags);
-
-        if missing_flags.clone().count() > 0 {
+        let missing_flags: Vec<_> = required_flags.difference(&enabled_flags).collect();
+        if !missing_flags.is_empty() {
             should_skip = true;
 
             let flags: String = missing_flags
+                .iter()
                 .map(|f| {
                     let f = f.to_string();
 
