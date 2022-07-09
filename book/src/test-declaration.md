@@ -34,49 +34,47 @@ to modify the execution of the tests or add requirements.
 
 Some features are not available for every file system.
 For tests requiring such features, the execution becomes opt-in.
-They can be declared by adding them after eventual `root` requirement
-and before the file types.
-Every variant of `FileSystemFeature` can be specified.
+When a test need such feature, a variant of `FileSystemFeature` corresponding to this feature should be specified,
+by adding it after eventual `root` requirement and before the file types.
+Multiple features can be specified, with a comma `,` separator.
+
+For example:
 
 ```rust,ignore
 #[cfg(target_os = "freebsd")]
-crate::test_case! {eperm_immutable_flag, FileSystemFeature::Chflags, FileSystemFeature::FileFlags(&[FileFlags::SF_IMMUTABLE])}
-#[cfg(target_os = "freebsd")]
-fn eperm_immutable_flag(ctx: &mut TestContext) {
-    let path = ctx.create(FileType::Regular).unwrap();
-    //TODO: Complete
-}
+crate::test_case! {eperm_immutable_flag, FileSystemFeature::Chflags, FileSystemFeature::PosixFallocate ...}
 ```
 
-#### File flags (MIGHT CHANGE)
+#### File flags
+
+**NOTE: This feature is not supported by all POSIX systems, 
+therefore its use needs a `#[cfg(target_os = ...)]` attribute, specifying supported system(s).
+Please see [Rust reference](https://doc.rust-lang.org/reference/conditional-compilation.html#target_os) for more information.**
 
 It is possible to specify individual file flags for the tests which
-requires it. `FileSystemFeature::FileFlags` takes a slice parameter,
-which is made of the used file flags.
-
-##### Warning: There is also a `FileFlags` defined for `nix`.
+require it. They can be specified by appending `FileFlags` variants after a `;` separator,
+after (eventual) `root` and features.
 
 ```rust,ignore
-test_case! { ..., FileSystemFeature::FileFlags(&[FileFlags::UF_IMMUTABLE, FileFlags::SF_IMMUTABLE])} }
+crate::test_case! {eperm_immutable_flag, root, FileSystemFeature::Chflags; FileFlags::SF_IMMUTABLE, FileFlags::UF_IMMUTABLE}
 ```
-
-##### NOTE: The file flags feature is the only one to have a parameter, and probably should stay that way.
 
 #### Adding features
 
-
+New features can be added to the `FileSystemFeature` enum.
 
 ### File types
 
 Some test cases need to test over different file types.
 The file types should be added at the end of the test case declaration,
-within brackets, with a fat arrow before (`=> [FileType::Regular]`).
+within brackets and with a fat arrow before (`=> [FileType::Regular]`).
 The test function should also accept a `FileType` parameter to operate on.
 
 For example:
 
 ```rust,ignore
-crate::test_case! {change_perm => [FileType::Regular, FileType::Fifo, FileType::Block, FileType::Char, FileType::Socket]}
+crate::test_case! {change_perm, root, FileSystemFeature::Chflags; FileFlags::SF_IMMUTABLE, FileFlags::UF_IMMUTABLE 
+=> [FileType::Regular, FileType::Fifo, FileType::Block, FileType::Char, FileType::Socket]}
 fn change_perm(ctx: &mut TestContext, f_type: FileType) {
 ```
 

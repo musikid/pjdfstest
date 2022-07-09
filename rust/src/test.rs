@@ -23,7 +23,17 @@ pub struct TestCase {
     pub name: &'static str,
     pub require_root: bool,
     pub fun: fn(&mut TestContext),
-    pub required_features: Option<&'static [FileSystemFeature]>,
+    pub required_features: &'static [FileSystemFeature],
+    #[cfg(any(
+        target_os = "openbsd",
+        target_os = "netbsd",
+        target_os = "freebsd",
+        target_os = "dragonfly",
+        target_os = "macos",
+        target_os = "ios",
+        target_os = "watchos",
+    ))]
+    pub required_file_flags: &'static [FileFlags],
 }
 
 #[distributed_slice]
@@ -123,19 +133,6 @@ pub enum FileFlags {
 pub enum FileSystemFeature {
     Chflags,
     ChflagsSfSnapshot,
-    #[strum(disabled)]
-    #[serde(skip)]
-    #[cfg(any(
-        target_os = "openbsd",
-        target_os = "netbsd",
-        target_os = "freebsd",
-        target_os = "dragonfly",
-        target_os = "macos",
-        target_os = "ios",
-        target_os = "watchos",
-    ))]
-    //TODO: Create another structure for flags? or directly add them into this enum?
-    FileFlags(&'static [FileFlags]),
     PosixFallocate,
     RenameCtime,
     StatStBirthtime,

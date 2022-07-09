@@ -25,6 +25,10 @@ posix_fallocate = {}
 [features.posix_fallocate]
 ```
 
+#### Feature configuration
+
+TODO
+
 #### file_flags
 
 Several UNIX operating systems have a concept of "file flags",
@@ -41,7 +45,3 @@ specified in the configuration with the `file_flags` array.
 posix_fallocate = {}
 file_flags = ["UF_IMMUTABLE"]
 ```
-
-#### Feature configuration
-
-TODO

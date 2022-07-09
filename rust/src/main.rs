@@ -1,7 +1,7 @@
 use std::{
     collections::HashSet,
     io::{stdout, Write},
-    panic::{catch_unwind, set_hook, AssertUnwindSafe, Location, PanicInfo},
+    panic::{catch_unwind, set_hook, AssertUnwindSafe},
     path::{Path, PathBuf},
 };
 
@@ -14,20 +14,8 @@ use gumdrop::Options;
 use once_cell::sync::OnceCell;
 use strum::IntoEnumIterator;
 
-#[cfg(any(
-    target_os = "openbsd",
-    target_os = "netbsd",
-    target_os = "freebsd",
-    target_os = "dragonfly",
-    target_os = "macos",
-    target_os = "ios",
-    target_os = "watchos",
-))]
-use pjdfs_tests::test::FileFlags;
-use pjdfs_tests::{
-    pjdfs_main,
-    test::{FileSystemFeature, TestCase, TestContext, TEST_CASES},
-};
+use pjdfs_tests::test::{FileSystemFeature, TestContext, TEST_CASES};
+
 mod config;
 
 struct PanicLocation(u32, u32, String);
@@ -42,14 +30,14 @@ struct ArgOptions {
     #[options(help = "Path of the configuration file")]
     configuration_file: Option<PathBuf>,
 
-    #[options(help = "List opt-in syscalls")]
-    list_syscalls: bool,
+    #[options(help = "List opt-in features")]
+    list_features: bool,
 }
 
 fn main() -> anyhow::Result<()> {
     let args = ArgOptions::parse_args_default_or_exit();
 
-    if args.list_syscalls {
+    if args.list_features {
         for feature in FileSystemFeature::iter() {
             println!("{}", feature);
         }
@@ -64,26 +52,13 @@ fn main() -> anyhow::Result<()> {
         ))
         .extract()?;
 
-    let mut enabled_features: Vec<FileSystemFeature> =
-        config.features.fs_features.keys().cloned().collect();
-
-    #[cfg(any(
-        target_os = "openbsd",
-        target_os = "netbsd",
-        target_os = "freebsd",
-        target_os = "dragonfly",
-        target_os = "macos",
-        target_os = "ios",
-        target_os = "watchos",
-    ))]
-    if let Some(flags) = config.features.file_flags {
-        let flags: Vec<_> = flags.iter().cloned().collect();
-        let flags = Box::new(flags);
-        // TODO: It's not going to change for the program lifetime, but is there a better alternative than leaking?
-        enabled_features.push(FileSystemFeature::FileFlags(Box::leak(flags)));
-    }
-
-    let enabled_features: HashSet<_> = enabled_features.into_iter().collect();
+    let enabled_features: HashSet<_> = config
+        .features
+        .fs_features
+        .keys()
+        .into_iter()
+        .cloned()
+        .collect();
 
     set_hook(Box::new(|ctx| {
         if let Some(location) = ctx.location() {
@@ -97,42 +72,84 @@ fn main() -> anyhow::Result<()> {
         }
     }));
 
+    #[cfg(any(
+        target_os = "openbsd",
+        target_os = "netbsd",
+        target_os = "freebsd",
+        target_os = "dragonfly",
+        target_os = "macos",
+        target_os = "ios",
+        target_os = "watchos",
+    ))]
+    let enabled_flags: HashSet<_> = config
+        .features
+        .file_flags
+        .unwrap_or_default()
+        .iter()
+        .cloned()
+        .collect();
+
     for test_case in TEST_CASES {
-        if let Some(features) = &test_case.required_features {
-            let features = features.iter().cloned().collect::<HashSet<_>>();
-            let missing_features = features.difference(&enabled_features);
-            if missing_features.clone().count() > 0 {
-                println!(
-                    "skipped {}, please add the following features to your configuration:",
-                    test_case.name
-                );
-                for feature in missing_features {
-                    println!(
-                        "{}\n",
-                        match feature {
-                            #[cfg(any(
-                                target_os = "openbsd",
-                                target_os = "netbsd",
-                                target_os = "freebsd",
-                                target_os = "dragonfly",
-                                target_os = "macos",
-                                target_os = "ios",
-                                target_os = "watchos",
-                            ))]
-                            FileSystemFeature::FileFlags(flags) => {
-                                let flags = flags
-                                    .iter()
-                                    .map(|f| format!(r#""{}""#, f))
-                                    .collect::<Vec<_>>()
-                                    .join(", ");
-                                format!("[features]\nfile_flags = [{}]", flags)
-                            }
-                            _ => format!("[features.{}]", feature.to_string()),
-                        }
-                    );
-                }
-                continue;
+        //TODO: There's probably a better way to do this...
+        let mut should_skip = false;
+
+        let mut message = None;
+
+        let features = test_case
+            .required_features
+            .iter()
+            .cloned()
+            .collect::<HashSet<_>>();
+        let missing_features = features.difference(&enabled_features);
+        if missing_features.clone().count() > 0 {
+            should_skip = true;
+
+            let message = message.get_or_insert(String::new());
+            *message += "please add the following features to your configuration:\n";
+            *message += &missing_features
+                .map(|feature| format!("\t[features.{}]\n", feature))
+                .collect::<String>();
+        }
+
+        #[cfg(any(
+            target_os = "openbsd",
+            target_os = "netbsd",
+            target_os = "freebsd",
+            target_os = "dragonfly",
+            target_os = "macos",
+            target_os = "ios",
+            target_os = "watchos",
+        ))]
+        {
+            let required_flags: HashSet<_> =
+                test_case.required_file_flags.iter().cloned().collect();
+            let missing_flags = required_flags.difference(&enabled_flags);
+
+            if missing_flags.clone().count() > 0 {
+                should_skip = true;
+
+                let flags: String = missing_flags
+                    .map(|f| {
+                        let f = f.to_string();
+
+                        ["\"", f.as_str(), "\""].join("")
+                    })
+                    .collect::<Vec<_>>()
+                    .join(", ");
+
+                let message = message.get_or_insert(String::new());
+                *message += "please add the following flags to your configuration:\n";
+                *message += &format!("\tfile_flags = [{}]\n", flags);
             }
+        }
+
+        if should_skip {
+            println!(
+                "skipped '{}'\n{}",
+                test_case.name,
+                message.unwrap_or_default()
+            );
+            continue;
         }
 
         print!("{}\t", test_case.name);

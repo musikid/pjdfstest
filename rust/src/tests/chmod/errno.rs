@@ -37,7 +37,7 @@ fn enametoolong(ctx: &mut TestContext) {
 }
 
 #[cfg(target_os = "freebsd")]
-crate::test_case! {eperm_immutable_flag, FileSystemFeature::Chflags, FileSystemFeature::FileFlags(&[FileFlags::SF_IMMUTABLE])}
+crate::test_case! {eperm_immutable_flag, FileSystemFeature::Chflags; FileFlags::SF_IMMUTABLE}
 #[cfg(target_os = "freebsd")]
 fn eperm_immutable_flag(ctx: &mut TestContext) {
     let path = ctx.create(FileType::Regular).unwrap();
