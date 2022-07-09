@@ -52,13 +52,7 @@ fn main() -> anyhow::Result<()> {
         ))
         .extract()?;
 
-    let enabled_features: HashSet<_> = config
-        .features
-        .fs_features
-        .keys()
-        .into_iter()
-        .cloned()
-        .collect();
+    let enabled_features: HashSet<_> = config.features.fs_features.keys().into_iter().collect();
 
     set_hook(Box::new(|ctx| {
         if let Some(location) = ctx.location() {
@@ -72,7 +66,7 @@ fn main() -> anyhow::Result<()> {
         }
     }));
 
-    let enabled_flags: HashSet<_> = config.features.file_flags.iter().cloned().collect();
+    let enabled_flags: HashSet<_> = config.features.file_flags.iter().collect();
 
     for test_case in TEST_CASES {
         //TODO: There's probably a better way to do this...
@@ -80,11 +74,7 @@ fn main() -> anyhow::Result<()> {
 
         let mut message = None;
 
-        let features = test_case
-            .required_features
-            .iter()
-            .cloned()
-            .collect::<HashSet<_>>();
+        let features = test_case.required_features.iter().collect::<HashSet<_>>();
         let missing_features = features.difference(&enabled_features);
         if missing_features.clone().count() > 0 {
             should_skip = true;
@@ -100,7 +90,7 @@ fn main() -> anyhow::Result<()> {
             *message += "\n";
         }
 
-        let required_flags: HashSet<_> = test_case.required_file_flags.iter().cloned().collect();
+        let required_flags: HashSet<_> = test_case.required_file_flags.iter().collect();
         let missing_flags = required_flags.difference(&enabled_flags);
 
         if missing_flags.clone().count() > 0 {
