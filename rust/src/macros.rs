@@ -29,7 +29,7 @@ macro_rules! test_case {
             paste::paste! {
                 ::inventory::submit! {
                     $crate::test::TestCase {
-                        name: concat!(module_path!(), "::", stringify!($f), "::", stringify!([<$file_type:lower>]), "_type"),
+                        name: concat!(module_path!(), "::", stringify!($f), "::", stringify!([<$file_type:lower>])),
                         required_features: $features,
                         required_file_flags: $flags,
                         require_root: $require_root || FileType::$file_type $( ($ft_args) )?.privileged(),
