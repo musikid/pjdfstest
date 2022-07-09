@@ -31,10 +31,7 @@ TODO
 
 #### file_flags
 
-Several UNIX operating systems have a concept of "file flags",
-which adds an additional level of security and control.
-Some tests are related to this feature and therefore
-need it to be supported. 
+Some tests are related to file flags. 
 However, not all file systems and operating systems support all flags.
 To give a sufficient level of granularity, each supported flag can be
 specified in the configuration with the `file_flags` array.
