@@ -1,8 +1,14 @@
-# Configuration for the test runner
+# Configuration for the pjdfstest runner
 
-# This section allows enabling opt-in syscalls.
-# A list of these syscalls is provided when executing the runner with `-l`.
+# This section allows enabling file system specific features.
+# Please see the book for more details.
+# A list of these features is provided when executing the runner with `-l`.
 [features]
+# File flags can be specified for OS which supports them.
+# file_flags = ["UF_IMMUTABLE"]
 
 # Here is an example with the `posix_fallocate` syscall.
+posix_fallocate = {}
+
+# Might use the key notation as well.
 [features.posix_fallocate]
