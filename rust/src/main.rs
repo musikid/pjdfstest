@@ -89,11 +89,15 @@ fn main() -> anyhow::Result<()> {
         if missing_features.clone().count() > 0 {
             should_skip = true;
 
+            let features = &missing_features
+                .map(|feature| format!("{}", feature))
+                .collect::<Vec<_>>()
+                .join(", ");
+
             let message = message.get_or_insert(String::new());
-            *message += "please add the following features to your configuration:\n";
-            *message += &missing_features
-                .map(|feature| format!("\t[features.{}]\n", feature))
-                .collect::<String>();
+            *message += "requires features: ";
+            *message += &features;
+            *message += "\n";
         }
 
         let required_flags: HashSet<_> = test_case.required_file_flags.iter().cloned().collect();
@@ -106,14 +110,15 @@ fn main() -> anyhow::Result<()> {
                 .map(|f| {
                     let f = f.to_string();
 
-                    ["\"", f.as_str(), "\""].join("")
+                    ["\"", &f, "\""].join("")
                 })
                 .collect::<Vec<_>>()
                 .join(", ");
 
             let message = message.get_or_insert(String::new());
-            *message += "please add the following flags to your configuration:\n";
-            *message += &format!("\tfile_flags = [{}]\n", flags);
+            *message += "requires flags: ";
+            *message += &flags;
+            *message += "\n";
         }
 
         if should_skip {
