@@ -95,7 +95,7 @@ fn main() -> anyhow::Result<()> {
         if !missing_flags.is_empty() {
             should_skip = true;
 
-            let flags: String = missing_flags
+            let flags = missing_flags
                 .iter()
                 .map(|f| {
                     let f = f.to_string();
