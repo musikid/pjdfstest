@@ -48,7 +48,7 @@ crate::test_case! {eperm_immutable_flag, FileSystemFeature::Chflags, FileSystemF
 #### File flags
 
 **NOTE: This feature is not supported by all POSIX systems, 
-therefore its use needs a `#[cfg(target_os = ...)]` attribute specifying supported system(s).
+therefore its use needs a `#[cfg(target_os = ...)]` attribute specifying supported system(s).**
 
 It is possible to specify individual file flags for the tests which
 require it. They can be specified by appending `FileFlags` variants after a `;` separator,
@@ -57,12 +57,6 @@ after (eventual) `root` and features.
 ```rust,ignore
 #[cfg(target_os = "freebsd")]
 crate::test_case! {eperm_immutable_flag, root, FileSystemFeature::Chflags; FileFlags::SF_IMMUTABLE, FileFlags::UF_IMMUTABLE}
-```
-
-Here is a list of the OS which support file flags:
-
-```rust,ignore
-{{#include ../../rust/src/test.rs:file_flags_os}}
 ```
 
 #### Adding features
