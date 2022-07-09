@@ -11,7 +11,7 @@ Some features are not available for every file system.
 For tests requiring such features,
 the execution becomes opt-in.
 The user can enable their execution,
- by adding the corresponding feature as a key in this section.
+by adding the corresponding feature as a key in this section.
 A list of these opt-in features is provided
 when executing the runner with `-l` argument.
 
