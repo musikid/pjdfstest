@@ -157,15 +157,32 @@ fn ctime(ctx: &amp;mut TestContext, f_type: FileType) {
 }
 </code></pre>
 <h2 id="parameterization"><a class="header" href="#parameterization">Parameterization</a></h2>
-<h3 id="file-types"><a class="header" href="#file-types">File types</a></h3>
-<p>Some test cases need to test over different file types.
-The file types should be added at the end of the test case declaration,
-with brackets and an fat arrow before (<code>=&gt; [FileType::Regular]</code>).
-The test function should also accept a <code>FileType</code> parameter to operate on.</p>
+<p>It is possible to give additional parameters to the test case macro,
+to modify the execution of the tests or add requirements.</p>
+<h3 id="file-system-exclusive-features"><a class="header" href="#file-system-exclusive-features">File-system exclusive features</a></h3>
+<p>Some features are not available for every file system.
+For tests requiring such features, the execution becomes opt-in.
+When a test need such feature, a variant of <code>FileSystemFeature</code> corresponding to this feature should be specified,
+by adding it after eventual <code>root</code> requirement and before the file types.
+Multiple features can be specified, with a comma <code>,</code> separator.</p>
 <p>For example:</p>
-<pre><code class="language-rust ignore">crate::test_case! {change_perm =&gt; [FileType::Regular, FileType::Fifo, FileType::Block, FileType::Char, FileType::Socket]}
-fn change_perm(ctx: &amp;mut TestContext, f_type: FileType) {
+<pre><code class="language-rust ignore">#[cfg(target_os = &quot;freebsd&quot;)]
+crate::test_case! {eperm_immutable_flag, FileSystemFeature::Chflags, FileSystemFeature::PosixFallocate ...}
 </code></pre>
+<h4 id="file-flags"><a class="header" href="#file-flags">File flags</a></h4>
+<p>**NOTE: This feature is not supported by all POSIX systems, 
+therefore its use needs a <code>#[cfg(target_os = ...)]</code> attribute specifying supported system(s).</p>
+<p>It is possible to specify individual file flags for the tests which
+require it. They can be specified by appending <code>FileFlags</code> variants after a <code>;</code> separator,
+after (eventual) <code>root</code> and features.</p>
+<pre><code class="language-rust ignore">#[cfg(target_os = &quot;freebsd&quot;)]
+crate::test_case! {eperm_immutable_flag, root, FileSystemFeature::Chflags; FileFlags::SF_IMMUTABLE, FileFlags::UF_IMMUTABLE}
+</code></pre>
+<p>Here is a list of the OS which support file flags:</p>
+<pre><code class="language-rust ignore">
+</code></pre>
+<h4 id="adding-features"><a class="header" href="#adding-features">Adding features</a></h4>
+<p>New features can be added to the <code>FileSystemFeature</code> enum.</p>
 <h3 id="root-privileges"><a class="header" href="#root-privileges">Root privileges</a></h3>
 <p>Some tests may need root privileges to run.
 To declare that a test function require root privileges, 
@@ -175,6 +192,16 @@ For example:</p>
 </code></pre>
 <p>The root requirement is automatically added for privileged file types,
 namely block and char.</p>
+<h3 id="file-types"><a class="header" href="#file-types">File types</a></h3>
+<p>Some test cases need to test over different file types.
+The file types should be added at the end of the test case declaration,
+within brackets and with a fat arrow before (<code>=&gt; [FileType::Regular]</code>).
+The test function should also accept a <code>FileType</code> parameter to operate on.</p>
+<p>For example:</p>
+<pre><code class="language-rust ignore">crate::test_case! {change_perm, root, FileSystemFeature::Chflags; FileFlags::SF_IMMUTABLE, FileFlags::UF_IMMUTABLE 
+=&gt; [FileType::Regular, FileType::Fifo, FileType::Block, FileType::Char, FileType::Socket]}
+fn change_perm(ctx: &amp;mut TestContext, f_type: FileType) {
+</code></pre>
 <h2 id="platform-specific-functions"><a class="header" href="#platform-specific-functions">Platform-specific functions</a></h2>
 <p>Some functions (like <code>lchmod</code>) are not supported on every operating system.
 When a test make use of such function, it is possible to restrain its compilation

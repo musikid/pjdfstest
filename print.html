@@ -226,11 +226,14 @@ It takes the tests from the specified test groups.</p>
 Its path can be specified by using the <code>-c PATH</code> flag.</p>
 <h2 id="sections"><a class="header" href="#sections">Sections</a></h2>
 <h3 id="features"><a class="header" href="#features">[features]</a></h3>
-<p>Some syscalls cannot be run on all combinations of file systems/platforms.
-Their execution is opt-in,
-as in the user should enable them by adding the key in this section.
-A list of these opt-in groups should be provided 
+<p>Some features are not available for every file system.
+For tests requiring such features,
+the execution becomes opt-in.
+The user can enable their execution,
+by adding the corresponding feature as a key in this section.
+A list of these opt-in features is provided
 when executing the runner with <code>-l</code> argument.</p>
+<p>For example, with <code>posix_fallocate</code>:</p>
 <pre><code class="language-toml">[features]
 posix_fallocate = {}
 
@@ -239,6 +242,15 @@ posix_fallocate = {}
 </code></pre>
 <h4 id="feature-configuration"><a class="header" href="#feature-configuration">Feature configuration</a></h4>
 <p>TODO</p>
+<h4 id="file_flags"><a class="header" href="#file_flags">file_flags</a></h4>
+<p>Some tests are related to file flags. 
+However, not all file systems and operating systems support all flags.
+To give a sufficient level of granularity, each supported flag can be
+specified in the configuration with the <code>file_flags</code> array.</p>
+<pre><code class="language-toml">[features]
+posix_fallocate = {}
+file_flags = [&quot;UF_IMMUTABLE&quot;]
+</code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="structure"><a class="header" href="#structure">Structure</a></h1>
 <p>The tests should be grouped by syscalls, in the <code>tests/</code> folder.
 Each folder then have a <code>mod.rs</code> file, 
@@ -293,15 +305,32 @@ fn ctime(ctx: &amp;mut TestContext, f_type: FileType) {
 }
 </code></pre>
 <h2 id="parameterization"><a class="header" href="#parameterization">Parameterization</a></h2>
-<h3 id="file-types"><a class="header" href="#file-types">File types</a></h3>
-<p>Some test cases need to test over different file types.
-The file types should be added at the end of the test case declaration,
-with brackets and an fat arrow before (<code>=&gt; [FileType::Regular]</code>).
-The test function should also accept a <code>FileType</code> parameter to operate on.</p>
+<p>It is possible to give additional parameters to the test case macro,
+to modify the execution of the tests or add requirements.</p>
+<h3 id="file-system-exclusive-features"><a class="header" href="#file-system-exclusive-features">File-system exclusive features</a></h3>
+<p>Some features are not available for every file system.
+For tests requiring such features, the execution becomes opt-in.
+When a test need such feature, a variant of <code>FileSystemFeature</code> corresponding to this feature should be specified,
+by adding it after eventual <code>root</code> requirement and before the file types.
+Multiple features can be specified, with a comma <code>,</code> separator.</p>
 <p>For example:</p>
-<pre><code class="language-rust ignore">crate::test_case! {change_perm =&gt; [FileType::Regular, FileType::Fifo, FileType::Block, FileType::Char, FileType::Socket]}
-fn change_perm(ctx: &amp;mut TestContext, f_type: FileType) {
+<pre><code class="language-rust ignore">#[cfg(target_os = &quot;freebsd&quot;)]
+crate::test_case! {eperm_immutable_flag, FileSystemFeature::Chflags, FileSystemFeature::PosixFallocate ...}
 </code></pre>
+<h4 id="file-flags"><a class="header" href="#file-flags">File flags</a></h4>
+<p>**NOTE: This feature is not supported by all POSIX systems, 
+therefore its use needs a <code>#[cfg(target_os = ...)]</code> attribute specifying supported system(s).</p>
+<p>It is possible to specify individual file flags for the tests which
+require it. They can be specified by appending <code>FileFlags</code> variants after a <code>;</code> separator,
+after (eventual) <code>root</code> and features.</p>
+<pre><code class="language-rust ignore">#[cfg(target_os = &quot;freebsd&quot;)]
+crate::test_case! {eperm_immutable_flag, root, FileSystemFeature::Chflags; FileFlags::SF_IMMUTABLE, FileFlags::UF_IMMUTABLE}
+</code></pre>
+<p>Here is a list of the OS which support file flags:</p>
+<pre><code class="language-rust ignore">
+</code></pre>
+<h4 id="adding-features"><a class="header" href="#adding-features">Adding features</a></h4>
+<p>New features can be added to the <code>FileSystemFeature</code> enum.</p>
 <h3 id="root-privileges"><a class="header" href="#root-privileges">Root privileges</a></h3>
 <p>Some tests may need root privileges to run.
 To declare that a test function require root privileges, 
@@ -311,6 +340,16 @@ For example:</p>
 </code></pre>
 <p>The root requirement is automatically added for privileged file types,
 namely block and char.</p>
+<h3 id="file-types"><a class="header" href="#file-types">File types</a></h3>
+<p>Some test cases need to test over different file types.
+The file types should be added at the end of the test case declaration,
+within brackets and with a fat arrow before (<code>=&gt; [FileType::Regular]</code>).
+The test function should also accept a <code>FileType</code> parameter to operate on.</p>
+<p>For example:</p>
+<pre><code class="language-rust ignore">crate::test_case! {change_perm, root, FileSystemFeature::Chflags; FileFlags::SF_IMMUTABLE, FileFlags::UF_IMMUTABLE 
+=&gt; [FileType::Regular, FileType::Fifo, FileType::Block, FileType::Char, FileType::Socket]}
+fn change_perm(ctx: &amp;mut TestContext, f_type: FileType) {
+</code></pre>
 <h2 id="platform-specific-functions"><a class="header" href="#platform-specific-functions">Platform-specific functions</a></h2>
 <p>Some functions (like <code>lchmod</code>) are not supported on every operating system.
 When a test make use of such function, it is possible to restrain its compilation
