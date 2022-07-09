@@ -19,7 +19,7 @@ use thiserror::Error;
 use crate::test::TestError;
 
 /// File type, mainly used with [TestContext::create].
-#[derive(Debug, Clone, PartialEq, EnumIter)]
+#[derive(Debug, Clone, Eq, PartialEq, EnumIter)]
 pub enum FileType {
     Regular,
     Dir,
@@ -85,7 +85,7 @@ impl TestContext {
             seteuid(uid).unwrap();
         }
 
-        let res = catch_unwind(move || f());
+        let res = catch_unwind(f);
 
         if uid.is_some() {
             seteuid(original_euid).unwrap();
@@ -114,7 +114,7 @@ impl TestContext {
         let mode = Mode::from_bits_truncate(0o644);
 
         match f_type {
-            FileType::Regular => open(&path, OFlag::O_CREAT, mode).and_then(|fd| close(fd)),
+            FileType::Regular => open(&path, OFlag::O_CREAT, mode).and_then(close),
             FileType::Dir => mkdir(&path, Mode::from_bits_truncate(0o755)),
             FileType::Fifo => mkfifo(&path, mode),
             FileType::Block => mknod(&path, SFlag::S_IFBLK, mode, 0),
@@ -130,7 +130,7 @@ impl TestContext {
                 bind(fd, &sockaddr)
             }
             //TODO: error type?
-            FileType::Symlink(target) => symlink(target.unwrap_or(PathBuf::from("test")), &path)
+            FileType::Symlink(target) => symlink(target.as_deref().unwrap_or_else(|| Path::new("test")), &path)
                 .map_err(|e| nix::Error::try_from(e).unwrap_or(nix::errno::Errno::UnknownErrno)),
         }?;
 
@@ -153,7 +153,7 @@ impl TestContext {
         let mode = Mode::from_bits_truncate(0o644);
 
         match f_type {
-            FileType::Regular => open(&path, OFlag::O_CREAT, mode).and_then(|fd| close(fd)),
+            FileType::Regular => open(&path, OFlag::O_CREAT, mode).and_then(close),
             FileType::Dir => mkdir(&path, Mode::from_bits_truncate(0o755)),
             FileType::Fifo => mkfifo(&path, mode),
             FileType::Block => mknod(&path, SFlag::S_IFBLK, mode, 0),
@@ -169,7 +169,7 @@ impl TestContext {
                 bind(fd, &sockaddr)
             }
             //TODO: error type?
-            FileType::Symlink(target) => symlink(target.unwrap_or(PathBuf::from("test")), &path)
+            FileType::Symlink(target) => symlink(target.as_deref().unwrap_or_else(|| Path::new("test")), &path)
                 .map_err(|e| nix::Error::try_from(e).unwrap_or(nix::errno::Errno::UnknownErrno)),
         }?;
 
@@ -203,10 +203,16 @@ impl TestContext {
                 bind(fd, &sockaddr)
             }
             //TODO: error type
-            FileType::Symlink(target) => symlink(target.unwrap_or(PathBuf::from("test")), &path)
+            FileType::Symlink(target) => symlink(target.as_deref().unwrap_or_else(|| Path::new("test")), &path)
                 .map_err(|e| nix::Error::try_from(e).unwrap_or(nix::errno::Errno::UnknownErrno)),
         }?;
 
         Ok(path)
+    }
+}
+
+impl Default for TestContext {
+    fn default() -> Self {
+        Self::new()
     }
 }

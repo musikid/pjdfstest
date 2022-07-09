@@ -29,7 +29,7 @@ fn enametoolong(ctx: &mut TestContext) {
     let actual_mode = stat(&path).unwrap().st_mode;
     assert_eq!(actual_mode & 0o777, expected_mode);
 
-    let mut too_long_path = path.clone();
+    let mut too_long_path = path;
     too_long_path.set_extension("x");
     let res = chmod(&too_long_path, Mode::from_bits_truncate(0o0620));
     assert!(res.is_err());
@@ -40,6 +40,6 @@ fn enametoolong(ctx: &mut TestContext) {
 crate::test_case! {eperm_immutable_flag, FileSystemFeature::Chflags; FileFlags::SF_IMMUTABLE}
 #[cfg(target_os = "freebsd")]
 fn eperm_immutable_flag(ctx: &mut TestContext) {
-    let path = ctx.create(FileType::Regular).unwrap();
+    let _path = ctx.create(FileType::Regular).unwrap();
     //TODO: Complete
 }
