@@ -242,8 +242,7 @@ posix_fallocate = {}
 <div style="break-before: page; page-break-before: always;"></div><h1 id="structure"><a class="header" href="#structure">Structure</a></h1>
 <p>The tests should be grouped by syscalls, in the <code>tests/</code> folder.
 Each folder then have a <code>mod.rs</code> file, 
-which contains declarations of the modules inside this folder,
-and a <code>group!</code> statement to export the test cases from these modules.
+which contains declarations of the modules inside this folder.
 For example:</p>
 <h3 id="layout-1"><a class="header" href="#layout-1">Layout</a></h3>
 <pre><code>chmod (syscall/test group)
@@ -253,31 +252,22 @@ For example:</p>
 </code></pre>
 <h3 id="modrs"><a class="header" href="#modrs">mod.rs</a></h3>
 <pre><code class="language-rust ignore">mod permission;
-mod lchmod;
+mod errno;
 </code></pre>
 <p>Each module inside a group should register its test cases with <code>test_case!</code>.
 In our example, <code>chmod/permission.rs</code> would be:</p>
-<pre><code class="language-rust ignore">test_case!{ctime, root, Syscall::Chmod}
-use crate::{
-    test_case,
-    test::{TestContext, TestResult},
-};
+<pre><code class="language-rust ignore">// chmod/00.t:L58
+crate::test_case! {ctime =&gt; [FileType::Regular, FileType::Dir, FileType::Fifo, FileType::Block, FileType::Char, FileType::Socket]}
+fn ctime(ctx: &amp;mut TestContext, f_type: FileType) {
+    let path = ctx.create(f_type).unwrap();
+    let ctime_before = stat(&amp;path).unwrap().st_ctime;
 
-// chmod/00.t:L58
-fn ctime(ctx: &amp;mut TestContext) -&gt; TestResult {
-  for f_type in FileType::iter().filter(|&amp;ft| ft == FileType::Symlink) {
-      let path = ctx.create(f_type).map_err(TestError::CreateFile)?;
-      let ctime_before = stat(&amp;path)?.st_ctime;
+    sleep(Duration::from_secs(1));
 
-      sleep(Duration::from_secs(1));
+    chmod(&amp;path, Mode::from_bits_truncate(0o111)).unwrap();
 
-      chmod(&amp;path, Mode::from_bits_truncate(0o111))?;
-
-      let ctime_after = stat(&amp;path)?.st_ctime;
-      test_assert!(ctime_after &gt; ctime_before);
-  }
-
-  Ok(())
+    let ctime_after = stat(&amp;path).unwrap().st_ctime;
+    assert!(ctime_after &gt; ctime_before);
 }
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="test-declaration"><a class="header" href="#test-declaration">Test declaration</a></h1>
@@ -309,22 +299,16 @@ The file types should be added at the end of the test case declaration,
 with brackets and an fat arrow before (<code>=&gt; [FileType::Regular]</code>).
 The test function should also accept a <code>FileType</code> parameter to operate on.</p>
 <p>For example:</p>
-<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
-</span><span class="boring">fn main() {
-</span>crate::test_case! {change_perm =&gt; [FileType::Regular, FileType::Fifo, FileType::Block, FileType::Char, FileType::Socket]}
+<pre><code class="language-rust ignore">crate::test_case! {change_perm =&gt; [FileType::Regular, FileType::Fifo, FileType::Block, FileType::Char, FileType::Socket]}
 fn change_perm(ctx: &amp;mut TestContext, f_type: FileType) {
-<span class="boring">}
-</span></code></pre></pre>
+</code></pre>
 <h3 id="root-privileges"><a class="header" href="#root-privileges">Root privileges</a></h3>
 <p>Some tests may need root privileges to run.
 To declare that a test function require root privileges, 
 <code>root</code> should be added to its declaration.
 For example:</p>
-<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
-</span><span class="boring">fn main() {
-</span>crate::test_case!{change_perm, root}
-<span class="boring">}
-</span></code></pre></pre>
+<pre><code class="language-rust ignore">crate::test_case!{change_perm, root}
+</code></pre>
 <p>The root requirement is automatically added for privileged file types,
 namely block and char.</p>
 <h2 id="platform-specific-functions"><a class="header" href="#platform-specific-functions">Platform-specific functions</a></h2>
@@ -333,12 +317,9 @@ When a test make use of such function, it is possible to restrain its compilatio
 to the supported operating systems, with the attribute <code>#[cfg(target_os = ...)]</code>.
 It is also possible to apply this attribute on an aspect, or even on a syscall module.
 For example:</p>
-<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
-</span><span class="boring">fn main() {
-</span>#[cfg(target_os = &quot;freebsd&quot;)]
+<pre><code class="language-rust ignore">#[cfg(target_os = &quot;freebsd&quot;)]
 mod lchmod;
-<span class="boring">}
-</span></code></pre></pre>
+</code></pre>
 
                     </main>
 

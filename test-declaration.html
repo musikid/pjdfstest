@@ -163,22 +163,16 @@ The file types should be added at the end of the test case declaration,
 with brackets and an fat arrow before (<code>=&gt; [FileType::Regular]</code>).
 The test function should also accept a <code>FileType</code> parameter to operate on.</p>
 <p>For example:</p>
-<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
-</span><span class="boring">fn main() {
-</span>crate::test_case! {change_perm =&gt; [FileType::Regular, FileType::Fifo, FileType::Block, FileType::Char, FileType::Socket]}
+<pre><code class="language-rust ignore">crate::test_case! {change_perm =&gt; [FileType::Regular, FileType::Fifo, FileType::Block, FileType::Char, FileType::Socket]}
 fn change_perm(ctx: &amp;mut TestContext, f_type: FileType) {
-<span class="boring">}
-</span></code></pre></pre>
+</code></pre>
 <h3 id="root-privileges"><a class="header" href="#root-privileges">Root privileges</a></h3>
 <p>Some tests may need root privileges to run.
 To declare that a test function require root privileges, 
 <code>root</code> should be added to its declaration.
 For example:</p>
-<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
-</span><span class="boring">fn main() {
-</span>crate::test_case!{change_perm, root}
-<span class="boring">}
-</span></code></pre></pre>
+<pre><code class="language-rust ignore">crate::test_case!{change_perm, root}
+</code></pre>
 <p>The root requirement is automatically added for privileged file types,
 namely block and char.</p>
 <h2 id="platform-specific-functions"><a class="header" href="#platform-specific-functions">Platform-specific functions</a></h2>
@@ -187,12 +181,9 @@ When a test make use of such function, it is possible to restrain its compilatio
 to the supported operating systems, with the attribute <code>#[cfg(target_os = ...)]</code>.
 It is also possible to apply this attribute on an aspect, or even on a syscall module.
 For example:</p>
-<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
-</span><span class="boring">fn main() {
-</span>#[cfg(target_os = &quot;freebsd&quot;)]
+<pre><code class="language-rust ignore">#[cfg(target_os = &quot;freebsd&quot;)]
 mod lchmod;
-<span class="boring">}
-</span></code></pre></pre>
+</code></pre>
 
                     </main>
 

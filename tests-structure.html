@@ -137,8 +137,7 @@
                         <h1 id="structure"><a class="header" href="#structure">Structure</a></h1>
 <p>The tests should be grouped by syscalls, in the <code>tests/</code> folder.
 Each folder then have a <code>mod.rs</code> file, 
-which contains declarations of the modules inside this folder,
-and a <code>group!</code> statement to export the test cases from these modules.
+which contains declarations of the modules inside this folder.
 For example:</p>
 <h3 id="layout"><a class="header" href="#layout">Layout</a></h3>
 <pre><code>chmod (syscall/test group)
@@ -148,31 +147,22 @@ For example:</p>
 </code></pre>
 <h3 id="modrs"><a class="header" href="#modrs">mod.rs</a></h3>
 <pre><code class="language-rust ignore">mod permission;
-mod lchmod;
+mod errno;
 </code></pre>
 <p>Each module inside a group should register its test cases with <code>test_case!</code>.
 In our example, <code>chmod/permission.rs</code> would be:</p>
-<pre><code class="language-rust ignore">test_case!{ctime, root, Syscall::Chmod}
-use crate::{
-    test_case,
-    test::{TestContext, TestResult},
-};
+<pre><code class="language-rust ignore">// chmod/00.t:L58
+crate::test_case! {ctime =&gt; [FileType::Regular, FileType::Dir, FileType::Fifo, FileType::Block, FileType::Char, FileType::Socket]}
+fn ctime(ctx: &amp;mut TestContext, f_type: FileType) {
+    let path = ctx.create(f_type).unwrap();
+    let ctime_before = stat(&amp;path).unwrap().st_ctime;
 
-// chmod/00.t:L58
-fn ctime(ctx: &amp;mut TestContext) -&gt; TestResult {
-  for f_type in FileType::iter().filter(|&amp;ft| ft == FileType::Symlink) {
-      let path = ctx.create(f_type).map_err(TestError::CreateFile)?;
-      let ctime_before = stat(&amp;path)?.st_ctime;
+    sleep(Duration::from_secs(1));
 
-      sleep(Duration::from_secs(1));
+    chmod(&amp;path, Mode::from_bits_truncate(0o111)).unwrap();
 
-      chmod(&amp;path, Mode::from_bits_truncate(0o111))?;
-
-      let ctime_after = stat(&amp;path)?.st_ctime;
-      test_assert!(ctime_after &gt; ctime_before);
-  }
-
-  Ok(())
+    let ctime_after = stat(&amp;path).unwrap().st_ctime;
+    assert!(ctime_after &gt; ctime_before);
 }
 </code></pre>
 
