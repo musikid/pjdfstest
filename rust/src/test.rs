@@ -1,6 +1,5 @@
 use std::fmt::Debug;
 
-use linkme::distributed_slice;
 use thiserror::Error;
 
 use crate::runner::context::ContextError;
@@ -25,12 +24,11 @@ pub struct TestCase {
     pub syscall: Option<ExclFeature>,
 }
 
-#[distributed_slice]
-pub static TEST_CASES: [TestCase] = [..];
-
 /// Syscalls which are not available on every OS/file system combination.
 #[derive(Debug, PartialEq, Eq, Hash, strum::EnumString, strum::Display, strum::EnumIter)]
 #[strum(serialize_all = "snake_case")]
 pub enum ExclFeature {
     PosixFallocate,
 }
+
+inventory::collect!{TestCase}

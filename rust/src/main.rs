@@ -16,7 +16,7 @@ use strum::IntoEnumIterator;
 
 use pjdfs_tests::{
     pjdfs_main,
-    test::{ExclFeature, TestCase, TestContext, TEST_CASES},
+    test::{ExclFeature, TestCase, TestContext},
 };
 
 mod config;
@@ -73,7 +73,7 @@ fn main() -> anyhow::Result<()> {
         }
     }));
 
-    for test_case in TEST_CASES {
+    for test_case in inventory::iter::<TestCase> {
         if let Some(sc) = &test_case.syscall {
             if !enabled_features.contains(sc) {
                 println!(
