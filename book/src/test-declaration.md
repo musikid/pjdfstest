@@ -55,6 +55,15 @@ crate::test_case!{change_perm, root}
 The root requirement is automatically added for privileged file types,
 namely block and char.
 
-## TODO: Platform-specific functions 
+## Platform-specific functions 
 
-Some functions (like `lchmod`) are not supported on every platform.
+Some functions (like `lchmod`) are not supported on every operating system.
+When a test make use of such function, it is possible to restrain its compilation
+to the supported operating systems, with the attribute `#[cfg(target_os = ...)]`.
+It is also possible to apply this attribute on an aspect, or even on a syscall module.
+For example:
+
+```rust
+#[cfg(target_os = "freebsd")]
+mod lchmod;
+```
