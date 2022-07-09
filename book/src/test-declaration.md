@@ -27,19 +27,47 @@ fn ctime(ctx: &mut TestContext, f_type: FileType) {
 
 ## Parameterization
 
-### File types
+It is possible to give additional parameters to the test case macro,
+to modify the execution of the tests or add requirements.
 
-Some test cases need to test over different file types.
-The file types should be added at the end of the test case declaration,
-with brackets and an fat arrow before (`=> [FileType::Regular]`).
-The test function should also accept a `FileType` parameter to operate on.
+### File-system exclusive features
+
+Some features are not available for every file system.
+For tests requiring such features, the execution becomes opt-in.
+When a test need such feature, a variant of `FileSystemFeature` corresponding to this feature should be specified,
+by adding it after eventual `root` requirement and before the file types.
+Multiple features can be specified, with a comma `,` separator.
 
 For example:
 
 ```rust,ignore
-crate::test_case! {change_perm => [FileType::Regular, FileType::Fifo, FileType::Block, FileType::Char, FileType::Socket]}
-fn change_perm(ctx: &mut TestContext, f_type: FileType) {
+#[cfg(target_os = "freebsd")]
+crate::test_case! {eperm_immutable_flag, FileSystemFeature::Chflags, FileSystemFeature::PosixFallocate ...}
 ```
+
+#### File flags
+
+**NOTE: This feature is not supported by all POSIX systems, 
+therefore its use needs a `#[cfg(target_os = ...)]` attribute specifying supported system(s).
+
+It is possible to specify individual file flags for the tests which
+require it. They can be specified by appending `FileFlags` variants after a `;` separator,
+after (eventual) `root` and features.
+
+```rust,ignore
+#[cfg(target_os = "freebsd")]
+crate::test_case! {eperm_immutable_flag, root, FileSystemFeature::Chflags; FileFlags::SF_IMMUTABLE, FileFlags::UF_IMMUTABLE}
+```
+
+Here is a list of the OS which support file flags:
+
+```rust,ignore
+{{#include ../../rust/src/test.rs:file_flags_os}}
+```
+
+#### Adding features
+
+New features can be added to the `FileSystemFeature` enum.
 
 ### Root privileges
 
@@ -54,6 +82,21 @@ crate::test_case!{change_perm, root}
 
 The root requirement is automatically added for privileged file types,
 namely block and char.
+
+### File types
+
+Some test cases need to test over different file types.
+The file types should be added at the end of the test case declaration,
+within brackets and with a fat arrow before (`=> [FileType::Regular]`).
+The test function should also accept a `FileType` parameter to operate on.
+
+For example:
+
+```rust,ignore
+crate::test_case! {change_perm, root, FileSystemFeature::Chflags; FileFlags::SF_IMMUTABLE, FileFlags::UF_IMMUTABLE 
+=> [FileType::Regular, FileType::Fifo, FileType::Block, FileType::Char, FileType::Socket]}
+fn change_perm(ctx: &mut TestContext, f_type: FileType) {
+```
 
 ## Platform-specific functions 
 

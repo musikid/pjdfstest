@@ -5,6 +5,9 @@ use nix::{
 
 use crate::{runner::context::FileType, test::TestContext};
 
+#[cfg(target_os = "freebsd")]
+use crate::test::{FileFlags, FileSystemFeature};
+
 use super::chmod;
 
 crate::test_case! {enotdir => [FileType::Regular, FileType::Fifo, FileType::Block, FileType::Char, FileType::Socket]}
@@ -31,4 +34,12 @@ fn enametoolong(ctx: &mut TestContext) {
     let res = chmod(&too_long_path, Mode::from_bits_truncate(0o0620));
     assert!(res.is_err());
     assert_eq!(res.unwrap_err(), Errno::ENAMETOOLONG);
+}
+
+#[cfg(target_os = "freebsd")]
+crate::test_case! {eperm_immutable_flag, FileSystemFeature::Chflags; FileFlags::SF_IMMUTABLE}
+#[cfg(target_os = "freebsd")]
+fn eperm_immutable_flag(ctx: &mut TestContext) {
+    let path = ctx.create(FileType::Regular).unwrap();
+    //TODO: Complete
 }
