@@ -200,16 +200,7 @@ should be preferred.</p>
 <h4 id="test-case"><a class="header" href="#test-case">Test case</a></h4>
 <p>Each test case exercises a minimal piece of the syscall's functionality.
 Each must be registered with the <code>test_case!</code> macro.</p>
-<ul>
-<li>in a single file, which contains all the test functions and the case declaration,</li>
-<li>in a folder, which contains multiple modules for the test functions and a <code>mod.rs</code> file, which contains the declaration of the case.</li>
-</ul>
-<p>Except in the case of a very large set of test functions, it is better to use a single file.</p>
-<p>For example, in <code>chmod/permission.rs</code>, the test case declaration would be:</p>
-<pre><code class="language-rust ignore">pjdfs_test_case!(permission, { test: test_ctime });
-</code></pre>
-<h4 id="test-function"><a class="header" href="#test-function">Test function</a></h4>
-<p>For now, a test function takes a <code>&amp;mut TestContext</code> parameter.</p>
+<p>For now, the test function takes a <code>&amp;mut TestContext</code> parameter.</p>
 <pre><code class="language-rust ignore">// chmod/00.t:L58
 crate::test_case!{ctime, Syscall::Chmod}
 fn ctime(ctx: &amp;mut TestContext) {
@@ -229,8 +220,6 @@ fn ctime(ctx: &amp;mut TestContext) {
 <h3 id="test-runner-mainrs"><a class="header" href="#test-runner-mainrs">Test runner (main.rs)</a></h3>
 <p>The test runner has to run the tests, and provide a command-line interface to allow the user to modify how the tests should be run.
 It takes the tests from the specified test groups.</p>
-<pre><code class="language-rust ignore">for group in [chmod::tests] {
-</code></pre>
 
                     </main>
 

@@ -181,8 +181,18 @@ For example:</p>
 </span></code></pre></pre>
 <p>The root requirement is automatically added for privileged file types,
 namely block and char.</p>
-<h2 id="todo-platform-specific-functions"><a class="header" href="#todo-platform-specific-functions">TODO: Platform-specific functions</a></h2>
-<p>Some functions (like <code>lchmod</code>) are not supported on every platform.</p>
+<h2 id="platform-specific-functions"><a class="header" href="#platform-specific-functions">Platform-specific functions</a></h2>
+<p>Some functions (like <code>lchmod</code>) are not supported on every operating system.
+When a test make use of such function, it is possible to restrain its compilation
+to the supported operating systems, with the attribute <code>#[cfg(target_os = ...)]</code>.
+It is also possible to apply this attribute on an aspect, or even on a syscall module.
+For example:</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>#[cfg(target_os = &quot;freebsd&quot;)]
+mod lchmod;
+<span class="boring">}
+</span></code></pre></pre>
 
                     </main>
 
