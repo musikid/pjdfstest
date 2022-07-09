@@ -2,8 +2,7 @@
 
 The tests should be grouped by syscalls, in the `tests/` folder.
 Each folder then have a `mod.rs` file, 
-which contains declarations of the modules inside this folder,
-and a `group!` statement to export the test cases from these modules.
+which contains declarations of the modules inside this folder.
 For example:
 
 ### Layout
@@ -19,33 +18,24 @@ chmod (syscall/test group)
 
 ```rust,ignore
 mod permission;
-mod lchmod;
+mod errno;
 ```
 
 Each module inside a group should register its test cases with `test_case!`.
 In our example, `chmod/permission.rs` would be:
 
 ```rust,ignore
-test_case!{ctime, root, Syscall::Chmod}
-use crate::{
-    test_case,
-    test::{TestContext, TestResult},
-};
-
 // chmod/00.t:L58
-fn ctime(ctx: &mut TestContext) -> TestResult {
-  for f_type in FileType::iter().filter(|&ft| ft == FileType::Symlink) {
-      let path = ctx.create(f_type).map_err(TestError::CreateFile)?;
-      let ctime_before = stat(&path)?.st_ctime;
+crate::test_case! {ctime => [FileType::Regular, FileType::Dir, FileType::Fifo, FileType::Block, FileType::Char, FileType::Socket]}
+fn ctime(ctx: &mut TestContext, f_type: FileType) {
+    let path = ctx.create(f_type).unwrap();
+    let ctime_before = stat(&path).unwrap().st_ctime;
 
-      sleep(Duration::from_secs(1));
+    sleep(Duration::from_secs(1));
 
-      chmod(&path, Mode::from_bits_truncate(0o111))?;
+    chmod(&path, Mode::from_bits_truncate(0o111)).unwrap();
 
-      let ctime_after = stat(&path)?.st_ctime;
-      test_assert!(ctime_after > ctime_before);
-  }
-
-  Ok(())
+    let ctime_after = stat(&path).unwrap().st_ctime;
+    assert!(ctime_after > ctime_before);
 }
 ```

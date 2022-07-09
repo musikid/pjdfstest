@@ -36,7 +36,7 @@ The test function should also accept a `FileType` parameter to operate on.
 
 For example:
 
-```rust
+```rust,ignore
 crate::test_case! {change_perm => [FileType::Regular, FileType::Fifo, FileType::Block, FileType::Char, FileType::Socket]}
 fn change_perm(ctx: &mut TestContext, f_type: FileType) {
 ```
@@ -48,7 +48,7 @@ To declare that a test function require root privileges,
 `root` should be added to its declaration.
 For example:
 
-```rust
+```rust,ignore
 crate::test_case!{change_perm, root}
 ```
 
@@ -63,7 +63,7 @@ to the supported operating systems, with the attribute `#[cfg(target_os = ...)]`
 It is also possible to apply this attribute on an aspect, or even on a syscall module.
 For example:
 
-```rust
+```rust,ignore
 #[cfg(target_os = "freebsd")]
 mod lchmod;
 ```
