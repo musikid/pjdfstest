@@ -49,7 +49,6 @@ crate::test_case! {eperm_immutable_flag, FileSystemFeature::Chflags, FileSystemF
 
 **NOTE: This feature is not supported by all POSIX systems, 
 therefore its use needs a `#[cfg(target_os = ...)]` attribute specifying supported system(s).
-Please see [Rust reference](https://doc.rust-lang.org/reference/conditional-compilation.html#target_os) for more information.**
 
 It is possible to specify individual file flags for the tests which
 require it. They can be specified by appending `FileFlags` variants after a `;` separator,
