@@ -99,6 +99,15 @@ crate::test_case! {change_perm, root, FileSystemFeature::Chflags; FileFlags::SF_
 fn change_perm(ctx: &mut TestContext, f_type: FileType) {
 ```
 
-## TODO: Platform-specific functions 
+## Platform-specific functions 
 
-Some functions (like `lchmod`) are not supported on every platform.
+Some functions (like `lchmod`) are not supported on every operating system.
+When a test make use of such function, it is possible to restrain its compilation
+to the supported operating systems, with the attribute `#[cfg(target_os = ...)]`.
+It is also possible to apply this attribute on an aspect, or even on a syscall module.
+For example:
+
+```rust,ignore
+#[cfg(target_os = "freebsd")]
+mod lchmod;
+```

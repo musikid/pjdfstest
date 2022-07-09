@@ -94,20 +94,7 @@ should be preferred.
 Each test case exercises a minimal piece of the syscall's functionality.
 Each must be registered with the `test_case!` macro.
 
-- in a single file, which contains all the test functions and the case declaration,
-- in a folder, which contains multiple modules for the test functions and a `mod.rs` file, which contains the declaration of the case.
-
-Except in the case of a very large set of test functions, it is better to use a single file.
-
-For example, in `chmod/permission.rs`, the test case declaration would be:
-
-```rust,ignore
-pjdfs_test_case!(permission, { test: test_ctime });
-```
-
-#### Test function
-
-For now, a test function takes a `&mut TestContext` parameter.
+For now, the test function takes a `&mut TestContext` parameter.
 
 ```rust,ignore
 // chmod/00.t:L58
@@ -131,7 +118,3 @@ fn ctime(ctx: &mut TestContext) {
 
 The test runner has to run the tests, and provide a command-line interface to allow the user to modify how the tests should be run.
 It takes the tests from the specified test groups.
-
-```rust,ignore
-for group in [chmod::tests] {
-```
