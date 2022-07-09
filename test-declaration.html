@@ -170,16 +170,13 @@ Multiple features can be specified, with a comma <code>,</code> separator.</p>
 crate::test_case! {eperm_immutable_flag, FileSystemFeature::Chflags, FileSystemFeature::PosixFallocate ...}
 </code></pre>
 <h4 id="file-flags"><a class="header" href="#file-flags">File flags</a></h4>
-<p>**NOTE: This feature is not supported by all POSIX systems, 
-therefore its use needs a <code>#[cfg(target_os = ...)]</code> attribute specifying supported system(s).</p>
+<p><strong>NOTE: This feature is not supported by all POSIX systems, 
+therefore its use needs a <code>#[cfg(target_os = ...)]</code> attribute specifying supported system(s).</strong></p>
 <p>It is possible to specify individual file flags for the tests which
 require it. They can be specified by appending <code>FileFlags</code> variants after a <code>;</code> separator,
 after (eventual) <code>root</code> and features.</p>
 <pre><code class="language-rust ignore">#[cfg(target_os = &quot;freebsd&quot;)]
 crate::test_case! {eperm_immutable_flag, root, FileSystemFeature::Chflags; FileFlags::SF_IMMUTABLE, FileFlags::UF_IMMUTABLE}
-</code></pre>
-<p>Here is a list of the OS which support file flags:</p>
-<pre><code class="language-rust ignore">
 </code></pre>
 <h4 id="adding-features"><a class="header" href="#adding-features">Adding features</a></h4>
 <p>New features can be added to the <code>FileSystemFeature</code> enum.</p>
