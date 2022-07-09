@@ -48,7 +48,7 @@ fn main() -> anyhow::Result<()> {
         .merge(Toml::file(
             args.configuration_file
                 .as_deref()
-                .unwrap_or(Path::new("pjdfstest.toml")),
+                .unwrap_or_else(|| Path::new("pjdfstest.toml")),
         ))
         .extract()?;
 
@@ -86,7 +86,7 @@ fn main() -> anyhow::Result<()> {
                 .join(", ");
 
             message += "requires features: ";
-            message += &features;
+            message += features;
             message += "\n";
         }
 
