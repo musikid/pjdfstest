@@ -24,32 +24,12 @@ pub struct TestCase {
     pub require_root: bool,
     pub fun: fn(&mut TestContext),
     pub required_features: &'static [FileSystemFeature],
-    #[cfg(any(
-        target_os = "openbsd",
-        target_os = "netbsd",
-        target_os = "freebsd",
-        target_os = "dragonfly",
-        target_os = "macos",
-        target_os = "ios",
-        target_os = "watchos",
-    ))]
     pub required_file_flags: &'static [FileFlags],
 }
 
 #[distributed_slice]
 pub static TEST_CASES: [TestCase] = [..];
 
-// ANCHOR: file_flags_os
-#[cfg(any(
-    target_os = "openbsd",
-    target_os = "netbsd",
-    target_os = "freebsd",
-    target_os = "dragonfly",
-    target_os = "macos",
-    target_os = "ios",
-    target_os = "watchos",
-))]
-// ANCHOR_END: file_flags_os
 #[allow(non_camel_case_types)]
 #[derive(
     Debug,
@@ -64,15 +44,96 @@ pub static TEST_CASES: [TestCase] = [..];
 )]
 /// File flags (see https://docs.freebsd.org/en/books/handbook/basics/#permissions).
 pub enum FileFlags {
+    #[cfg(any(
+        target_os = "openbsd",
+        target_os = "netbsd",
+        target_os = "freebsd",
+        target_os = "dragonfly",
+        target_os = "macos",
+        target_os = "ios",
+        target_os = "watchos",
+    ))]
     UF_SETTABLE,
+    #[cfg(any(
+        target_os = "openbsd",
+        target_os = "netbsd",
+        target_os = "freebsd",
+        target_os = "dragonfly",
+        target_os = "macos",
+        target_os = "ios",
+        target_os = "watchos",
+    ))]
     UF_NODUMP,
+    #[cfg(any(
+        target_os = "openbsd",
+        target_os = "netbsd",
+        target_os = "freebsd",
+        target_os = "dragonfly",
+        target_os = "macos",
+        target_os = "ios",
+        target_os = "watchos",
+    ))]
     UF_IMMUTABLE,
+    #[cfg(any(
+        target_os = "openbsd",
+        target_os = "netbsd",
+        target_os = "freebsd",
+        target_os = "dragonfly",
+        target_os = "macos",
+        target_os = "ios",
+        target_os = "watchos",
+    ))]
     UF_APPEND,
+    #[cfg(any(
+        target_os = "openbsd",
+        target_os = "netbsd",
+        target_os = "freebsd",
+        target_os = "dragonfly",
+        target_os = "macos",
+        target_os = "ios",
+        target_os = "watchos",
+    ))]
     UF_OPAQUE,
 
+    #[cfg(any(
+        target_os = "openbsd",
+        target_os = "netbsd",
+        target_os = "freebsd",
+        target_os = "dragonfly",
+        target_os = "macos",
+        target_os = "ios",
+        target_os = "watchos",
+    ))]
     SF_SETTABLE,
+    #[cfg(any(
+        target_os = "openbsd",
+        target_os = "netbsd",
+        target_os = "freebsd",
+        target_os = "dragonfly",
+        target_os = "macos",
+        target_os = "ios",
+        target_os = "watchos",
+    ))]
     SF_ARCHIVED,
+    #[cfg(any(
+        target_os = "openbsd",
+        target_os = "netbsd",
+        target_os = "freebsd",
+        target_os = "dragonfly",
+        target_os = "macos",
+        target_os = "ios",
+        target_os = "watchos",
+    ))]
     SF_IMMUTABLE,
+    #[cfg(any(
+        target_os = "openbsd",
+        target_os = "netbsd",
+        target_os = "freebsd",
+        target_os = "dragonfly",
+        target_os = "macos",
+        target_os = "ios",
+        target_os = "watchos",
+    ))]
     SF_APPEND,
 
     #[cfg(any(target_os = "dragonfly"))]

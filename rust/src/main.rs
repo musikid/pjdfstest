@@ -72,22 +72,7 @@ fn main() -> anyhow::Result<()> {
         }
     }));
 
-    #[cfg(any(
-        target_os = "openbsd",
-        target_os = "netbsd",
-        target_os = "freebsd",
-        target_os = "dragonfly",
-        target_os = "macos",
-        target_os = "ios",
-        target_os = "watchos",
-    ))]
-    let enabled_flags: HashSet<_> = config
-        .features
-        .file_flags
-        .unwrap_or_default()
-        .iter()
-        .cloned()
-        .collect();
+    let enabled_flags: HashSet<_> = config.features.file_flags.iter().cloned().collect();
 
     for test_case in TEST_CASES {
         //TODO: There's probably a better way to do this...
@@ -111,36 +96,24 @@ fn main() -> anyhow::Result<()> {
                 .collect::<String>();
         }
 
-        #[cfg(any(
-            target_os = "openbsd",
-            target_os = "netbsd",
-            target_os = "freebsd",
-            target_os = "dragonfly",
-            target_os = "macos",
-            target_os = "ios",
-            target_os = "watchos",
-        ))]
-        {
-            let required_flags: HashSet<_> =
-                test_case.required_file_flags.iter().cloned().collect();
-            let missing_flags = required_flags.difference(&enabled_flags);
+        let required_flags: HashSet<_> = test_case.required_file_flags.iter().cloned().collect();
+        let missing_flags = required_flags.difference(&enabled_flags);
 
-            if missing_flags.clone().count() > 0 {
-                should_skip = true;
+        if missing_flags.clone().count() > 0 {
+            should_skip = true;
 
-                let flags: String = missing_flags
-                    .map(|f| {
-                        let f = f.to_string();
+            let flags: String = missing_flags
+                .map(|f| {
+                    let f = f.to_string();
 
-                        ["\"", f.as_str(), "\""].join("")
-                    })
-                    .collect::<Vec<_>>()
-                    .join(", ");
+                    ["\"", f.as_str(), "\""].join("")
+                })
+                .collect::<Vec<_>>()
+                .join(", ");
 
-                let message = message.get_or_insert(String::new());
-                *message += "please add the following flags to your configuration:\n";
-                *message += &format!("\tfile_flags = [{}]\n", flags);
-            }
+            let message = message.get_or_insert(String::new());
+            *message += "please add the following flags to your configuration:\n";
+            *message += &format!("\tfile_flags = [{}]\n", flags);
         }
 
         if should_skip {

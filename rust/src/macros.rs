@@ -17,15 +17,6 @@ macro_rules! test_case {
             static [<CASE_$f:upper>]: $crate::test::TestCase = $crate::test::TestCase {
                 name: concat!(module_path!(), "::", stringify!($f)),
                 required_features: $features,
-                #[cfg(any(
-                    target_os = "openbsd",
-                    target_os = "netbsd",
-                    target_os = "freebsd",
-                    target_os = "dragonfly",
-                    target_os = "macos",
-                    target_os = "ios",
-                    target_os = "watchos",
-                ))]
                 required_file_flags: $flags,
                 require_root: $require_root,
                 fun: $f,
@@ -39,15 +30,6 @@ macro_rules! test_case {
                 static [<CASE_$f:upper$file_type:upper>]: $crate::test::TestCase = $crate::test::TestCase {
                     name: concat!(module_path!(), "::", stringify!($f), "::", stringify!([<$file_type:lower>]), "_type"),
                     required_features: $features,
-                    #[cfg(any(
-                        target_os = "openbsd",
-                        target_os = "netbsd",
-                        target_os = "freebsd",
-                        target_os = "dragonfly",
-                        target_os = "macos",
-                        target_os = "ios",
-                        target_os = "watchos",
-                    ))]
                     required_file_flags: $flags,
                     require_root: $require_root || FileType::$file_type $( ($ft_args) )?.privileged(),
                     fun: |ctx| $f(ctx, FileType::$file_type $( ($ft_args) )?),
