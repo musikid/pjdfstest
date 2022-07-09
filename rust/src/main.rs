@@ -72,7 +72,7 @@ fn main() -> anyhow::Result<()> {
         //TODO: There's probably a better way to do this...
         let mut should_skip = false;
 
-        let mut message = None;
+        let mut message = String::new();
 
         let features: HashSet<_> = test_case.required_features.iter().collect();
         let missing_features: Vec<_> = features.difference(&enabled_features).collect();
@@ -85,10 +85,9 @@ fn main() -> anyhow::Result<()> {
                 .collect::<Vec<_>>()
                 .join(", ");
 
-            let message = message.get_or_insert(String::new());
-            *message += "requires features: ";
-            *message += &features;
-            *message += "\n";
+            message += "requires features: ";
+            message += &features;
+            message += "\n";
         }
 
         let required_flags: HashSet<_> = test_case.required_file_flags.iter().collect();
@@ -106,18 +105,13 @@ fn main() -> anyhow::Result<()> {
                 .collect::<Vec<_>>()
                 .join(", ");
 
-            let message = message.get_or_insert(String::new());
-            *message += "requires flags: ";
-            *message += &flags;
-            *message += "\n";
+            message += "requires flags: ";
+            message += &flags;
+            message += "\n";
         }
 
         if should_skip {
-            println!(
-                "skipped '{}'\n{}",
-                test_case.name,
-                message.unwrap_or_default()
-            );
+            println!("skipped '{}'\n{}", test_case.name, message);
             continue;
         }
 
