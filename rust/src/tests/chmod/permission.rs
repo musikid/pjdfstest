@@ -9,7 +9,7 @@ use nix::{
 const FILE_PERMS: mode_t = 0o777;
 
 // chmod/00.t:L24
-crate::test_case! {change_perm => [FileType::Regular, FileType::Dir, FileType::Fifo, FileType::Block, FileType::Char, FileType::Socket]}
+crate::test_case! {change_perm => [Regular, Dir, Fifo, Block, Char, Socket]}
 fn change_perm(ctx: &mut TestContext, f_type: FileType) {
     let path = ctx.create(f_type).unwrap();
     let expected_mode = Mode::from_bits_truncate(0o111);
@@ -37,7 +37,7 @@ fn change_perm(ctx: &mut TestContext, f_type: FileType) {
 }
 
 // chmod/00.t:L58
-crate::test_case! {ctime => [FileType::Regular, FileType::Dir, FileType::Fifo, FileType::Block, FileType::Char, FileType::Socket]}
+crate::test_case! {ctime => [Regular, Dir, Fifo, Block, Char, Socket]}
 fn ctime(ctx: &mut TestContext, f_type: FileType) {
     let path = ctx.create(f_type).unwrap();
     let ctime_before = stat(&path).unwrap().st_ctime;
@@ -51,7 +51,7 @@ fn ctime(ctx: &mut TestContext, f_type: FileType) {
 }
 
 // chmod/00.t:L89
-crate::test_case! {failed_chmod_unchanged_ctime => [FileType::Regular, FileType::Dir, FileType::Fifo, FileType::Block, FileType::Char, FileType::Socket]}
+crate::test_case! {failed_chmod_unchanged_ctime => [Regular, Dir, Fifo, Block, Char, Socket]}
 fn failed_chmod_unchanged_ctime(ctx: &mut TestContext, f_type: FileType) {
     let path = ctx.create(f_type).unwrap();
     let ctime_before = stat(&path).unwrap().st_ctime;

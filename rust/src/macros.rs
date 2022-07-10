@@ -24,7 +24,7 @@ macro_rules! test_case {
             }
         }
     };
-    (@ $f:ident, $features:expr, $flags:expr, $require_root:expr => [$( FileType:: $file_type:tt $( ($ft_args: tt) )? ),+ $(,)*]) => {
+    (@ $f:ident, $features:expr, $flags:expr, $require_root:expr => [$( $file_type:tt $( ($ft_args: tt) )? ),+ $(,)*]) => {
         $(
             paste::paste! {
                 ::inventory::submit! {
@@ -32,8 +32,8 @@ macro_rules! test_case {
                         name: concat!(module_path!(), "::", stringify!($f), "::", stringify!([<$file_type:lower>])),
                         required_features: $features,
                         required_file_flags: $flags,
-                        require_root: $require_root || FileType::$file_type $( ($ft_args) )?.privileged(),
-                        fun: |ctx| $f(ctx, FileType::$file_type $( ($ft_args) )?),
+                        require_root: $require_root || crate::runner::context::FileType::$file_type $( ($ft_args) )?.privileged(),
+                        fun: |ctx| $f(ctx, crate::runner::context::FileType::$file_type $( ($ft_args) )?),
                     }
                 }
             }
