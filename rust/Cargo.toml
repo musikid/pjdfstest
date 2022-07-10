@@ -26,5 +26,5 @@ name = "pjdfs_tests"
 path = "src/lib.rs"
 
 [[bin]]
-name = "pjdfs_runner"
+name = "pjdfstest"
 path = "src/main.rs"

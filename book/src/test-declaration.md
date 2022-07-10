@@ -34,9 +34,10 @@ to modify the execution of the tests or add requirements.
 
 Some features are not available for every file system.
 For tests requiring such features, the execution becomes opt-in.
-When a test need such feature, a variant of `FileSystemFeature` corresponding to this feature should be specified,
-by adding it after eventual `root` requirement and before the file types.
-Multiple features can be specified, with a comma `,` separator.
+When a test needs such feature,
+a variant of `FileSystemFeature` corresponding to this feature should be specified
+after potential `root` requirement and before file flags.
+Multiple features can be specified, each separated by a comma `,` separator.
 
 For example:
 
@@ -48,11 +49,11 @@ crate::test_case! {eperm_immutable_flag, FileSystemFeature::Chflags, FileSystemF
 #### File flags
 
 **NOTE: This feature is not supported by all POSIX systems, 
-therefore its use needs a `#[cfg(target_os = ...)]` attribute specifying supported system(s).**
+therefore its use needs a `#[cfg(target_os = ...)]` attribute specifying the relevant system(s).**
 
 It is possible to specify individual file flags for the tests which
 require it. They can be specified by appending `FileFlags` variants after a `;` separator,
-after (eventual) `root` and features.
+after potential `root` requirement and features.
 
 ```rust,ignore
 #[cfg(target_os = "freebsd")]

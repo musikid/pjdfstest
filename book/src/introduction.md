@@ -18,7 +18,7 @@ cargo run
 
 ```bash
 cd rust
-cargo build && sudo ./target/debug/pjdfs_runner
+cargo build && sudo ./target/debug/pjdfstest
 ```
 
 ## Architecture
@@ -97,20 +97,17 @@ Each must be registered with the `test_case!` macro.
 For now, the test function takes a `&mut TestContext` parameter.
 
 ```rust,ignore
-// chmod/00.t:L58
-crate::test_case!{ctime, Syscall::Chmod}
-fn ctime(ctx: &mut TestContext) {
-    for f_type in FileType::iter().filter(|ft| *ft != FileType::Symlink(None)) {
-        let path = ctx.create(f_type).unwrap();
-        let ctime_before = stat(&path).unwrap().st_ctime;
+crate::test_case! {ctime => [FileType::Regular, FileType::Fifo, FileType::Block, FileType::Char, FileType::Socket]}
+fn ctime(ctx: &mut TestContext, f_type: FileType) {
+    let path = ctx.create(f_type).unwrap();
+    let ctime_before = stat(&path).unwrap().st_ctime;
 
-        sleep(Duration::from_secs(1));
+    sleep(Duration::from_secs(1));
 
-        chmod(&path, Mode::from_bits_truncate(0o111)).unwrap();
+    chmod(&path, Mode::from_bits_truncate(0o111)).unwrap();
 
-        let ctime_after = stat(&path).unwrap().st_ctime;
-        assert!(ctime_after > ctime_before);
-    }
+    let ctime_after = stat(&path).unwrap().st_ctime;
+    assert!(ctime_after > ctime_before);
 }
 ```
 
