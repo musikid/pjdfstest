@@ -147,7 +147,7 @@ cargo run
 </code></pre>
 <h3 id="run-as-root"><a class="header" href="#run-as-root">Run as root</a></h3>
 <pre><code class="language-bash">cd rust
-cargo build &amp;&amp; sudo ./target/debug/pjdfs_runner
+cargo build &amp;&amp; sudo ./target/debug/pjdfstest
 </code></pre>
 <h2 id="architecture"><a class="header" href="#architecture">Architecture</a></h2>
 <p>The package is made of the tests, and a test runner to launch them.</p>
@@ -202,20 +202,17 @@ should be preferred.</p>
 <p>Each test case exercises a minimal piece of the syscall's functionality.
 Each must be registered with the <code>test_case!</code> macro.</p>
 <p>For now, the test function takes a <code>&amp;mut TestContext</code> parameter.</p>
-<pre><code class="language-rust ignore">// chmod/00.t:L58
-crate::test_case!{ctime, Syscall::Chmod}
-fn ctime(ctx: &amp;mut TestContext) {
-    for f_type in FileType::iter().filter(|ft| *ft != FileType::Symlink(None)) {
-        let path = ctx.create(f_type).unwrap();
-        let ctime_before = stat(&amp;path).unwrap().st_ctime;
+<pre><code class="language-rust ignore">crate::test_case! {ctime =&gt; [FileType::Regular, FileType::Fifo, FileType::Block, FileType::Char, FileType::Socket]}
+fn ctime(ctx: &amp;mut TestContext, f_type: FileType) {
+    let path = ctx.create(f_type).unwrap();
+    let ctime_before = stat(&amp;path).unwrap().st_ctime;
 
-        sleep(Duration::from_secs(1));
+    sleep(Duration::from_secs(1));
 
-        chmod(&amp;path, Mode::from_bits_truncate(0o111)).unwrap();
+    chmod(&amp;path, Mode::from_bits_truncate(0o111)).unwrap();
 
-        let ctime_after = stat(&amp;path).unwrap().st_ctime;
-        assert!(ctime_after &gt; ctime_before);
-    }
+    let ctime_after = stat(&amp;path).unwrap().st_ctime;
+    assert!(ctime_after &gt; ctime_before);
 }
 </code></pre>
 <h3 id="test-runner-mainrs"><a class="header" href="#test-runner-mainrs">Test runner (main.rs)</a></h3>
@@ -310,19 +307,20 @@ to modify the execution of the tests or add requirements.</p>
 <h3 id="file-system-exclusive-features"><a class="header" href="#file-system-exclusive-features">File-system exclusive features</a></h3>
 <p>Some features are not available for every file system.
 For tests requiring such features, the execution becomes opt-in.
-When a test need such feature, a variant of <code>FileSystemFeature</code> corresponding to this feature should be specified,
-by adding it after eventual <code>root</code> requirement and before the file types.
-Multiple features can be specified, with a comma <code>,</code> separator.</p>
+When a test needs such feature,
+a variant of <code>FileSystemFeature</code> corresponding to this feature should be specified
+after potential <code>root</code> requirement and before file flags.
+Multiple features can be specified, each separated by a comma <code>,</code> separator.</p>
 <p>For example:</p>
 <pre><code class="language-rust ignore">#[cfg(target_os = &quot;freebsd&quot;)]
 crate::test_case! {eperm_immutable_flag, FileSystemFeature::Chflags, FileSystemFeature::PosixFallocate ...}
 </code></pre>
 <h4 id="file-flags"><a class="header" href="#file-flags">File flags</a></h4>
 <p><strong>NOTE: This feature is not supported by all POSIX systems, 
-therefore its use needs a <code>#[cfg(target_os = ...)]</code> attribute specifying supported system(s).</strong></p>
+therefore its use needs a <code>#[cfg(target_os = ...)]</code> attribute specifying the relevant system(s).</strong></p>
 <p>It is possible to specify individual file flags for the tests which
 require it. They can be specified by appending <code>FileFlags</code> variants after a <code>;</code> separator,
-after (eventual) <code>root</code> and features.</p>
+after potential <code>root</code> requirement and features.</p>
 <pre><code class="language-rust ignore">#[cfg(target_os = &quot;freebsd&quot;)]
 crate::test_case! {eperm_immutable_flag, root, FileSystemFeature::Chflags; FileFlags::SF_IMMUTABLE, FileFlags::UF_IMMUTABLE}
 </code></pre>

@@ -146,7 +146,7 @@ cargo run
 </code></pre>
 <h3 id="run-as-root"><a class="header" href="#run-as-root">Run as root</a></h3>
 <pre><code class="language-bash">cd rust
-cargo build &amp;&amp; sudo ./target/debug/pjdfs_runner
+cargo build &amp;&amp; sudo ./target/debug/pjdfstest
 </code></pre>
 <h2 id="architecture"><a class="header" href="#architecture">Architecture</a></h2>
 <p>The package is made of the tests, and a test runner to launch them.</p>
@@ -201,20 +201,17 @@ should be preferred.</p>
 <p>Each test case exercises a minimal piece of the syscall's functionality.
 Each must be registered with the <code>test_case!</code> macro.</p>
 <p>For now, the test function takes a <code>&amp;mut TestContext</code> parameter.</p>
-<pre><code class="language-rust ignore">// chmod/00.t:L58
-crate::test_case!{ctime, Syscall::Chmod}
-fn ctime(ctx: &amp;mut TestContext) {
-    for f_type in FileType::iter().filter(|ft| *ft != FileType::Symlink(None)) {
-        let path = ctx.create(f_type).unwrap();
-        let ctime_before = stat(&amp;path).unwrap().st_ctime;
+<pre><code class="language-rust ignore">crate::test_case! {ctime =&gt; [FileType::Regular, FileType::Fifo, FileType::Block, FileType::Char, FileType::Socket]}
+fn ctime(ctx: &amp;mut TestContext, f_type: FileType) {
+    let path = ctx.create(f_type).unwrap();
+    let ctime_before = stat(&amp;path).unwrap().st_ctime;
 
-        sleep(Duration::from_secs(1));
+    sleep(Duration::from_secs(1));
 
-        chmod(&amp;path, Mode::from_bits_truncate(0o111)).unwrap();
+    chmod(&amp;path, Mode::from_bits_truncate(0o111)).unwrap();
 
-        let ctime_after = stat(&amp;path).unwrap().st_ctime;
-        assert!(ctime_after &gt; ctime_before);
-    }
+    let ctime_after = stat(&amp;path).unwrap().st_ctime;
+    assert!(ctime_after &gt; ctime_before);
 }
 </code></pre>
 <h3 id="test-runner-mainrs"><a class="header" href="#test-runner-mainrs">Test runner (main.rs)</a></h3>
