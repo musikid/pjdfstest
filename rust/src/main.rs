@@ -32,6 +32,12 @@ struct ArgOptions {
 
     #[options(help = "List opt-in features")]
     list_features: bool,
+
+    #[options(help = "Match names exactly")]
+    exact: bool,
+
+    #[options(free, help = "Filter test names")]
+    test_patterns: Vec<String>,
 }
 
 fn main() -> anyhow::Result<()> {
@@ -68,7 +74,25 @@ fn main() -> anyhow::Result<()> {
 
     let enabled_flags: HashSet<_> = config.features.file_flags.iter().collect();
 
-    for test_case in inventory::iter::<TestCase> {
+    let test_cases = inventory::iter::<TestCase>;
+    let test_cases: Vec<_> = if args.test_patterns.is_empty() {
+        test_cases.into_iter().collect()
+    } else {
+        test_cases
+            .into_iter()
+            .filter(|case| {
+                args.test_patterns.iter().any(|pat| {
+                    if args.exact {
+                        case.name == pat
+                    } else {
+                        case.name.contains(pat)
+                    }
+                })
+            })
+            .collect()
+    };
+
+    for test_case in test_cases {
         //TODO: There's probably a better way to do this...
         let mut should_skip = false;
 
