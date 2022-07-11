@@ -248,6 +248,15 @@ specified in the configuration with the <code>file_flags</code> array.</p>
 posix_fallocate = {}
 file_flags = [&quot;UF_IMMUTABLE&quot;]
 </code></pre>
+<h3 id="settings"><a class="header" href="#settings">[settings]</a></h3>
+<pre><code class="language-toml">[settings]
+naptime = 0.001
+</code></pre>
+<ul>
+<li><code>naptime</code> - The duration for a &quot;short&quot; sleep.  It should be greater than the
+timestamp granularity of the file system under test.  The default value is 1
+second.</li>
+</ul>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="structure"><a class="header" href="#structure">Structure</a></h1>
 <p>The tests should be grouped by syscalls, in the <code>tests/</code> folder.
 Each folder then have a <code>mod.rs</code> file, 
