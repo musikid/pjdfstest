@@ -41,3 +41,14 @@ specified in the configuration with the `file_flags` array.
 posix_fallocate = {}
 file_flags = ["UF_IMMUTABLE"]
 ```
+
+### [settings]
+
+```toml
+[settings]
+naptime = 0.001
+```
+
+* `naptime` - The duration for a "short" sleep.  It should be greater than the
+  timestamp granularity of the file system under test.  The default value is 1
+  second.

@@ -11,6 +11,8 @@ use std::{
     os::unix::fs::symlink,
     panic::{catch_unwind, resume_unwind, UnwindSafe},
     path::{Path, PathBuf},
+    thread,
+    time::Duration
 };
 use strum_macros::EnumIter;
 use tempfile::{tempdir, TempDir};
@@ -54,14 +56,18 @@ pub enum ContextError {
 }
 
 pub struct TestContext {
+    naptime: Duration,
     temp_dir: TempDir,
 }
 
 impl TestContext {
     // TODO: make it private when all code runner is in the good module
-    pub fn new() -> Self {
+    // TODO: replace the `naptime` argument with `SettingsConfig` once the lib
+    // is merged into the bin.
+    pub fn new(naptime: &f64) -> Self {
+        let naptime = Duration::from_secs_f64(*naptime);
         let temp_dir = tempdir().unwrap();
-        TestContext { temp_dir }
+        TestContext { naptime, temp_dir }
     }
 
     //TODO: Maybe better as a macro? unwrap?
@@ -209,10 +215,9 @@ impl TestContext {
 
         Ok(path)
     }
-}
 
-impl Default for TestContext {
-    fn default() -> Self {
-        Self::new()
+    /// A short sleep, long enough for file system timestamps to change.
+    pub fn nap(&self) {
+        thread::sleep(self.naptime)
     }
 }
