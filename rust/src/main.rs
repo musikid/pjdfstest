@@ -75,13 +75,11 @@ fn main() -> anyhow::Result<()> {
     let enabled_flags: HashSet<_> = config.features.file_flags.iter().collect();
 
     let test_cases = inventory::iter::<TestCase>;
-    let test_cases: Vec<_> = if args.test_patterns.is_empty() {
-        test_cases.into_iter().collect()
-    } else {
+    let test_cases: Vec<_> =
         test_cases
             .into_iter()
             .filter(|case| {
-                args.test_patterns.iter().any(|pat| {
+                args.test_patterns.is_empty() || args.test_patterns.iter().any(|pat| {
                     if args.exact {
                         case.name == pat
                     } else {
