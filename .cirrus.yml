@@ -8,7 +8,7 @@ build: &BUILD
     - cd rust
     - cargo check --all-targets
     - cargo build --all-targets --release
-    - target/release/pjdfs_runner
+    - target/release/pjdfstest
     - rustup component add clippy
     - cargo clippy --all-targets
 
