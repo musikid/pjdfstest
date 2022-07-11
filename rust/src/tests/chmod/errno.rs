@@ -10,7 +10,7 @@ use crate::test::{FileFlags, FileSystemFeature};
 
 use super::chmod;
 
-crate::test_case! {enotdir => [FileType::Regular, FileType::Fifo, FileType::Block, FileType::Char, FileType::Socket]}
+crate::test_case! {enotdir => [Regular, Fifo, Block, Char, Socket]}
 /// Returns ENOTDIR if a component of the path prefix is not a directory
 fn enotdir(ctx: &mut TestContext, f_type: FileType) {
     let not_dir = ctx.create(f_type).unwrap();
