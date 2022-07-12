@@ -1,21 +1,27 @@
 use std::os::unix::fs::MetadataExt as StdMetadataExt;
+
+
 use std::{
     fs::metadata,
     path::Path,
-    time::{Duration, SystemTime}
+    time::{Duration, SystemTime},
 };
 
-use crate::test::TestContext;
+
+
+
+
+use crate::{test::TestContext};
 
 pub mod chmod;
+pub mod posix_fallocate;
 
 /// A handy extention to std::os::unix::fs::MetadataExt
 trait MetadataExt: StdMetadataExt {
     /// Return the file's last changed time as a `SystemTime`, including
     /// fractional component.
     fn ctime_sys(&self) -> SystemTime {
-        let nsec = u32::try_from(self.ctime_nsec())
-            .expect("File has denormalized timestamp");
+        let nsec = u32::try_from(self.ctime_nsec()).expect("File has denormalized timestamp");
         if self.ctime() >= 0 {
             SystemTime::UNIX_EPOCH + Duration::new(self.ctime() as u64, nsec)
         } else {
@@ -29,7 +35,8 @@ impl<T: StdMetadataExt> MetadataExt for T {}
 
 /// Assert that a certain operation changes the ctime of a file.
 fn assert_ctime_changed<F>(ctx: &mut TestContext, path: &Path, f: F)
-    where F: FnOnce()
+where
+    F: FnOnce(),
 {
     let ctime_before = metadata(&path).unwrap().ctime_sys();
 
@@ -43,7 +50,8 @@ fn assert_ctime_changed<F>(ctx: &mut TestContext, path: &Path, f: F)
 
 /// Assert that a certain operation does not change the ctime of a file.
 fn assert_ctime_unchanged<F>(ctx: &TestContext, path: &Path, f: F)
-    where F: FnOnce()
+where
+    F: FnOnce(),
 {
     let ctime_before = metadata(&path).unwrap().ctime_sys();
 
