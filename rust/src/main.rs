@@ -89,6 +89,10 @@ fn main() -> anyhow::Result<()> {
         })
         .collect();
 
+    let mut failed_tests_count = 0;
+    let mut succeeded_tests_count = 0;
+    let mut skipped_tests_count = 0;
+
     for test_case in test_cases {
         //TODO: There's probably a better way to do this...
         let mut should_skip = false;
@@ -131,26 +135,30 @@ fn main() -> anyhow::Result<()> {
             message += "\n";
         }
 
+        print!("{}\t", test_case.name);
+        stdout().lock().flush()?;
+
         if should_skip {
-            println!("skipped '{}'\n{}", test_case.name, message);
+            println!("skipped\n{}", message);
+            skipped_tests_count += 1;
             continue;
         }
 
-        print!("{}\t", test_case.name);
-        stdout().lock().flush()?;
         let mut context = TestContext::new(&config.settings.naptime);
         //TODO: AssertUnwindSafe should be used with caution
         let mut ctx_wrapper = AssertUnwindSafe(&mut context);
+
         match catch_unwind(move || {
             (test_case.fun)(&mut ctx_wrapper);
         }) {
-            Ok(_) => println!("success"),
+            Ok(_) => {
+                println!("success");
+                succeeded_tests_count += 1;
+            }
             Err(e) => {
                 let location = PANIC_LOCATION.get().unwrap();
-                anyhow::bail!(
-                    "{}
-                    Located in file {} at {}:{}
-                    ",
+                println!(
+                    "error: {}, located in file {} at {}:{}",
                     e.downcast_ref::<String>()
                         .cloned()
                         .or_else(|| e.downcast_ref::<&str>().map(|&s| s.to_string()))
@@ -158,10 +166,18 @@ fn main() -> anyhow::Result<()> {
                     location.2,
                     location.0,
                     location.1
-                )
+                );
+                failed_tests_count += 1;
             }
         }
     }
 
+    println!(
+        "\nTests: {} failed, {} skipped, {} passed, {} total",
+        failed_tests_count,
+        skipped_tests_count,
+        succeeded_tests_count,
+        failed_tests_count + skipped_tests_count + succeeded_tests_count,
+    );
     Ok(())
 }
