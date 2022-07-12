@@ -1,1 +1,83 @@
-mod size;
+use std::{fs::File, io::Write};
+
+use nix::{
+    errno::Errno,
+    fcntl::{open, posix_fallocate, OFlag},
+    sys::stat::{lstat, Mode},
+    unistd::Uid,
+};
+
+use crate::{
+    runner::context::FileType,
+    test::{FileSystemFeature, TestContext},
+    tests::{
+        assert_ctime_changed, assert_ctime_unchanged,
+        chmod::{chmod},
+    },
+};
+
+crate::test_case! {increase_empty, FileSystemFeature::PosixFallocate}
+fn increase_empty(ctx: &mut TestContext) {
+    let expected_size = 567;
+
+    let (path, file) = ctx.create_file_no_mode(OFlag::O_RDWR).unwrap();
+    posix_fallocate(file, 0, expected_size).unwrap();
+
+    let size = lstat(&path).unwrap().st_size;
+    assert_eq!(size, expected_size);
+}
+
+crate::test_case! {increase_non_empty, FileSystemFeature::PosixFallocate}
+fn increase_non_empty(ctx: &mut TestContext) {
+    let expected_offset = 20_000;
+    let expected_size = 3456;
+
+    let (path, file) = ctx.create_file_no_mode(OFlag::O_RDWR).unwrap();
+    let mut std_file = File::create(&path).unwrap();
+    let random_data: [u8; 1234] = rand::random();
+    std_file.write_all(&random_data).unwrap();
+
+    posix_fallocate(file, expected_offset, expected_size).unwrap();
+
+    let size = lstat(&path).unwrap().st_size;
+    assert_eq!(size, expected_offset + expected_size);
+}
+
+crate::test_case! {update_ctime_success, FileSystemFeature::PosixFallocate}
+fn update_ctime_success(ctx: &mut TestContext) {
+    let (path, file) = ctx.create_file_no_mode(OFlag::O_RDWR).unwrap();
+
+    assert_ctime_changed(ctx, &path, || {
+        posix_fallocate(file, 0, 123).unwrap();
+    })
+}
+
+crate::test_case! {no_update_ctime_fail, FileSystemFeature::PosixFallocate}
+fn no_update_ctime_fail(ctx: &mut TestContext) {
+    let (path, file) = ctx.create_file_no_mode(OFlag::O_WRONLY).unwrap();
+
+    assert_ctime_unchanged(ctx, &path, || {
+        let err = posix_fallocate(file, 0, 0).unwrap_err();
+        assert_eq!(err, Errno::EINVAL);
+    })
+}
+
+crate::test_case! {affected_only_create_flags, root}
+/// The file mode of a newly created file should not affect whether ftruncate
+/// will work, only the create args
+/// https://bugs.freebsd.org/bugzilla/show_bug.cgi?id=154873
+fn affected_only_create_flags(ctx: &mut TestContext) {
+    let subdir = ctx.create(FileType::Dir).unwrap();
+
+    let path = subdir.join("test");
+    let file = open(&path, OFlag::O_CREAT | OFlag::O_RDWR, Mode::empty()).unwrap();
+    assert!(posix_fallocate(file, 0, 1).is_ok());
+
+    chmod(&subdir, Mode::from_bits_truncate(0o0777)).unwrap();
+
+    ctx.as_user(Some(Uid::from_raw(65534)), None, || {
+        let path = subdir.join("test1");
+        let file = open(&path, OFlag::O_CREAT | OFlag::O_RDWR, Mode::empty()).unwrap();
+        assert!(posix_fallocate(file, 0, 1).is_ok());
+    });
+}
