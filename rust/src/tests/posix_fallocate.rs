@@ -26,18 +26,18 @@ fn increase_empty(ctx: &mut TestContext) {
 
 crate::test_case! {increase_non_empty, FileSystemFeature::PosixFallocate}
 fn increase_non_empty(ctx: &mut TestContext) {
-    let expected_offset = 20_000;
-    let expected_size = 3456;
+    let offset = 20_000;
+    let size = 3456;
 
     let (path, file) = ctx.create_file(OFlag::O_RDWR, None).unwrap();
     let mut std_file = File::create(&path).unwrap();
     let random_data: [u8; 1234] = rand::random();
     std_file.write_all(&random_data).unwrap();
 
-    posix_fallocate(file, expected_offset, expected_size).unwrap();
+    posix_fallocate(file, offset, size).unwrap();
 
-    let size = lstat(&path).unwrap().st_size;
-    assert_eq!(size, expected_offset + expected_size);
+    let actual_size = lstat(&path).unwrap().st_size;
+    assert_eq!(actual_size, offset + size);
 }
 
 crate::test_case! {update_ctime_success, FileSystemFeature::PosixFallocate}
