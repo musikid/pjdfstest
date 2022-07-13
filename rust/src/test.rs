@@ -20,6 +20,7 @@ pub enum TestError {
 /// A single minimal test case.
 pub struct TestCase {
     pub name: &'static str,
+    pub description: &'static str,
     pub require_root: bool,
     pub fun: fn(&mut TestContext),
     pub required_features: &'static [FileSystemFeature],

@@ -36,6 +36,9 @@ struct ArgOptions {
     #[options(help = "Match names exactly")]
     exact: bool,
 
+    #[options(help = "Verbose mode")]
+    verbose: bool,
+
     #[options(free, help = "Filter test names")]
     test_patterns: Vec<String>,
 }
@@ -89,9 +92,9 @@ fn main() -> anyhow::Result<()> {
         })
         .collect();
 
-    let mut failed_tests_count = 0;
-    let mut succeeded_tests_count = 0;
-    let mut skipped_tests_count = 0;
+    let mut failed_tests_count: usize = 0;
+    let mut succeeded_tests_count: usize = 0;
+    let mut skipped_tests_count: usize = 0;
 
     for test_case in test_cases {
         //TODO: There's probably a better way to do this...
@@ -136,6 +139,13 @@ fn main() -> anyhow::Result<()> {
         }
 
         print!("{}\t", test_case.name);
+
+        if args.verbose {
+            if !test_case.description.is_empty() {
+                print!("\n\t{}\t\t", test_case.description);
+            }
+        }
+
         stdout().lock().flush()?;
 
         if should_skip {
@@ -179,5 +189,10 @@ fn main() -> anyhow::Result<()> {
         succeeded_tests_count,
         failed_tests_count + skipped_tests_count + succeeded_tests_count,
     );
-    Ok(())
+
+    if failed_tests_count > 0 {
+        Err(anyhow::anyhow!("Some tests have failed"))
+    } else {
+        Ok(())
+    }
 }
