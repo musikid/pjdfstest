@@ -3,12 +3,10 @@ use nix::{
     sys::stat::{stat, Mode},
 };
 
-use crate::{runner::context::FileType, test::TestContext};
+use crate::{runner::context::FileType, test::TestContext, tests::chmod};
 
 #[cfg(target_os = "freebsd")]
 use crate::test::{FileFlags, FileSystemFeature};
-
-use super::chmod;
 
 crate::test_case! {
     /// Returns ENOTDIR if a component of the path prefix is not a directory

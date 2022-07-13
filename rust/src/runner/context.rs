@@ -8,11 +8,11 @@ use nix::{
 };
 use rand::{distributions::Alphanumeric, thread_rng, Rng};
 use std::{
-    os::unix::fs::symlink,
+    os::unix::{fs::symlink, prelude::RawFd},
     panic::{catch_unwind, resume_unwind, UnwindSafe},
     path::{Path, PathBuf},
     thread,
-    time::Duration
+    time::Duration,
 };
 use strum_macros::EnumIter;
 use tempfile::{tempdir, TempDir};
@@ -68,6 +68,17 @@ impl TestContext {
         let naptime = Duration::from_secs_f64(*naptime);
         let temp_dir = tempdir().unwrap();
         TestContext { naptime, temp_dir }
+    }
+
+    /// Create a regular file and open it.
+    pub fn create_file(
+        &mut self,
+        oflag: OFlag,
+        mode: Option<Mode>,
+    ) -> Result<(PathBuf, RawFd), TestError> {
+        let path = self.create(FileType::Regular)?;
+        let file = open(&path, oflag, mode.unwrap_or_else(|| Mode::empty()))?;
+        Ok((path, file))
     }
 
     //TODO: Maybe better as a macro? unwrap?
@@ -136,8 +147,11 @@ impl TestContext {
                 bind(fd, &sockaddr)
             }
             //TODO: error type?
-            FileType::Symlink(target) => symlink(target.as_deref().unwrap_or_else(|| Path::new("test")), &path)
-                .map_err(|e| nix::Error::try_from(e).unwrap_or(nix::errno::Errno::UnknownErrno)),
+            FileType::Symlink(target) => symlink(
+                target.as_deref().unwrap_or_else(|| Path::new("test")),
+                &path,
+            )
+            .map_err(|e| nix::Error::try_from(e).unwrap_or(nix::errno::Errno::UnknownErrno)),
         }?;
 
         Ok(path)
@@ -175,8 +189,11 @@ impl TestContext {
                 bind(fd, &sockaddr)
             }
             //TODO: error type?
-            FileType::Symlink(target) => symlink(target.as_deref().unwrap_or_else(|| Path::new("test")), &path)
-                .map_err(|e| nix::Error::try_from(e).unwrap_or(nix::errno::Errno::UnknownErrno)),
+            FileType::Symlink(target) => symlink(
+                target.as_deref().unwrap_or_else(|| Path::new("test")),
+                &path,
+            )
+            .map_err(|e| nix::Error::try_from(e).unwrap_or(nix::errno::Errno::UnknownErrno)),
         }?;
 
         Ok(path)
@@ -209,8 +226,11 @@ impl TestContext {
                 bind(fd, &sockaddr)
             }
             //TODO: error type
-            FileType::Symlink(target) => symlink(target.as_deref().unwrap_or_else(|| Path::new("test")), &path)
-                .map_err(|e| nix::Error::try_from(e).unwrap_or(nix::errno::Errno::UnknownErrno)),
+            FileType::Symlink(target) => symlink(
+                target.as_deref().unwrap_or_else(|| Path::new("test")),
+                &path,
+            )
+            .map_err(|e| nix::Error::try_from(e).unwrap_or(nix::errno::Errno::UnknownErrno)),
         }?;
 
         Ok(path)

@@ -33,8 +33,8 @@ macro_rules! test_case {
                         description: $desc,
                         required_features: $features,
                         required_file_flags: $flags,
-                        require_root: $require_root || crate::runner::context::FileType::$file_type $( ($ft_args) )?.privileged(),
-                        fun: |ctx| $f(ctx, crate::runner::context::FileType::$file_type $( ($ft_args) )?),
+                        require_root: $require_root || $crate::runner::context::FileType::$file_type $( ($ft_args) )?.privileged(),
+                        fun: |ctx| $f(ctx, $crate::runner::context::FileType::$file_type $( ($ft_args) )?),
                     }
                 }
             }
