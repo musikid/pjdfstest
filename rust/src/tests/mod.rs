@@ -1,20 +1,25 @@
 use std::os::unix::fs::MetadataExt as StdMetadataExt;
 
-
 use std::{
     fs::metadata,
     path::Path,
     time::{Duration, SystemTime},
 };
 
-
-
-
-
-use crate::{test::TestContext};
+use crate::test::TestContext;
 
 pub mod chmod;
 pub mod posix_fallocate;
+
+/// Wrapper for `fchmodat(None, path, mode, FchmodatFlags::FollowSymlink)`.
+pub fn chmod<P: ?Sized + nix::NixPath>(path: &P, mode: nix::sys::stat::Mode) -> nix::Result<()> {
+    nix::sys::stat::fchmodat(
+        None,
+        path,
+        mode,
+        nix::sys::stat::FchmodatFlags::FollowSymlink,
+    )
+}
 
 /// A handy extention to std::os::unix::fs::MetadataExt
 trait MetadataExt: StdMetadataExt {

@@ -71,16 +71,13 @@ impl TestContext {
     }
 
     /// Create a regular file and open it.
-    pub fn create_file(&mut self, oflag: OFlag, mode: Mode) -> Result<(PathBuf, RawFd), TestError> {
+    pub fn create_file(
+        &mut self,
+        oflag: OFlag,
+        mode: Option<Mode>,
+    ) -> Result<(PathBuf, RawFd), TestError> {
         let path = self.create(FileType::Regular)?;
-        let file = open(&path, oflag, mode)?;
-        Ok((path, file))
-    }
-
-    /// Create a regular file with empty mode and open it.
-    pub fn create_file_no_mode(&mut self, oflag: OFlag) -> Result<(PathBuf, RawFd), TestError> {
-        let path = self.create(FileType::Regular)?;
-        let file = open(&path, oflag, Mode::empty())?;
+        let file = open(&path, oflag, mode.unwrap_or_else(|| Mode::empty()))?;
         Ok((path, file))
     }
 

@@ -10,17 +10,14 @@ use nix::{
 use crate::{
     runner::context::FileType,
     test::{FileSystemFeature, TestContext},
-    tests::{
-        assert_ctime_changed, assert_ctime_unchanged,
-        chmod::{chmod},
-    },
+    tests::{assert_ctime_changed, assert_ctime_unchanged, chmod},
 };
 
 crate::test_case! {increase_empty, FileSystemFeature::PosixFallocate}
 fn increase_empty(ctx: &mut TestContext) {
     let expected_size = 567;
 
-    let (path, file) = ctx.create_file_no_mode(OFlag::O_RDWR).unwrap();
+    let (path, file) = ctx.create_file(OFlag::O_RDWR, None).unwrap();
     posix_fallocate(file, 0, expected_size).unwrap();
 
     let size = lstat(&path).unwrap().st_size;
@@ -32,7 +29,7 @@ fn increase_non_empty(ctx: &mut TestContext) {
     let expected_offset = 20_000;
     let expected_size = 3456;
 
-    let (path, file) = ctx.create_file_no_mode(OFlag::O_RDWR).unwrap();
+    let (path, file) = ctx.create_file(OFlag::O_RDWR, None).unwrap();
     let mut std_file = File::create(&path).unwrap();
     let random_data: [u8; 1234] = rand::random();
     std_file.write_all(&random_data).unwrap();
@@ -45,7 +42,7 @@ fn increase_non_empty(ctx: &mut TestContext) {
 
 crate::test_case! {update_ctime_success, FileSystemFeature::PosixFallocate}
 fn update_ctime_success(ctx: &mut TestContext) {
-    let (path, file) = ctx.create_file_no_mode(OFlag::O_RDWR).unwrap();
+    let (path, file) = ctx.create_file(OFlag::O_RDWR, None).unwrap();
 
     assert_ctime_changed(ctx, &path, || {
         posix_fallocate(file, 0, 123).unwrap();
@@ -54,7 +51,7 @@ fn update_ctime_success(ctx: &mut TestContext) {
 
 crate::test_case! {no_update_ctime_fail, FileSystemFeature::PosixFallocate}
 fn no_update_ctime_fail(ctx: &mut TestContext) {
-    let (path, file) = ctx.create_file_no_mode(OFlag::O_WRONLY).unwrap();
+    let (path, file) = ctx.create_file(OFlag::O_WRONLY, None).unwrap();
 
     assert_ctime_unchanged(ctx, &path, || {
         let err = posix_fallocate(file, 0, 0).unwrap_err();

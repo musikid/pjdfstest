@@ -1,7 +1,7 @@
 use crate::{
     runner::context::FileType,
     test::TestContext,
-    tests::{assert_ctime_changed, assert_ctime_unchanged, chmod::chmod}
+    tests::{assert_ctime_changed, assert_ctime_unchanged, chmod},
 };
 use nix::{
     sys::stat::{lstat, mode_t, stat, Mode},
