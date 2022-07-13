@@ -13,7 +13,10 @@ use crate::{
     tests::{assert_ctime_changed, assert_ctime_unchanged, chmod},
 };
 
-crate::test_case! {increase_empty, FileSystemFeature::PosixFallocate}
+crate::test_case! {
+    /// posix_fallocate should allocate even if the file is empty
+    increase_empty, FileSystemFeature::PosixFallocate
+}
 fn increase_empty(ctx: &mut TestContext) {
     let expected_size = 567;
 
@@ -24,8 +27,11 @@ fn increase_empty(ctx: &mut TestContext) {
     assert_eq!(size, expected_size);
 }
 
-crate::test_case! {increase_non_empty, FileSystemFeature::PosixFallocate}
-fn increase_non_empty(ctx: &mut TestContext) {
+crate::test_case! {
+    /// posix_fallocate should allocate even if the file is not empty
+    increase_not_empty, FileSystemFeature::PosixFallocate
+}
+fn increase_not_empty(ctx: &mut TestContext) {
     let offset = 20_000;
     let size = 3456;
 
@@ -40,7 +46,10 @@ fn increase_non_empty(ctx: &mut TestContext) {
     assert_eq!(actual_size, offset + size);
 }
 
-crate::test_case! {update_ctime_success, FileSystemFeature::PosixFallocate}
+crate::test_case! {
+    /// posix_fallocate should update ctime when it succeeds
+    update_ctime_success, FileSystemFeature::PosixFallocate
+}
 fn update_ctime_success(ctx: &mut TestContext) {
     let (path, file) = ctx.create_file(OFlag::O_RDWR, None).unwrap();
 
@@ -49,7 +58,10 @@ fn update_ctime_success(ctx: &mut TestContext) {
     })
 }
 
-crate::test_case! {no_update_ctime_fail, FileSystemFeature::PosixFallocate}
+crate::test_case! {
+    /// posix_fallocate should not update ctime when it fails
+    no_update_ctime_fail, FileSystemFeature::PosixFallocate
+}
 fn no_update_ctime_fail(ctx: &mut TestContext) {
     let (path, file) = ctx.create_file(OFlag::O_WRONLY, None).unwrap();
 
@@ -59,10 +71,12 @@ fn no_update_ctime_fail(ctx: &mut TestContext) {
     })
 }
 
-crate::test_case! {affected_only_create_flags, root, FileSystemFeature::PosixFallocate}
-/// The file mode of a newly created file should not affect whether ftruncate
-/// will work, only the create args
-/// https://bugs.freebsd.org/bugzilla/show_bug.cgi?id=154873
+crate::test_case! {
+    /// The file mode of a newly created file should not affect whether
+    /// posix_fallocate will work, only the create args
+    /// https://bugs.freebsd.org/bugzilla/show_bug.cgi?id=154873
+    affected_only_create_flags, root, FileSystemFeature::PosixFallocate
+}
 fn affected_only_create_flags(ctx: &mut TestContext) {
     let subdir = ctx.create(FileType::Dir).unwrap();
 
