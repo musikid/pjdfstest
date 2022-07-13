@@ -11,7 +11,10 @@ use nix::{
 const FILE_PERMS: mode_t = 0o777;
 
 // chmod/00.t:L24
-crate::test_case! {change_perm => [Regular, Dir, Fifo, Block, Char, Socket]}
+crate::test_case! {
+    /// chmod successfully change permissions
+    change_perm => [Regular, Dir, Fifo, Block, Char, Socket]
+}
 fn change_perm(ctx: &mut TestContext, f_type: FileType) {
     let path = ctx.create(f_type).unwrap();
     let expected_mode = Mode::from_bits_truncate(0o111);
@@ -39,8 +42,11 @@ fn change_perm(ctx: &mut TestContext, f_type: FileType) {
 }
 
 // chmod/00.t:L58
-crate::test_case! {ctime => [Regular, Dir, Fifo, Block, Char, Socket]}
-fn ctime(ctx: &mut TestContext, f_type: FileType) {
+crate::test_case! {
+    /// chmod updates ctime when it succeeds
+    update_ctime => [Regular, Dir, Fifo, Block, Char, Socket]
+}
+fn update_ctime(ctx: &mut TestContext, f_type: FileType) {
     let path = ctx.create(f_type).unwrap();
     assert_ctime_changed(ctx, &path, || {
         chmod(&path, Mode::from_bits_truncate(0o111)).unwrap()
@@ -48,7 +54,10 @@ fn ctime(ctx: &mut TestContext, f_type: FileType) {
 }
 
 // chmod/00.t:L89
-crate::test_case! {failed_chmod_unchanged_ctime => [Regular, Dir, Fifo, Block, Char, Socket]}
+crate::test_case! {
+    /// chmod does not update ctime when it fails
+    failed_chmod_unchanged_ctime => [Regular, Dir, Fifo, Block, Char, Socket]
+}
 fn failed_chmod_unchanged_ctime(ctx: &mut TestContext, f_type: FileType) {
     let path = ctx.create(f_type).unwrap();
     assert_ctime_unchanged(ctx, &path, || {
@@ -58,7 +67,13 @@ fn failed_chmod_unchanged_ctime(ctx: &mut TestContext, f_type: FileType) {
     });
 }
 
-crate::test_case! {clear_isgid_bit}
+crate::test_case! {
+    /// S_ISGID bit shall be cleared upon successful return from chmod of a regular file
+    /// if the calling process does not have appropriate privileges, and if
+    /// the group ID of the file does not match the effective group ID or one of the
+    /// supplementary group IDs
+    clear_isgid_bit
+}
 fn clear_isgid_bit(ctx: &mut TestContext) {
     let path = ctx.create(FileType::Regular).unwrap();
     chmod(&path, Mode::from_bits_truncate(0o0755)).unwrap();

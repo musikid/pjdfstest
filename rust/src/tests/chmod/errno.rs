@@ -7,9 +7,12 @@ use crate::{runner::context::FileType, test::TestContext, tests::chmod};
 
 #[cfg(target_os = "freebsd")]
 use crate::test::{FileFlags, FileSystemFeature};
+use super::chmod;
 
-crate::test_case! {enotdir => [Regular, Fifo, Block, Char, Socket]}
-/// Returns ENOTDIR if a component of the path prefix is not a directory
+crate::test_case! {
+    /// Returns ENOTDIR if a component of the path prefix is not a directory
+    enotdir => [Regular, Fifo, Block, Char, Socket]
+}
 fn enotdir(ctx: &mut TestContext, f_type: FileType) {
     let not_dir = ctx.create(f_type).unwrap();
     let fake_path = not_dir.join("test");
@@ -18,8 +21,10 @@ fn enotdir(ctx: &mut TestContext, f_type: FileType) {
     assert_eq!(res.unwrap_err(), Errno::ENOTDIR);
 }
 
-crate::test_case! {enametoolong}
-/// chmod returns ENAMETOOLONG if a component of a pathname exceeded {NAME_MAX} characters
+crate::test_case! {
+    /// chmod returns ENAMETOOLONG if a component of a pathname exceeded {NAME_MAX} characters
+    enametoolong
+}
 fn enametoolong(ctx: &mut TestContext) {
     let path = ctx.create_max(FileType::Regular).unwrap();
     let expected_mode = 0o620;
