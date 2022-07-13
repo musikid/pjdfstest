@@ -59,7 +59,7 @@ fn no_update_ctime_fail(ctx: &mut TestContext) {
     })
 }
 
-crate::test_case! {affected_only_create_flags, root}
+crate::test_case! {affected_only_create_flags, root, FileSystemFeature::PosixFallocate}
 /// The file mode of a newly created file should not affect whether ftruncate
 /// will work, only the create args
 /// https://bugs.freebsd.org/bugzilla/show_bug.cgi?id=154873
