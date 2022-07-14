@@ -197,6 +197,10 @@ pub enum FileSystemFeature {
     ChflagsSfSnapshot,
     PosixFallocate,
     RenameCtime,
+    // struct stat contains an st_birthtime field
     StatStBirthtime,
+    // The UTIME_NOW constant is available
     UtimeNow,
+    // The utimensat syscall is available
+    Utimensat,
 }

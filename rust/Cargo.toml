@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+libc = "0.2.126"
 tempfile = "3.3.0"
 rand = { version = "0.8.5", features = ["min_const_gen"] }
 thiserror = "1.0.31"
@@ -18,7 +19,8 @@ serde = { version = "1.0.138", features = ["derive"] }
 inventory = "0.3.0"
 
 [dependencies.nix]
-version = "0.24.1"
+git = "https://github.com/nix-rust/nix"
+rev = "fb65331"
 features = ["fs", "socket"]
 
 [lib]
