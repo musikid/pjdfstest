@@ -49,7 +49,7 @@ crate::test_case! {
 fn update_ctime(ctx: &mut TestContext, f_type: FileType) {
     let path = ctx.create(f_type).unwrap();
     assert_ctime_changed(ctx, &path, || {
-        chmod(&path, Mode::from_bits_truncate(0o111)).unwrap()
+        chmod(&path, Mode::from_bits_truncate(0o111)).unwrap();
     });
 }
 

@@ -61,9 +61,10 @@ fn main() -> anyhow::Result<()> {
         .merge(Toml::file(
             args.configuration_file
                 .as_deref()
-                .unwrap_or_else(|| Path::new("pjdfstest.toml")),
+                .unwrap_or_else(|| Path::new("")),
         ))
-        .extract()?;
+        .extract()
+        .unwrap_or_default();
 
     let enabled_features: HashSet<_> = config.features.fs_features.keys().into_iter().collect();
 
