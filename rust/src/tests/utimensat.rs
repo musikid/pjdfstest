@@ -4,8 +4,6 @@ use std::{
 };
 
 use crate::test::FileSystemFeature;
-use crate::tests::{MetadataExt, chmod};
-use crate::{runner::context::FileType, test::TestContext};
 #[cfg(any(
     target_os = "freebsd",
     target_os = "ios",
@@ -14,11 +12,13 @@ use crate::{runner::context::FileType, test::TestContext};
     target_os = "openbsd"
 ))]
 use crate::tests::birthtime_ts;
+use crate::tests::{chmod, MetadataExt};
+use crate::{runner::context::FileType, test::TestContext};
 
 use nix::{
     errno::Errno,
     sys::{
-        stat::{Mode, UtimensatFlags::*, utimensat},
+        stat::{utimensat, Mode, UtimensatFlags::*},
         time::{TimeSpec, TimeValLike},
     },
     unistd::Uid,
@@ -64,14 +64,8 @@ fn utime_now(ctx: &mut TestContext) {
     let md = metadata(&path).unwrap();
     let delta_atime = md.atime_ts() - orig_atime;
     let delta_mtime = md.mtime_ts() - orig_mtime;
-    assert!(
-        delta_atime > null_ts,
-        "atime was not updated"
-    );
-    assert!(
-        delta_mtime > null_ts,
-        "mtime was not updated"
-    );
+    assert!(delta_atime > null_ts, "atime was not updated");
+    assert!(delta_mtime > null_ts, "mtime was not updated");
     assert!(
         delta_atime < margin,
         "new atime is implausibly far in the future"
@@ -205,9 +199,10 @@ fn utime_now_nobody(ctx: &mut TestContext) {
     let path = ctx.create(FileType::Regular).unwrap();
     chmod(&path, mode).unwrap();
     ctx.as_user(Some(Uid::from_raw(65534)), None, || {
-        assert_eq!(Errno::EACCES,
-            utimensat(None, &path, &UTIME_NOW, &UTIME_NOW, FollowSymlink)
-            .unwrap_err());
+        assert_eq!(
+            Errno::EACCES,
+            utimensat(None, &path, &UTIME_NOW, &UTIME_NOW, FollowSymlink).unwrap_err()
+        );
     });
 }
 
@@ -245,8 +240,7 @@ fn utime_now_write_perm(ctx: &mut TestContext) {
     let path = ctx.create(FileType::Regular).unwrap();
     chmod(&path, mode).unwrap();
     ctx.as_user(Some(Uid::from_raw(65534)), None, || {
-        utimensat(None, &path, &UTIME_OMIT, &UTIME_OMIT, FollowSymlink)
-            .unwrap();
+        utimensat(None, &path, &UTIME_OMIT, &UTIME_OMIT, FollowSymlink).unwrap();
     });
 }
 
@@ -262,15 +256,18 @@ fn nobody(ctx: &mut TestContext) {
     let path = ctx.create(FileType::Regular).unwrap();
     chmod(&path, mode).unwrap();
     ctx.as_user(Some(Uid::from_raw(65534)), None, || {
-        assert_eq!(Errno::EPERM,
-            utimensat(None, &path, &UTIME_OMIT, &date2, FollowSymlink)
-            .unwrap_err());
-        assert_eq!(Errno::EPERM,
-            utimensat(None, &path, &date1, &UTIME_OMIT, FollowSymlink)
-            .unwrap_err());
-        assert_eq!(Errno::EPERM,
-            utimensat(None, &path, &date1, &date2, FollowSymlink)
-            .unwrap_err());
+        assert_eq!(
+            Errno::EPERM,
+            utimensat(None, &path, &UTIME_OMIT, &date2, FollowSymlink).unwrap_err()
+        );
+        assert_eq!(
+            Errno::EPERM,
+            utimensat(None, &path, &date1, &UTIME_OMIT, FollowSymlink).unwrap_err()
+        );
+        assert_eq!(
+            Errno::EPERM,
+            utimensat(None, &path, &date1, &date2, FollowSymlink).unwrap_err()
+        );
     })
 }
 
@@ -286,15 +283,18 @@ fn write_perm(ctx: &mut TestContext) {
     let path = ctx.create(FileType::Regular).unwrap();
     chmod(&path, mode).unwrap();
     ctx.as_user(Some(Uid::from_raw(65534)), None, || {
-        assert_eq!(Errno::EPERM,
-            utimensat(None, &path, &UTIME_OMIT, &date2, FollowSymlink)
-            .unwrap_err());
-        assert_eq!(Errno::EPERM,
-            utimensat(None, &path, &date1, &UTIME_OMIT, FollowSymlink)
-            .unwrap_err());
-        assert_eq!(Errno::EPERM,
-            utimensat(None, &path, &date1, &date2, FollowSymlink)
-            .unwrap_err());
+        assert_eq!(
+            Errno::EPERM,
+            utimensat(None, &path, &UTIME_OMIT, &date2, FollowSymlink).unwrap_err()
+        );
+        assert_eq!(
+            Errno::EPERM,
+            utimensat(None, &path, &date1, &UTIME_OMIT, FollowSymlink).unwrap_err()
+        );
+        assert_eq!(
+            Errno::EPERM,
+            utimensat(None, &path, &date1, &date2, FollowSymlink).unwrap_err()
+        );
     })
 }
 

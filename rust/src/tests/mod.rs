@@ -1,11 +1,7 @@
 use std::os::unix::fs::MetadataExt as StdMetadataExt;
 
-use std::{
-    fs::metadata,
-    path::Path,
-};
+use std::{fs::metadata, path::Path};
 
-use nix::sys::time::TimeSpec;
 #[cfg(any(
     target_os = "freebsd",
     target_os = "ios",
@@ -14,6 +10,7 @@ use nix::sys::time::TimeSpec;
     target_os = "openbsd"
 ))]
 use nix::sys::stat::stat;
+use nix::sys::time::TimeSpec;
 
 use crate::test::TestContext;
 
@@ -33,7 +30,6 @@ pub fn chmod<P: ?Sized + nix::NixPath>(path: &P, mode: nix::sys::stat::Mode) -> 
 
 /// A handy extention to std::os::unix::fs::MetadataExt
 trait MetadataExt: StdMetadataExt {
-
     /// Return the file's last accessed time as a `TimeSpec`, including
     /// fractional component.
     fn atime_ts(&self) -> TimeSpec {

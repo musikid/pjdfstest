@@ -140,10 +140,8 @@ fn main() -> anyhow::Result<()> {
 
         print!("{}\t", test_case.name);
 
-        if args.verbose {
-            if !test_case.description.is_empty() {
-                print!("\n\t{}\t\t", test_case.description);
-            }
+        if args.verbose && !test_case.description.is_empty() {
+            print!("\n\t{}\t\t", test_case.description);
         }
 
         stdout().lock().flush()?;
