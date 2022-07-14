@@ -105,3 +105,21 @@ For example:
 #[cfg(target_os = "freebsd")]
 mod lchmod;
 ```
+
+## Serialized test cases
+
+Some test cases need functions only available when they are run serialized.
+An example is changing user (`SerializedTestContext::as_user`), which affects the whole process.
+To have access to these functions, the test should be declared with `SerializedTestContext`
+in place of `TestContext`.
+For example:
+
+```rust,ignore
+fn affected_only_create_flags(ctx: &mut SerializedTestContext) {
+    ctx.as_user(Some(Uid::from_raw(65534)), None, || {
+        let path = subdir.join("test1");
+        let file = open(&path, OFlag::O_CREAT | OFlag::O_RDWR, Mode::empty()).unwrap();
+        assert!(posix_fallocate(file, 0, 1).is_ok());
+    });
+} 
+```
