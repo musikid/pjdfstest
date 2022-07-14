@@ -22,7 +22,7 @@ pub struct FeaturesConfig {
 #[derive(Debug, Deserialize)]
 pub struct SettingsConfig {
     #[serde(default = "default_naptime")]
-    pub naptime: f64
+    pub naptime: f64,
 }
 
 fn default_naptime() -> f64 {
@@ -33,5 +33,5 @@ fn default_naptime() -> f64 {
 pub struct Config {
     /// File-system features.
     pub features: FeaturesConfig,
-    pub settings: SettingsConfig
+    pub settings: SettingsConfig,
 }
