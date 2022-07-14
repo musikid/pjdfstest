@@ -1,0 +1,8 @@
+[features]
+
+posix_fallocate = {}
+utime_now = {}
+utimensat = {}
+
+[settings]
+naptime = 0.001
