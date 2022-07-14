@@ -18,16 +18,19 @@ pub enum TestError {
 }
 
 /// A single minimal test case.
-pub struct TestCase {
+pub struct TestCase<const SERIALIZED: bool = false> {
     pub name: &'static str,
     pub description: &'static str,
     pub require_root: bool,
-    pub fun: fn(&mut TestContext),
+    pub fun: fn(&mut TestContext<SERIALIZED>),
     pub required_features: &'static [FileSystemFeature],
     pub required_file_flags: &'static [FileFlags],
 }
 
+pub type SerializedTestCase = TestCase<true>;
+
 inventory::collect!(TestCase);
+inventory::collect!(SerializedTestCase);
 
 #[allow(non_camel_case_types)]
 #[derive(

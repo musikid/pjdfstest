@@ -8,7 +8,7 @@ use nix::{
 };
 
 use crate::{
-    runner::context::FileType,
+    runner::context::{FileType, SerializedTestContext},
     test::{FileSystemFeature, TestContext},
     tests::{assert_ctime_changed, assert_ctime_unchanged, chmod},
 };
@@ -77,7 +77,7 @@ crate::test_case! {
     /// https://bugs.freebsd.org/bugzilla/show_bug.cgi?id=154873
     affected_only_create_flags, root, FileSystemFeature::PosixFallocate
 }
-fn affected_only_create_flags(ctx: &mut TestContext) {
+fn affected_only_create_flags(ctx: &mut SerializedTestContext) {
     let subdir = ctx.create(FileType::Dir).unwrap();
 
     let path = subdir.join("test");

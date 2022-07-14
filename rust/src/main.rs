@@ -14,7 +14,7 @@ use gumdrop::Options;
 use once_cell::sync::OnceCell;
 use strum::IntoEnumIterator;
 
-use pjdfs_tests::test::{FileSystemFeature, TestCase, TestContext};
+use pjdfs_tests::test::{FileSystemFeature, SerializedTestCase, TestCase, TestContext};
 
 mod config;
 
@@ -77,8 +77,8 @@ fn main() -> anyhow::Result<()> {
 
     let enabled_flags: HashSet<_> = config.features.file_flags.iter().collect();
 
-    let test_cases = inventory::iter::<TestCase>;
-    let test_cases: Vec<_> = test_cases
+    let non_serialized_test_cases = inventory::iter::<TestCase>;
+    let non_serialized_test_cases: Vec<_> = non_serialized_test_cases
         .into_iter()
         .filter(|case| {
             args.test_patterns.is_empty()
@@ -92,9 +92,69 @@ fn main() -> anyhow::Result<()> {
         })
         .collect();
 
+    let serialized_test_cases = inventory::iter::<SerializedTestCase>;
+    let serialized_test_cases: Vec<_> = serialized_test_cases
+        .into_iter()
+        .filter(|case| {
+            args.test_patterns.is_empty()
+                || args.test_patterns.iter().any(|pat| {
+                    if args.exact {
+                        case.name == pat
+                    } else {
+                        case.name.contains(pat)
+                    }
+                })
+        })
+        .collect();
+
+    let (non_ser_failed_count, non_ser_skipped_count, non_ser_success_count) = run_test_cases(
+        &non_serialized_test_cases,
+        args.verbose,
+        &config,
+        &enabled_features,
+        &enabled_flags,
+    )?;
+
+    let (ser_failed_count, ser_skipped_count, ser_success_count) = run_test_cases(
+        &serialized_test_cases,
+        args.verbose,
+        &config,
+        &enabled_features,
+        &enabled_flags,
+    )?;
+
+    println!(
+        "\nTests: {} failed, {} skipped, {} passed, {} total",
+        non_ser_failed_count + ser_failed_count,
+        non_ser_skipped_count + ser_skipped_count,
+        non_ser_success_count + ser_success_count,
+        non_ser_failed_count
+            + non_ser_skipped_count
+            + non_ser_success_count
+            + ser_failed_count
+            + ser_skipped_count
+            + ser_success_count,
+    );
+
+    if ser_failed_count + non_ser_failed_count > 0 {
+        Err(anyhow::anyhow!("Some tests have failed"))
+    } else {
+        Ok(())
+    }
+}
+
+/// Run provided test cases and filter according to features and flags availability.
+fn run_test_cases<const SER: bool>(
+    test_cases: &Vec<&TestCase<SER>>,
+    verbose: bool,
+    config: &Config,
+    enabled_features: &HashSet<&FileSystemFeature>,
+    enabled_flags: &HashSet<&pjdfs_tests::test::FileFlags>,
+) -> Result<(usize, usize, usize), anyhow::Error> {
     let mut failed_tests_count: usize = 0;
     let mut succeeded_tests_count: usize = 0;
     let mut skipped_tests_count: usize = 0;
+    let _serialized = SER;
 
     for test_case in test_cases {
         //TODO: There's probably a better way to do this...
@@ -103,7 +163,7 @@ fn main() -> anyhow::Result<()> {
         let mut message = String::new();
 
         let features: HashSet<_> = test_case.required_features.iter().collect();
-        let missing_features: Vec<_> = features.difference(&enabled_features).collect();
+        let missing_features: Vec<_> = features.difference(enabled_features).collect();
         if !missing_features.is_empty() {
             should_skip = true;
 
@@ -119,7 +179,7 @@ fn main() -> anyhow::Result<()> {
         }
 
         let required_flags: HashSet<_> = test_case.required_file_flags.iter().collect();
-        let missing_flags: Vec<_> = required_flags.difference(&enabled_flags).collect();
+        let missing_flags: Vec<_> = required_flags.difference(enabled_flags).collect();
         if !missing_flags.is_empty() {
             should_skip = true;
 
@@ -140,10 +200,8 @@ fn main() -> anyhow::Result<()> {
 
         print!("{}\t", test_case.name);
 
-        if args.verbose {
-            if !test_case.description.is_empty() {
-                print!("\n\t{}\t\t", test_case.description);
-            }
+        if verbose && !test_case.description.is_empty() {
+            print!("\n\t{}\t\t", test_case.description);
         }
 
         stdout().lock().flush()?;
@@ -182,17 +240,9 @@ fn main() -> anyhow::Result<()> {
         }
     }
 
-    println!(
-        "\nTests: {} failed, {} skipped, {} passed, {} total",
+    Ok((
         failed_tests_count,
         skipped_tests_count,
         succeeded_tests_count,
-        failed_tests_count + skipped_tests_count + succeeded_tests_count,
-    );
-
-    if failed_tests_count > 0 {
-        Err(anyhow::anyhow!("Some tests have failed"))
-    } else {
-        Ok(())
-    }
+    ))
 }

@@ -55,32 +55,14 @@ pub enum ContextError {
     Nix(#[from] nix::Error),
 }
 
-pub struct TestContext {
+pub struct TestContext<const SERIALIZED: bool = false> {
     naptime: Duration,
     temp_dir: TempDir,
 }
 
-impl TestContext {
-    // TODO: make it private when all code runner is in the good module
-    // TODO: replace the `naptime` argument with `SettingsConfig` once the lib
-    // is merged into the bin.
-    pub fn new(naptime: &f64) -> Self {
-        let naptime = Duration::from_secs_f64(*naptime);
-        let temp_dir = tempdir().unwrap();
-        TestContext { naptime, temp_dir }
-    }
+pub type SerializedTestContext = TestContext<true>;
 
-    /// Create a regular file and open it.
-    pub fn create_file(
-        &mut self,
-        oflag: OFlag,
-        mode: Option<Mode>,
-    ) -> Result<(PathBuf, RawFd), TestError> {
-        let path = self.create(FileType::Regular)?;
-        let file = open(&path, oflag, mode.unwrap_or_else(|| Mode::empty()))?;
-        Ok((path, file))
-    }
-
+impl SerializedTestContext {
     //TODO: Maybe better as a macro? unwrap?
     /// Execute the function as another user/group.
     pub fn as_user<F>(&self, uid: Option<Uid>, gid: Option<Gid>, mut f: F)
@@ -116,6 +98,28 @@ impl TestContext {
         if let Err(e) = res {
             resume_unwind(e)
         }
+    }
+}
+
+impl<const SER: bool> TestContext<SER> {
+    // TODO: make it private when all code runner is in the good module
+    // TODO: replace the `naptime` argument with `SettingsConfig` once the lib
+    // is merged into the bin.
+    pub fn new(naptime: &f64) -> Self {
+        let naptime = Duration::from_secs_f64(*naptime);
+        let temp_dir = tempdir().unwrap();
+        TestContext { naptime, temp_dir }
+    }
+
+    /// Create a regular file and open it.
+    pub fn create_file(
+        &mut self,
+        oflag: OFlag,
+        mode: Option<Mode>,
+    ) -> Result<(PathBuf, RawFd), TestError> {
+        let path = self.create(FileType::Regular)?;
+        let file = open(&path, oflag, mode.unwrap_or_else(|| Mode::empty()))?;
+        Ok((path, file))
     }
 
     /// Create a file in a temp folder with a random name.
