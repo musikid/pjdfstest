@@ -14,7 +14,9 @@ use gumdrop::Options;
 use once_cell::sync::OnceCell;
 use strum::IntoEnumIterator;
 
-use pjdfs_tests::test::{FileSystemFeature, SerializedTestCase, TestCase, TestContext};
+use pjdfs_tests::test::{
+    FileFlags, FileSystemFeature, SerializedTestContext, TestCase, TestContext, TestFn,
+};
 
 mod config;
 
@@ -77,8 +79,8 @@ fn main() -> anyhow::Result<()> {
 
     let enabled_flags: HashSet<_> = config.features.file_flags.iter().collect();
 
-    let non_serialized_test_cases = inventory::iter::<TestCase>;
-    let non_serialized_test_cases: Vec<_> = non_serialized_test_cases
+    let test_cases = inventory::iter::<TestCase>;
+    let test_cases: Vec<_> = test_cases
         .into_iter()
         .filter(|case| {
             args.test_patterns.is_empty()
@@ -92,31 +94,8 @@ fn main() -> anyhow::Result<()> {
         })
         .collect();
 
-    let serialized_test_cases = inventory::iter::<SerializedTestCase>;
-    let serialized_test_cases: Vec<_> = serialized_test_cases
-        .into_iter()
-        .filter(|case| {
-            args.test_patterns.is_empty()
-                || args.test_patterns.iter().any(|pat| {
-                    if args.exact {
-                        case.name == pat
-                    } else {
-                        case.name.contains(pat)
-                    }
-                })
-        })
-        .collect();
-
-    let (non_ser_failed_count, non_ser_skipped_count, non_ser_success_count) = run_test_cases(
-        &non_serialized_test_cases,
-        args.verbose,
-        &config,
-        &enabled_features,
-        &enabled_flags,
-    )?;
-
-    let (ser_failed_count, ser_skipped_count, ser_success_count) = run_test_cases(
-        &serialized_test_cases,
+    let (failed_count, skipped_count, success_count) = run_test_cases(
+        &test_cases,
         args.verbose,
         &config,
         &enabled_features,
@@ -125,18 +104,13 @@ fn main() -> anyhow::Result<()> {
 
     println!(
         "\nTests: {} failed, {} skipped, {} passed, {} total",
-        non_ser_failed_count + ser_failed_count,
-        non_ser_skipped_count + ser_skipped_count,
-        non_ser_success_count + ser_success_count,
-        non_ser_failed_count
-            + non_ser_skipped_count
-            + non_ser_success_count
-            + ser_failed_count
-            + ser_skipped_count
-            + ser_success_count,
+        failed_count,
+        skipped_count,
+        success_count,
+        failed_count + skipped_count + success_count,
     );
 
-    if ser_failed_count + non_ser_failed_count > 0 {
+    if failed_count > 0 {
         Err(anyhow::anyhow!("Some tests have failed"))
     } else {
         Ok(())
@@ -144,17 +118,16 @@ fn main() -> anyhow::Result<()> {
 }
 
 /// Run provided test cases and filter according to features and flags availability.
-fn run_test_cases<const SER: bool>(
-    test_cases: &Vec<&TestCase<SER>>,
+fn run_test_cases(
+    test_cases: &Vec<&TestCase>,
     verbose: bool,
     config: &Config,
     enabled_features: &HashSet<&FileSystemFeature>,
-    enabled_flags: &HashSet<&pjdfs_tests::test::FileFlags>,
+    enabled_flags: &HashSet<&FileFlags>,
 ) -> Result<(usize, usize, usize), anyhow::Error> {
     let mut failed_tests_count: usize = 0;
     let mut succeeded_tests_count: usize = 0;
     let mut skipped_tests_count: usize = 0;
-    let _serialized = SER;
 
     for test_case in test_cases {
         //TODO: There's probably a better way to do this...
@@ -212,13 +185,26 @@ fn run_test_cases<const SER: bool>(
             continue;
         }
 
-        let mut context = TestContext::new(&config.settings.naptime);
-        //TODO: AssertUnwindSafe should be used with caution
-        let mut ctx_wrapper = AssertUnwindSafe(&mut context);
+        let result = catch_unwind(move || {
+            match test_case.fun {
+                TestFn::NonSerialized(fun) => {
+                    let mut context = TestContext::new(&config.settings.naptime);
+                    //TODO: AssertUnwindSafe should be used with caution
+                    let mut ctx_wrapper = AssertUnwindSafe(&mut context);
 
-        match catch_unwind(move || {
-            (test_case.fun)(&mut ctx_wrapper);
-        }) {
+                    (fun)(&mut ctx_wrapper)
+                }
+                TestFn::Serialized(fun) => {
+                    let mut context = SerializedTestContext::new(&config.settings.naptime);
+                    //TODO: AssertUnwindSafe should be used with caution
+                    let mut ctx_wrapper = AssertUnwindSafe(&mut context);
+
+                    (fun)(&mut ctx_wrapper)
+                }
+            }
+        });
+
+        match result {
             Ok(_) => {
                 println!("success");
                 succeeded_tests_count += 1;

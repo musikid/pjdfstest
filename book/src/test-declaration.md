@@ -110,8 +110,11 @@ mod lchmod;
 
 Some test cases need functions only available when they are run serialized.
 An example is changing user (`SerializedTestContext::as_user`), which affects the whole process.
-To have access to these functions, the test should be declared with `SerializedTestContext`
-in place of `TestContext`.
+To have access to these functions, the test should be declared with a `SerializedTestContext`
+parameter in place of `TestContext` 
+and the `serialized` keyword should be prepended before features.
+Root requirement is automatically added when a test needs to be run serialized.
+
 For example:
 
 ```rust,ignore

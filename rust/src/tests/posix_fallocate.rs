@@ -75,7 +75,7 @@ crate::test_case! {
     /// The file mode of a newly created file should not affect whether
     /// posix_fallocate will work, only the create args
     /// https://bugs.freebsd.org/bugzilla/show_bug.cgi?id=154873
-    affected_only_create_flags, root, FileSystemFeature::PosixFallocate
+    affected_only_create_flags, serialized, FileSystemFeature::PosixFallocate
 }
 fn affected_only_create_flags(ctx: &mut SerializedTestContext) {
     let subdir = ctx.create(FileType::Dir).unwrap();

@@ -4,7 +4,7 @@ use serde::Deserialize;
 use thiserror::Error;
 
 use crate::runner::context::ContextError;
-pub use crate::runner::context::TestContext;
+pub use crate::runner::context::{SerializedTestContext, TestContext};
 
 pub type TestResult = std::result::Result<(), TestError>;
 
@@ -17,20 +17,22 @@ pub enum TestError {
     Nix(#[from] nix::Error),
 }
 
+pub enum TestFn {
+    Serialized(fn(&mut SerializedTestContext)),
+    NonSerialized(fn(&mut TestContext)),
+}
+
 /// A single minimal test case.
-pub struct TestCase<const SERIALIZED: bool = false> {
+pub struct TestCase {
     pub name: &'static str,
     pub description: &'static str,
     pub require_root: bool,
-    pub fun: fn(&mut TestContext<SERIALIZED>),
+    pub fun: TestFn,
     pub required_features: &'static [FileSystemFeature],
     pub required_file_flags: &'static [FileFlags],
 }
 
-pub type SerializedTestCase = TestCase<true>;
-
 inventory::collect!(TestCase);
-inventory::collect!(SerializedTestCase);
 
 #[allow(non_camel_case_types)]
 #[derive(

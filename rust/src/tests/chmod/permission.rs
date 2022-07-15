@@ -56,7 +56,7 @@ fn update_ctime(ctx: &mut TestContext, f_type: FileType) {
 // chmod/00.t:L89
 crate::test_case! {
     /// chmod does not update ctime when it fails
-    failed_chmod_unchanged_ctime => [Regular, Dir, Fifo, Block, Char, Socket]
+    failed_chmod_unchanged_ctime, serialized => [Regular, Dir, Fifo, Block, Char, Socket]
 }
 fn failed_chmod_unchanged_ctime(ctx: &mut SerializedTestContext, f_type: FileType) {
     let path = ctx.create(f_type).unwrap();
@@ -72,7 +72,7 @@ crate::test_case! {
     /// if the calling process does not have appropriate privileges, and if
     /// the group ID of the file does not match the effective group ID or one of the
     /// supplementary group IDs
-    clear_isgid_bit
+    clear_isgid_bit, serialized
 }
 fn clear_isgid_bit(ctx: &mut SerializedTestContext) {
     let path = ctx.create(FileType::Regular).unwrap();

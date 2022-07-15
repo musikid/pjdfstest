@@ -66,7 +66,7 @@ fn birthtime_ts(path: &Path) -> TimeSpec {
 }
 
 /// Assert that a certain operation changes the ctime of a file.
-fn assert_ctime_changed<const S: bool, F>(ctx: &mut TestContext<S>, path: &Path, f: F)
+fn assert_ctime_changed<F>(ctx: &mut TestContext, path: &Path, f: F)
 where
     F: FnOnce(),
 {
@@ -81,7 +81,7 @@ where
 }
 
 /// Assert that a certain operation does not change the ctime of a file.
-fn assert_ctime_unchanged<const S: bool, F>(ctx: &TestContext<S>, path: &Path, f: F)
+fn assert_ctime_unchanged<F>(ctx: &TestContext, path: &Path, f: F)
 where
     F: FnOnce(),
 {

@@ -8,6 +8,7 @@ use nix::{
 };
 use rand::{distributions::Alphanumeric, thread_rng, Rng};
 use std::{
+    ops::{Deref, DerefMut},
     os::unix::{fs::symlink, prelude::RawFd},
     panic::{catch_unwind, resume_unwind, UnwindSafe},
     path::{Path, PathBuf},
@@ -55,14 +56,32 @@ pub enum ContextError {
     Nix(#[from] nix::Error),
 }
 
-pub struct TestContext<const SERIALIZED: bool = false> {
+pub struct TestContext {
     naptime: Duration,
     temp_dir: TempDir,
 }
 
-pub type SerializedTestContext = TestContext<true>;
+pub struct SerializedTestContext(TestContext);
+
+impl Deref for SerializedTestContext {
+    type Target = TestContext;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl DerefMut for SerializedTestContext {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
+}
 
 impl SerializedTestContext {
+    pub fn new(naptime: &f64) -> Self {
+        Self(TestContext::new(naptime))
+    }
+
     //TODO: Maybe better as a macro? unwrap?
     /// Execute the function as another user/group.
     pub fn as_user<F>(&self, uid: Option<Uid>, gid: Option<Gid>, mut f: F)
@@ -101,7 +120,7 @@ impl SerializedTestContext {
     }
 }
 
-impl<const SER: bool> TestContext<SER> {
+impl TestContext {
     // TODO: make it private when all code runner is in the good module
     // TODO: replace the `naptime` argument with `SettingsConfig` once the lib
     // is merged into the bin.
