@@ -3,7 +3,6 @@ use std::{
     os::unix::fs::symlink,
 };
 
-use crate::test::FileSystemFeature;
 #[cfg(any(
     target_os = "freebsd",
     target_os = "ios",
@@ -14,6 +13,7 @@ use crate::test::FileSystemFeature;
 use crate::tests::birthtime_ts;
 use crate::tests::{chmod, MetadataExt};
 use crate::{runner::context::FileType, test::TestContext};
+use crate::{runner::context::SerializedTestContext, test::FileSystemFeature};
 
 use nix::{
     errno::Errno,
@@ -192,9 +192,9 @@ fn follow_symlink(ctx: &mut TestContext) {
 crate::test_case! {
     /// A user without write permission cannot use UTIME_NOW
     // utimensat/06.t:L26
-    utime_now_nobody, root, FileSystemFeature::Utimensat, FileSystemFeature::UtimeNow
+    utime_now_nobody, serialized, root, FileSystemFeature::Utimensat, FileSystemFeature::UtimeNow
 }
-fn utime_now_nobody(ctx: &mut TestContext) {
+fn utime_now_nobody(ctx: &mut SerializedTestContext) {
     let mode = Mode::from_bits_truncate(0o644);
     let path = ctx.create(FileType::Regular).unwrap();
     chmod(&path, mode).unwrap();
@@ -233,9 +233,9 @@ fn utime_now_root(ctx: &mut TestContext) {
 crate::test_case! {
     /// A user with write permission can use UTIME_NOW
     // utimensat/06.t:L38
-    utime_now_write_perm, root, FileSystemFeature::Utimensat, FileSystemFeature::UtimeNow
+    utime_now_write_perm, serialized, root, FileSystemFeature::Utimensat, FileSystemFeature::UtimeNow
 }
-fn utime_now_write_perm(ctx: &mut TestContext) {
+fn utime_now_write_perm(ctx: &mut SerializedTestContext) {
     let mode = Mode::from_bits_truncate(0o666);
     let path = ctx.create(FileType::Regular).unwrap();
     chmod(&path, mode).unwrap();
@@ -247,9 +247,9 @@ fn utime_now_write_perm(ctx: &mut TestContext) {
 crate::test_case! {
     /// A user without write permission cannot set the timestamps arbitrarily
     // utimensat/07.t:L28
-    nobody, root, FileSystemFeature::Utimensat
+    nobody, serialized, root, FileSystemFeature::Utimensat
 }
-fn nobody(ctx: &mut TestContext) {
+fn nobody(ctx: &mut SerializedTestContext) {
     let mode = Mode::from_bits_truncate(0o644);
     let date1 = TimeSpec::seconds(1900000000); // Sun Mar 17 11:46:40 MDT 2030
     let date2 = TimeSpec::seconds(1950000000); // Fri Oct 17 04:40:00 MDT 2031
@@ -274,9 +274,9 @@ fn nobody(ctx: &mut TestContext) {
 crate::test_case! {
     /// A user with write permission cannot set the timestamps arbitrarily
     // utimensat/07.t:L33
-    write_perm, root, FileSystemFeature::Utimensat
+    write_perm, serialized, root, FileSystemFeature::Utimensat
 }
-fn write_perm(ctx: &mut TestContext) {
+fn write_perm(ctx: &mut SerializedTestContext) {
     let mode = Mode::from_bits_truncate(0o666);
     let date1 = TimeSpec::seconds(1900000000); // Sun Mar 17 11:46:40 MDT 2030
     let date2 = TimeSpec::seconds(1950000000); // Fri Oct 17 04:40:00 MDT 2031

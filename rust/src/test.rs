@@ -3,7 +3,7 @@ use std::fmt::Debug;
 use serde::Deserialize;
 use thiserror::Error;
 
-pub use crate::runner::context::TestContext;
+pub use crate::runner::context::{SerializedTestContext, TestContext};
 
 /// Error returned by a test function.
 #[derive(Error, Debug)]
@@ -12,12 +12,17 @@ pub enum TestError {
     Nix(#[from] nix::Error),
 }
 
+pub enum TestFn {
+    Serialized(fn(&mut SerializedTestContext)),
+    NonSerialized(fn(&mut TestContext)),
+}
+
 /// A single minimal test case.
 pub struct TestCase {
     pub name: &'static str,
     pub description: &'static str,
     pub require_root: bool,
-    pub fun: fn(&mut TestContext),
+    pub fun: TestFn,
     pub required_features: &'static [FileSystemFeature],
     pub required_file_flags: &'static [FileFlags],
 }

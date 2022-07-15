@@ -1,5 +1,5 @@
 use crate::{
-    runner::context::FileType,
+    runner::context::{FileType, SerializedTestContext},
     test::TestContext,
     tests::{assert_ctime_changed, assert_ctime_unchanged, chmod},
 };
@@ -56,9 +56,9 @@ fn update_ctime(ctx: &mut TestContext, f_type: FileType) {
 // chmod/00.t:L89
 crate::test_case! {
     /// chmod does not update ctime when it fails
-    failed_chmod_unchanged_ctime => [Regular, Dir, Fifo, Block, Char, Socket]
+    failed_chmod_unchanged_ctime, serialized => [Regular, Dir, Fifo, Block, Char, Socket]
 }
-fn failed_chmod_unchanged_ctime(ctx: &mut TestContext, f_type: FileType) {
+fn failed_chmod_unchanged_ctime(ctx: &mut SerializedTestContext, f_type: FileType) {
     let path = ctx.create(f_type).unwrap();
     assert_ctime_unchanged(ctx, &path, || {
         ctx.as_user(Some(Uid::from_raw(65534)), None, || {
@@ -72,9 +72,9 @@ crate::test_case! {
     /// if the calling process does not have appropriate privileges, and if
     /// the group ID of the file does not match the effective group ID or one of the
     /// supplementary group IDs
-    clear_isgid_bit
+    clear_isgid_bit, serialized
 }
-fn clear_isgid_bit(ctx: &mut TestContext) {
+fn clear_isgid_bit(ctx: &mut SerializedTestContext) {
     let path = ctx.create(FileType::Regular).unwrap();
     chmod(&path, Mode::from_bits_truncate(0o0755)).unwrap();
 

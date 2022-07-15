@@ -14,13 +14,13 @@ use gumdrop::Options;
 use once_cell::sync::OnceCell;
 use strum::IntoEnumIterator;
 
+mod config;
 mod macros;
+mod runner;
 mod test;
 mod tests;
-mod runner;
-mod config;
 
-use test::{FileSystemFeature, TestCase, TestContext};
+use test::{FileFlags, FileSystemFeature, SerializedTestContext, TestCase, TestContext, TestFn};
 
 struct PanicLocation(u32, u32, String);
 
@@ -96,6 +96,37 @@ fn main() -> anyhow::Result<()> {
         })
         .collect();
 
+    let (failed_count, skipped_count, success_count) = run_test_cases(
+        &test_cases,
+        args.verbose,
+        &config,
+        &enabled_features,
+        &enabled_flags,
+    )?;
+
+    println!(
+        "\nTests: {} failed, {} skipped, {} passed, {} total",
+        failed_count,
+        skipped_count,
+        success_count,
+        failed_count + skipped_count + success_count,
+    );
+
+    if failed_count > 0 {
+        Err(anyhow::anyhow!("Some tests have failed"))
+    } else {
+        Ok(())
+    }
+}
+
+/// Run provided test cases and filter according to features and flags availability.
+fn run_test_cases(
+    test_cases: &Vec<&TestCase>,
+    verbose: bool,
+    config: &Config,
+    enabled_features: &HashSet<&FileSystemFeature>,
+    enabled_flags: &HashSet<&FileFlags>,
+) -> Result<(usize, usize, usize), anyhow::Error> {
     let mut failed_tests_count: usize = 0;
     let mut succeeded_tests_count: usize = 0;
     let mut skipped_tests_count: usize = 0;
@@ -107,7 +138,7 @@ fn main() -> anyhow::Result<()> {
         let mut message = String::new();
 
         let features: HashSet<_> = test_case.required_features.iter().collect();
-        let missing_features: Vec<_> = features.difference(&enabled_features).collect();
+        let missing_features: Vec<_> = features.difference(enabled_features).collect();
         if !missing_features.is_empty() {
             should_skip = true;
 
@@ -123,7 +154,7 @@ fn main() -> anyhow::Result<()> {
         }
 
         let required_flags: HashSet<_> = test_case.required_file_flags.iter().collect();
-        let missing_flags: Vec<_> = required_flags.difference(&enabled_flags).collect();
+        let missing_flags: Vec<_> = required_flags.difference(enabled_flags).collect();
         if !missing_flags.is_empty() {
             should_skip = true;
 
@@ -144,7 +175,7 @@ fn main() -> anyhow::Result<()> {
 
         print!("{}\t", test_case.name);
 
-        if args.verbose && !test_case.description.is_empty() {
+        if verbose && !test_case.description.is_empty() {
             print!("\n\t{}\t\t", test_case.description);
         }
 
@@ -156,13 +187,26 @@ fn main() -> anyhow::Result<()> {
             continue;
         }
 
-        let mut context = TestContext::new(&config.settings);
-        //TODO: AssertUnwindSafe should be used with caution
-        let mut ctx_wrapper = AssertUnwindSafe(&mut context);
+        let result = catch_unwind(move || {
+            match test_case.fun {
+                TestFn::NonSerialized(fun) => {
+                    let mut context = TestContext::new(&config.settings);
+                    //TODO: AssertUnwindSafe should be used with caution
+                    let mut ctx_wrapper = AssertUnwindSafe(&mut context);
 
-        match catch_unwind(move || {
-            (test_case.fun)(&mut ctx_wrapper);
-        }) {
+                    (fun)(&mut ctx_wrapper)
+                }
+                TestFn::Serialized(fun) => {
+                    let mut context = SerializedTestContext::new(&config.settings);
+                    //TODO: AssertUnwindSafe should be used with caution
+                    let mut ctx_wrapper = AssertUnwindSafe(&mut context);
+
+                    (fun)(&mut ctx_wrapper)
+                }
+            }
+        });
+
+        match result {
             Ok(_) => {
                 println!("success");
                 succeeded_tests_count += 1;
@@ -184,17 +228,9 @@ fn main() -> anyhow::Result<()> {
         }
     }
 
-    println!(
-        "\nTests: {} failed, {} skipped, {} passed, {} total",
+    Ok((
         failed_tests_count,
         skipped_tests_count,
         succeeded_tests_count,
-        failed_tests_count + skipped_tests_count + succeeded_tests_count,
-    );
-
-    if failed_tests_count > 0 {
-        Err(anyhow::anyhow!("Some tests have failed"))
-    } else {
-        Ok(())
-    }
+    ))
 }

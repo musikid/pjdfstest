@@ -1,6 +1,14 @@
 #[macro_export]
 macro_rules! test_case {
     ($(#[doc = $docs:literal])*
+        $f:ident, serialized, root $(,)* $( $features:expr ),* $(,)* $(; $( $flags:expr ),+)? $(=> $ftypes: tt )?) => {
+        $crate::test_case! {@serialized $f, &[$( $features ),*], &[$( $( $flags ),+ )?], concat!($($docs),*), true $(=> $ftypes)?}
+    };
+    ($(#[doc = $docs:literal])*
+        $f:ident, serialized $(,)* $( $features:expr ),* $(,)* $(; $( $flags:expr ),+)? $(=> $ftypes: tt )?) => {
+        $crate::test_case! {@serialized $f, &[$( $features ),*], &[$( $( $flags ),+ )?], concat!($($docs),*), false $(=> $ftypes)?}
+    };
+    ($(#[doc = $docs:literal])*
         $f:ident, root $(,)* $( $features:expr ),* $(,)* $(; $( $flags:expr ),+)? $(=> $ftypes: tt )?) => {
         $crate::test_case! {@ $f, &[$( $features ),*], &[$( $( $flags ),+ )?], true, concat!($($docs),*) $(=> $ftypes)?}
     };
@@ -9,6 +17,38 @@ macro_rules! test_case {
         $crate::test_case! {@ $f, &[$( $features ),*], &[$( $( $flags ),+ )?], false, concat!($($docs),*) $(=> $ftypes)?}
     };
 
+
+
+    (@serialized $f:ident, $features:expr, $flags:expr, $desc:expr, $require_root:expr ) => {
+        paste::paste! {
+            ::inventory::submit! {
+                $crate::test::TestCase {
+                    name: concat!(module_path!(), "::", stringify!($f)),
+                    description: $desc,
+                    required_features: $features,
+                    required_file_flags: $flags,
+                    require_root: $require_root,
+                    fun: $crate::test::TestFn::Serialized($f),
+                }
+            }
+        }
+    };
+    (@serialized $f:ident, $features:expr, $flags:expr, $desc:expr, $require_root:expr => [$( $file_type:tt $( ($ft_args: tt) )? ),+ $(,)*]) => {
+        $(
+            paste::paste! {
+                ::inventory::submit! {
+                    $crate::test::TestCase {
+                        name: concat!(module_path!(), "::", stringify!($f), "::", stringify!([<$file_type:lower>])),
+                        description: $desc,
+                        required_features: $features,
+                        required_file_flags: $flags,
+                        require_root: $require_root || $crate::runner::context::FileType::$file_type $( ($ft_args) )?.privileged(),
+                        fun: $crate::test::TestFn::Serialized(|ctx| $f(ctx, $crate::runner::context::FileType::$file_type $( ($ft_args) )?)),
+                    }
+                }
+            }
+        )+
+    };
 
     (@ $f:ident, $features:expr, $flags:expr, $require_root:expr, $desc:expr ) => {
         paste::paste! {
@@ -19,7 +59,7 @@ macro_rules! test_case {
                     required_features: $features,
                     required_file_flags: $flags,
                     require_root: $require_root,
-                    fun: $f,
+                    fun: $crate::test::TestFn::NonSerialized($f),
                 }
             }
         }
@@ -34,7 +74,7 @@ macro_rules! test_case {
                         required_features: $features,
                         required_file_flags: $flags,
                         require_root: $require_root || $crate::runner::context::FileType::$file_type $( ($ft_args) )?.privileged(),
-                        fun: |ctx| $f(ctx, $crate::runner::context::FileType::$file_type $( ($ft_args) )?),
+                        fun: $crate::test::TestFn::NonSerialized(|ctx| $f(ctx, $crate::runner::context::FileType::$file_type $( ($ft_args) )?)),
                     }
                 }
             }

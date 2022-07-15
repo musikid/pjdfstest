@@ -8,6 +8,7 @@ use nix::{
 };
 use rand::{distributions::Alphanumeric, thread_rng, Rng};
 use std::{
+    ops::{Deref, DerefMut},
     os::unix::{fs::symlink, prelude::RawFd},
     panic::{catch_unwind, resume_unwind, UnwindSafe},
     path::{Path, PathBuf},
@@ -18,10 +19,7 @@ use strum_macros::EnumIter;
 use tempfile::{tempdir, TempDir};
 use thiserror::Error;
 
-use crate::{
-    config::SettingsConfig,
-    test::TestError
-};
+use crate::{config::SettingsConfig, test::TestError};
 
 /// File type, mainly used with [TestContext::create].
 #[derive(Debug, Clone, Eq, PartialEq, EnumIter)]
@@ -63,23 +61,25 @@ pub struct TestContext {
     temp_dir: TempDir,
 }
 
-impl TestContext {
-    // TODO: make it private when all code runner is in the good module
-    pub fn new(settings: &SettingsConfig) -> Self {
-        let naptime = Duration::from_secs_f64(settings.naptime);
-        let temp_dir = tempdir().unwrap();
-        TestContext { naptime, temp_dir }
-    }
+pub struct SerializedTestContext(TestContext);
 
-    /// Create a regular file and open it.
-    pub fn create_file(
-        &mut self,
-        oflag: OFlag,
-        mode: Option<Mode>,
-    ) -> Result<(PathBuf, RawFd), TestError> {
-        let path = self.create(FileType::Regular)?;
-        let file = open(&path, oflag, mode.unwrap_or_else(Mode::empty))?;
-        Ok((path, file))
+impl Deref for SerializedTestContext {
+    type Target = TestContext;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl DerefMut for SerializedTestContext {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
+}
+
+impl SerializedTestContext {
+    pub fn new(settings: &SettingsConfig) -> Self {
+        Self(TestContext::new(settings))
     }
 
     //TODO: Maybe better as a macro? unwrap?
@@ -117,6 +117,25 @@ impl TestContext {
         if let Err(e) = res {
             resume_unwind(e)
         }
+    }
+}
+
+impl TestContext {
+    pub fn new(settings: &SettingsConfig) -> Self {
+        let naptime = Duration::from_secs_f64(settings.naptime);
+        let temp_dir = tempdir().unwrap();
+        TestContext { naptime, temp_dir }
+    }
+
+    /// Create a regular file and open it.
+    pub fn create_file(
+        &mut self,
+        oflag: OFlag,
+        mode: Option<Mode>,
+    ) -> Result<(PathBuf, RawFd), TestError> {
+        let path = self.create(FileType::Regular)?;
+        let file = open(&path, oflag, mode.unwrap_or_else(|| Mode::empty()))?;
+        Ok((path, file))
     }
 
     /// Create a file in a temp folder with a random name.
