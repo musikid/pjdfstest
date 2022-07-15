@@ -3,7 +3,6 @@ use std::fmt::Debug;
 use serde::Deserialize;
 use thiserror::Error;
 
-use crate::runner::context::ContextError;
 pub use crate::runner::context::{SerializedTestContext, TestContext};
 
 /// Error returned by a test function.

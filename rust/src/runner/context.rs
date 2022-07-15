@@ -78,8 +78,8 @@ impl DerefMut for SerializedTestContext {
 }
 
 impl SerializedTestContext {
-    pub fn new(naptime: &f64) -> Self {
-        Self(TestContext::new(naptime))
+    pub fn new(settings: &SettingsConfig) -> Self {
+        Self(TestContext::new(settings))
     }
 
     //TODO: Maybe better as a macro? unwrap?
@@ -121,11 +121,8 @@ impl SerializedTestContext {
 }
 
 impl TestContext {
-    // TODO: make it private when all code runner is in the good module
-    // TODO: replace the `naptime` argument with `SettingsConfig` once the lib
-    // is merged into the bin.
-    pub fn new(naptime: &f64) -> Self {
-        let naptime = Duration::from_secs_f64(*naptime);
+    pub fn new(settings: &SettingsConfig) -> Self {
+        let naptime = Duration::from_secs_f64(settings.naptime);
         let temp_dir = tempdir().unwrap();
         TestContext { naptime, temp_dir }
     }

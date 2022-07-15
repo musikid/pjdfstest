@@ -190,14 +190,14 @@ fn run_test_cases(
         let result = catch_unwind(move || {
             match test_case.fun {
                 TestFn::NonSerialized(fun) => {
-                    let mut context = TestContext::new(&config.settings.naptime);
+                    let mut context = TestContext::new(&config.settings);
                     //TODO: AssertUnwindSafe should be used with caution
                     let mut ctx_wrapper = AssertUnwindSafe(&mut context);
 
                     (fun)(&mut ctx_wrapper)
                 }
                 TestFn::Serialized(fun) => {
-                    let mut context = SerializedTestContext::new(&config.settings.naptime);
+                    let mut context = SerializedTestContext::new(&config.settings);
                     //TODO: AssertUnwindSafe should be used with caution
                     let mut ctx_wrapper = AssertUnwindSafe(&mut context);
 
