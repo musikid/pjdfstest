@@ -113,7 +113,6 @@ An example is changing user (`SerializedTestContext::as_user`), which affects th
 To have access to these functions, the test should be declared with a `SerializedTestContext`
 parameter in place of `TestContext` 
 and the `serialized` keyword should be prepended before features.
-Root requirement is automatically added when a test needs to be run serialized.
 
 For example:
 

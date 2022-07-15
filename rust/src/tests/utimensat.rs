@@ -192,7 +192,7 @@ fn follow_symlink(ctx: &mut TestContext) {
 crate::test_case! {
     /// A user without write permission cannot use UTIME_NOW
     // utimensat/06.t:L26
-    utime_now_nobody, serialized, FileSystemFeature::Utimensat, FileSystemFeature::UtimeNow
+    utime_now_nobody, serialized, root, FileSystemFeature::Utimensat, FileSystemFeature::UtimeNow
 }
 fn utime_now_nobody(ctx: &mut SerializedTestContext) {
     let mode = Mode::from_bits_truncate(0o644);
@@ -233,7 +233,7 @@ fn utime_now_root(ctx: &mut TestContext) {
 crate::test_case! {
     /// A user with write permission can use UTIME_NOW
     // utimensat/06.t:L38
-    utime_now_write_perm, serialized, FileSystemFeature::Utimensat, FileSystemFeature::UtimeNow
+    utime_now_write_perm, serialized, root, FileSystemFeature::Utimensat, FileSystemFeature::UtimeNow
 }
 fn utime_now_write_perm(ctx: &mut SerializedTestContext) {
     let mode = Mode::from_bits_truncate(0o666);
@@ -247,7 +247,7 @@ fn utime_now_write_perm(ctx: &mut SerializedTestContext) {
 crate::test_case! {
     /// A user without write permission cannot set the timestamps arbitrarily
     // utimensat/07.t:L28
-    nobody, serialized, FileSystemFeature::Utimensat
+    nobody, serialized, root, FileSystemFeature::Utimensat
 }
 fn nobody(ctx: &mut SerializedTestContext) {
     let mode = Mode::from_bits_truncate(0o644);
@@ -274,7 +274,7 @@ fn nobody(ctx: &mut SerializedTestContext) {
 crate::test_case! {
     /// A user with write permission cannot set the timestamps arbitrarily
     // utimensat/07.t:L33
-    write_perm, serialized, FileSystemFeature::Utimensat
+    write_perm, serialized, root, FileSystemFeature::Utimensat
 }
 fn write_perm(ctx: &mut SerializedTestContext) {
     let mode = Mode::from_bits_truncate(0o666);

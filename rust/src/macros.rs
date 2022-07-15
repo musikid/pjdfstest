@@ -1,8 +1,12 @@
 #[macro_export]
 macro_rules! test_case {
     ($(#[doc = $docs:literal])*
+        $f:ident, serialized, root $(,)* $( $features:expr ),* $(,)* $(; $( $flags:expr ),+)? $(=> $ftypes: tt )?) => {
+        $crate::test_case! {@serialized $f, &[$( $features ),*], &[$( $( $flags ),+ )?], concat!($($docs),*), true $(=> $ftypes)?}
+    };
+    ($(#[doc = $docs:literal])*
         $f:ident, serialized $(,)* $( $features:expr ),* $(,)* $(; $( $flags:expr ),+)? $(=> $ftypes: tt )?) => {
-        $crate::test_case! {@serialized $f, &[$( $features ),*], &[$( $( $flags ),+ )?], concat!($($docs),*) $(=> $ftypes)?}
+        $crate::test_case! {@serialized $f, &[$( $features ),*], &[$( $( $flags ),+ )?], concat!($($docs),*), false $(=> $ftypes)?}
     };
     ($(#[doc = $docs:literal])*
         $f:ident, root $(,)* $( $features:expr ),* $(,)* $(; $( $flags:expr ),+)? $(=> $ftypes: tt )?) => {
@@ -15,7 +19,7 @@ macro_rules! test_case {
 
 
 
-    (@serialized $f:ident, $features:expr, $flags:expr, $desc:expr ) => {
+    (@serialized $f:ident, $features:expr, $flags:expr, $desc:expr, $require_root:expr ) => {
         paste::paste! {
             ::inventory::submit! {
                 $crate::test::TestCase {
@@ -23,13 +27,13 @@ macro_rules! test_case {
                     description: $desc,
                     required_features: $features,
                     required_file_flags: $flags,
-                    require_root: true,
+                    require_root: $require_root,
                     fun: $crate::test::TestFn::Serialized($f),
                 }
             }
         }
     };
-    (@serialized $f:ident, $features:expr, $flags:expr, $desc:expr => [$( $file_type:tt $( ($ft_args: tt) )? ),+ $(,)*]) => {
+    (@serialized $f:ident, $features:expr, $flags:expr, $desc:expr, $require_root:expr => [$( $file_type:tt $( ($ft_args: tt) )? ),+ $(,)*]) => {
         $(
             paste::paste! {
                 ::inventory::submit! {
@@ -38,7 +42,7 @@ macro_rules! test_case {
                         description: $desc,
                         required_features: $features,
                         required_file_flags: $flags,
-                        require_root: true,
+                        require_root: $require_root || $crate::runner::context::FileType::$file_type $( ($ft_args) )?.privileged(),
                         fun: $crate::test::TestFn::Serialized(|ctx| $f(ctx, $crate::runner::context::FileType::$file_type $( ($ft_args) )?)),
                     }
                 }
