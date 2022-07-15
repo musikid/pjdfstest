@@ -8,7 +8,7 @@ build: &BUILD
     - cd rust
     - cargo check --all-targets
     - cargo build --all-targets --release
-    - target/release/pjdfstest
+    - target/release/pjdfstest -c $CFG
     - rustup component add clippy
     - cargo clippy --all-targets
 
@@ -16,6 +16,8 @@ task:
   name: FreeBSD
   freebsd_instance:
     image: freebsd-12-3-release-amd64
+  env:
+    CFG: ci/freebsd-ufs.toml
   setup_script:
     - fetch https://sh.rustup.rs -o rustup.sh
     - sh rustup.sh -y --profile=minimal
@@ -26,4 +28,6 @@ task:
   name: Linux
   container:
    image: rust:latest
+  env:
+    CFG: ci/linux-ext4.toml
   << : *BUILD

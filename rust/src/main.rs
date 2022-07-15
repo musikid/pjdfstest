@@ -14,11 +14,13 @@ use gumdrop::Options;
 use once_cell::sync::OnceCell;
 use strum::IntoEnumIterator;
 
-use pjdfs_tests::test::{
-    FileFlags, FileSystemFeature, SerializedTestContext, TestCase, TestContext, TestFn,
-};
-
 mod config;
+mod macros;
+mod runner;
+mod test;
+mod tests;
+
+use test::{FileFlags, FileSystemFeature, SerializedTestContext, TestCase, TestContext, TestFn};
 
 struct PanicLocation(u32, u32, String);
 

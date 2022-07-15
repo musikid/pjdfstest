@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
-use pjdfs_tests::test::FileFlags;
-use pjdfs_tests::test::FileSystemFeature;
+use crate::test::FileFlags;
+use crate::test::FileSystemFeature;
 use serde::Deserialize;
 
 #[derive(Debug, Deserialize)]

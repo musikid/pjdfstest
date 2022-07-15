@@ -1,0 +1,11 @@
+[features]
+
+chflags = {}
+file_flags = ["SF_IMMUTABLE"]
+posix_fallocate = {}
+stat_st_birthtime = {}
+utime_now = {}
+utimensat = {}
+
+[settings]
+naptime = 0.001

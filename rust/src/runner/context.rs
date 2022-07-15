@@ -19,7 +19,7 @@ use strum_macros::EnumIter;
 use tempfile::{tempdir, TempDir};
 use thiserror::Error;
 
-use crate::test::TestError;
+use crate::{config::SettingsConfig, test::TestError};
 
 /// File type, mainly used with [TestContext::create].
 #[derive(Debug, Clone, Eq, PartialEq, EnumIter)]
@@ -212,43 +212,6 @@ impl TestContext {
                 bind(fd, &sockaddr)
             }
             //TODO: error type?
-            FileType::Symlink(target) => symlink(
-                target.as_deref().unwrap_or_else(|| Path::new("test")),
-                &path,
-            )
-            .map_err(|e| nix::Error::try_from(e).unwrap_or(nix::errno::Errno::UnknownErrno)),
-        }?;
-
-        Ok(path)
-    }
-
-    /// Create a file in a temp folder with the given name.
-    pub fn create_named<P: AsRef<Path>>(
-        &mut self,
-        f_type: FileType,
-        name: P,
-    ) -> Result<PathBuf, TestError> {
-        let path = self.temp_dir.path().join(name.as_ref());
-
-        let mode = Mode::from_bits_truncate(0o644);
-
-        match f_type {
-            FileType::Regular => open(&path, OFlag::O_CREAT, mode).and_then(close),
-            FileType::Dir => mkdir(&path, Mode::from_bits_truncate(0o755)),
-            FileType::Fifo => mkfifo(&path, Mode::from_bits_truncate(0o755)),
-            FileType::Block => mknod(&path, SFlag::S_IFBLK, mode, 0),
-            FileType::Char => mknod(&path, SFlag::S_IFCHR, mode, 0),
-            FileType::Socket => {
-                let fd = socket(
-                    nix::sys::socket::AddressFamily::Unix,
-                    nix::sys::socket::SockType::Stream,
-                    SockFlag::empty(),
-                    None,
-                )?;
-                let sockaddr = UnixAddr::new(&path)?;
-                bind(fd, &sockaddr)
-            }
-            //TODO: error type
             FileType::Symlink(target) => symlink(
                 target.as_deref().unwrap_or_else(|| Path::new("test")),
                 &path,
