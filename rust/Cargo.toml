@@ -23,10 +23,6 @@ git = "https://github.com/nix-rust/nix"
 rev = "fb65331"
 features = ["fs", "socket"]
 
-[lib]
-name = "pjdfs_tests"
-path = "src/lib.rs"
-
 [[bin]]
 name = "pjdfstest"
 path = "src/main.rs"

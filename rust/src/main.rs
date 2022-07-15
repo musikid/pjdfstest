@@ -14,9 +14,13 @@ use gumdrop::Options;
 use once_cell::sync::OnceCell;
 use strum::IntoEnumIterator;
 
-use pjdfs_tests::test::{FileSystemFeature, TestCase, TestContext};
-
+mod macros;
+mod test;
+mod tests;
+mod runner;
 mod config;
+
+use test::{FileSystemFeature, TestCase, TestContext};
 
 struct PanicLocation(u32, u32, String);
 
@@ -152,7 +156,7 @@ fn main() -> anyhow::Result<()> {
             continue;
         }
 
-        let mut context = TestContext::new(&config.settings.naptime);
+        let mut context = TestContext::new(&config.settings);
         //TODO: AssertUnwindSafe should be used with caution
         let mut ctx_wrapper = AssertUnwindSafe(&mut context);
 
