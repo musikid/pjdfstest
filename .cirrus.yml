@@ -6,7 +6,7 @@ build: &BUILD
   build_script:
     - . $HOME/.cargo/env || true
     - cd rust
-    - cargo check --all-targets
+    - cargo test
     - cargo build --all-targets --release
     - target/release/pjdfstest -c $CFG
     - rustup component add clippy
