@@ -2,7 +2,7 @@ use std::{
     collections::HashSet,
     io::{stdout, Write},
     panic::{catch_unwind, set_hook, AssertUnwindSafe},
-    path::{Path, PathBuf},
+    path::PathBuf,
 };
 
 use config::Config;
@@ -57,13 +57,13 @@ fn main() -> anyhow::Result<()> {
         return Ok(());
     }
 
-    let config: Config = Figment::new()
-        .merge(Toml::file(
-            args.configuration_file
-                .as_deref()
-                .unwrap_or_else(|| Path::new("pjdfstest.toml")),
-        ))
-        .extract()?;
+    let config: Config = if let Some(path) = args.configuration_file.as_deref() {
+        Figment::new().merge(Toml::file(path))
+    } else {
+        Figment::new()
+    }
+    .extract()
+    .unwrap_or_default();
 
     let enabled_features: HashSet<_> = config.features.fs_features.keys().into_iter().collect();
 
