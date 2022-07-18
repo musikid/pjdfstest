@@ -127,6 +127,10 @@ impl TestContext {
         TestContext { naptime, temp_dir }
     }
 
+    pub fn base_path(&self) -> &Path {
+        self.temp_dir.path()
+    }
+
     /// Create a regular file and open it.
     pub fn create_file(
         &mut self,
