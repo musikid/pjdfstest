@@ -20,7 +20,7 @@ inventory = "0.3.0"
 
 [dependencies.nix]
 git = "https://github.com/nix-rust/nix"
-rev = "fb65331"
+rev = "b1e1a604a713432773fb6bc8590ff9291c70a0bb"
 features = ["fs", "socket"]
 
 [[bin]]
