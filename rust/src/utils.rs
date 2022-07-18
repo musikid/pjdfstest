@@ -1,3 +1,4 @@
+use nix::unistd::{Gid, Uid};
 use nix::{
     fcntl::renameat,
     sys::stat::{fchmodat, FchmodatFlags},
@@ -47,4 +48,19 @@ pub fn lchflags<P: ?Sized + nix::NixPath>(
         path.with_nix_path(|cstr| unsafe { nix::libc::lchflags(cstr.as_ptr(), flags.bits()) })?;
 
     Errno::result(res).map(drop)
+}
+
+/// Wrapper for `fchownat(None, path, owner, group, FchownatFlags::NoFollowSymlink)`.
+pub fn lchown<P: ?Sized + nix::NixPath>(
+    path: &P,
+    owner: Option<Uid>,
+    group: Option<Gid>,
+) -> nix::Result<()> {
+    nix::unistd::fchownat(
+        None,
+        path,
+        owner,
+        group,
+        nix::unistd::FchownatFlags::NoFollowSymlink,
+    )
 }

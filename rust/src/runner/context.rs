@@ -196,6 +196,20 @@ impl<'a> TestContext<'a> {
         )
     }
 
+    //TODO: Generify create functions
+    /// Create a file with a custom name.
+    pub fn create_named<P: AsRef<Path>>(
+        &mut self,
+        f_type: FileType,
+        name: P,
+    ) -> Result<PathBuf, TestError> {
+        let path = self.temp_dir.path().join(name.as_ref());
+
+        create_type(f_type, &path)?;
+
+        Ok(path)
+    }
+
     /// Create a regular file and open it.
     pub fn create_file(
         &self,

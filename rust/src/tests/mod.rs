@@ -13,6 +13,7 @@ use std::{fs::metadata, path::Path};
 ))]
 use nix::sys::stat::stat;
 use nix::sys::time::TimeSpec;
+use nix::unistd::{Gid, Uid};
 
 use crate::test::TestContext;
 
@@ -26,6 +27,7 @@ use crate::test::TestContext;
 ))]
 pub mod chflags;
 pub mod chmod;
+pub mod errors;
 pub mod ftruncate;
 pub mod link;
 pub mod mkdir;
