@@ -3,7 +3,7 @@ use std::{
     env::current_dir,
     io::{stdout, Write},
     panic::{catch_unwind, set_hook, AssertUnwindSafe},
-    path::PathBuf,
+    path::{Path, PathBuf},
 };
 
 use config::Config;
@@ -65,13 +65,13 @@ fn main() -> anyhow::Result<()> {
         return Ok(());
     }
 
-    let config: Config = if let Some(path) = args.configuration_file.as_deref() {
-        Figment::new().merge(Toml::file(path))
-    } else {
-        Figment::new()
-    }
-    .extract()
-    .unwrap_or_default();
+    let config: Config = Figment::new()
+        .merge(Toml::file(
+            args.configuration_file
+                .as_deref()
+                .unwrap_or_else(|| Path::new("pjdfstest.toml")),
+        ))
+        .extract()?;
 
     let path = args
         .path

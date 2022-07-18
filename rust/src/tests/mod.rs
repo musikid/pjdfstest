@@ -11,10 +11,12 @@ use std::{fs::metadata, path::Path};
 ))]
 use nix::sys::stat::stat;
 use nix::sys::time::TimeSpec;
+use nix::unistd::{Gid, Uid};
 
 use crate::test::TestContext;
 
 pub mod chmod;
+pub mod errors;
 pub mod posix_fallocate;
 pub mod utimensat;
 

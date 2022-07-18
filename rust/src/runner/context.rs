@@ -19,6 +19,7 @@ use nix::{sys::stat::FileFlag, unistd::chflags};
 
 use rand::{distributions::Alphanumeric, thread_rng, Rng};
 use std::{
+    fs::create_dir_all,
     ops::{Deref, DerefMut},
     os::unix::{fs::symlink, prelude::RawFd},
     panic::{catch_unwind, resume_unwind, UnwindSafe},
@@ -142,6 +143,20 @@ impl TestContext {
         self.temp_dir.path()
     }
 
+    //TODO: Generify create functions
+    /// Create a file with a custom name.
+    pub fn create_named<P: AsRef<Path>>(
+        &mut self,
+        f_type: FileType,
+        name: P,
+    ) -> Result<PathBuf, TestError> {
+        let path = self.temp_dir.path().join(name.as_ref());
+
+        create_type(f_type, &path)?;
+
+        Ok(path)
+    }
+
     /// Create a regular file and open it.
     pub fn create_file(
         &mut self,
@@ -163,37 +178,13 @@ impl TestContext {
                 .collect::<String>(),
         );
 
-        let mode = Mode::from_bits_truncate(0o644);
-
-        match f_type {
-            FileType::Regular => open(&path, OFlag::O_CREAT, mode).and_then(close),
-            FileType::Dir => mkdir(&path, Mode::from_bits_truncate(0o755)),
-            FileType::Fifo => mkfifo(&path, mode),
-            FileType::Block => mknod(&path, SFlag::S_IFBLK, mode, 0),
-            FileType::Char => mknod(&path, SFlag::S_IFCHR, mode, 0),
-            FileType::Socket => {
-                let fd = socket(
-                    nix::sys::socket::AddressFamily::Unix,
-                    nix::sys::socket::SockType::Stream,
-                    SockFlag::empty(),
-                    None,
-                )?;
-                let sockaddr = UnixAddr::new(&path)?;
-                bind(fd, &sockaddr)
-            }
-            //TODO: error type?
-            FileType::Symlink(target) => symlink(
-                target.as_deref().unwrap_or_else(|| Path::new("test")),
-                &path,
-            )
-            .map_err(|e| nix::Error::try_from(e).unwrap_or(nix::errno::Errno::UnknownErrno)),
-        }?;
+        create_type(f_type, &path)?;
 
         Ok(path)
     }
 
-    pub fn create_max(&mut self, f_type: FileType) -> Result<PathBuf, TestError> {
-        //TODO: const?
+    /// Create a file whose name length is _PC_NAME_MAX.
+    pub fn create_name_max(&mut self, f_type: FileType) -> Result<PathBuf, TestError> {
         let max_name_len =
             pathconf(self.temp_dir.path(), nix::unistd::PathconfVar::NAME_MAX)?.unwrap();
 
@@ -205,31 +196,59 @@ impl TestContext {
                 .collect::<String>(),
         );
 
-        let mode = Mode::from_bits_truncate(0o644);
+        create_type(f_type, &path)?;
 
-        match f_type {
-            FileType::Regular => open(&path, OFlag::O_CREAT, mode).and_then(close),
-            FileType::Dir => mkdir(&path, Mode::from_bits_truncate(0o755)),
-            FileType::Fifo => mkfifo(&path, mode),
-            FileType::Block => mknod(&path, SFlag::S_IFBLK, mode, 0),
-            FileType::Char => mknod(&path, SFlag::S_IFCHR, mode, 0),
-            FileType::Socket => {
-                let fd = socket(
-                    nix::sys::socket::AddressFamily::Unix,
-                    nix::sys::socket::SockType::Stream,
-                    SockFlag::empty(),
-                    None,
-                )?;
-                let sockaddr = UnixAddr::new(&path)?;
-                bind(fd, &sockaddr)
-            }
-            //TODO: error type?
-            FileType::Symlink(target) => symlink(
-                target.as_deref().unwrap_or_else(|| Path::new("test")),
-                &path,
-            )
-            .map_err(|e| nix::Error::try_from(e).unwrap_or(nix::errno::Errno::UnknownErrno)),
-        }?;
+        Ok(path)
+    }
+
+    /// Create a file whose path length is _PC_PATH_MAX.
+    pub fn create_path_max(&mut self, f_type: FileType) -> Result<PathBuf, TestError> {
+        let max_name_len = pathconf(self.temp_dir.path(), nix::unistd::PathconfVar::NAME_MAX)?
+            .unwrap() as usize
+            - 1;
+        let component_len = max_name_len / 2;
+
+        let max_path_len = pathconf(self.temp_dir.path(), nix::unistd::PathconfVar::PATH_MAX)?
+            .unwrap() as usize
+            - 1;
+
+        let mut path = self.temp_dir.path().to_owned();
+        let initial_path = path.to_string_lossy().len();
+        let remaining_chars = max_path_len - initial_path;
+
+        let parts: Vec<_> = (0..remaining_chars / component_len)
+            .into_iter()
+            .map(|_| {
+                thread_rng()
+                    .sample_iter(&Alphanumeric)
+                    .take(component_len - 1)
+                    .map(char::from)
+                    .collect::<String>()
+            })
+            .collect();
+
+        let remaining_chars = remaining_chars % component_len - 1;
+        if remaining_chars > 0 {
+            path.extend(parts);
+
+            create_dir_all(&path).unwrap();
+
+            path.push(
+                thread_rng()
+                    .sample_iter(&Alphanumeric)
+                    .take(remaining_chars)
+                    .map(char::from)
+                    .collect::<String>(),
+            );
+        } else {
+            path.extend(&parts[..parts.len() - 1]);
+
+            create_dir_all(&path).unwrap();
+
+            path.push(&parts[parts.len() - 1]);
+        }
+
+        create_type(f_type, &path)?;
 
         Ok(path)
     }
@@ -284,5 +303,37 @@ impl Drop for TestContext {
                 }
             }
         }
+    }
+}
+
+fn create_type<P: AsRef<Path>>(f_type: FileType, path: P) -> nix::Result<()> {
+    let path = path.as_ref();
+    let mode = match f_type {
+        FileType::Dir => Mode::from_bits_truncate(0o755),
+        _ => Mode::from_bits_truncate(0o644),
+    };
+
+    match f_type {
+        FileType::Regular => open(path, OFlag::O_CREAT, mode).and_then(close),
+        FileType::Dir => mkdir(path, mode),
+        FileType::Fifo => mkfifo(path, mode),
+        FileType::Block => mknod(path, SFlag::S_IFBLK, mode, 0),
+        FileType::Char => mknod(path, SFlag::S_IFCHR, mode, 0),
+        FileType::Socket => {
+            let fd = socket(
+                nix::sys::socket::AddressFamily::Unix,
+                nix::sys::socket::SockType::Stream,
+                SockFlag::empty(),
+                None,
+            )?;
+            let sockaddr = UnixAddr::new(path)?;
+            bind(fd, &sockaddr)
+        }
+        //TODO: error type?
+        FileType::Symlink(target) => symlink(
+            target.as_deref().unwrap_or_else(|| Path::new("test")),
+            &path,
+        )
+        .map_err(|e| nix::Error::try_from(e).unwrap_or(nix::errno::Errno::UnknownErrno)),
     }
 }
