@@ -100,6 +100,7 @@ crate::test_case! {enotdir => [Regular, Fifo, Block, Char, Socket]}
 fn enotdir(ctx: &mut TestContext, ft: FileType) {
     let base_path = ctx.create(ft).unwrap();
     let path = base_path.join("previous_not_dir");
+    let dir = ctx.create(FileType::Dir).unwrap();
 
     fn assert_enotdir<T: Debug, F>(path: &Path, f: F)
     where
@@ -132,13 +133,13 @@ fn enotdir(ctx: &mut TestContext, ft: FileType) {
     assert_enotdir(&path, |p| mkdir(p, Mode::empty()));
     assert_enotdir(&path, |p| mkfifo(p, Mode::empty()));
     assert_enotdir(&path, |p| mknod(p, SFlag::S_IFCHR, Mode::empty(), 0));
+    assert_enotdir(&path, |p| open(p, OFlag::O_RDONLY, Mode::empty()));
     assert_enotdir(&path, |p| {
-        open(p, OFlag::O_RDONLY, Mode::empty())
-            .and_then(|_| open(p, OFlag::O_CREAT, Mode::from_bits_truncate(0o644)))
+        open(p, OFlag::O_CREAT, Mode::from_bits_truncate(0o644))
     });
-    // TODO: rename returns ENOTDIR when the 'from' argument is a directory, but 'to' is not a directory
+    assert_enotdir(&path, |p| rename(&dir, &base_path));
     assert_enotdir(&path, |p| rename(p, Path::new("test")));
-    assert_enotdir(&path, |p| rename(Path::new("test"), p));
+    assert_enotdir(&path, |p| rename(&*base_path, p));
     assert_enotdir(&path, |p| symlink(Path::new("test"), p));
     assert_enotdir(&path, |p| truncate(p, 0));
     assert_enotdir(&path, |p| unlink(p));
