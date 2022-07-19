@@ -145,6 +145,88 @@ fn enotdir(ctx: &mut TestContext, ft: FileType) {
     assert_enotdir(&path, |p| unlink(p));
 }
 
+crate::test_case! {enoent}
+fn enoent(ctx: &mut TestContext) {
+    let dir = ctx.create(FileType::Dir).unwrap();
+    let fake_path = dir.join("not_existent");
+    let real_path = ctx.create(FileType::Regular).unwrap();
+    let link_to_fake_path = ctx
+        .create(FileType::Symlink(Some(fake_path.to_path_buf())))
+        .unwrap();
+
+    fn assert_enoent<F, T: Debug + PartialEq>(path: &Path, f: F)
+    where
+        F: Fn(&Path) -> nix::Result<T>,
+    {
+        assert_eq!(f(path).unwrap_err(), Errno::ENOENT);
+    }
+
+    fn assert_enoent_final_comp<F, T: Debug + PartialEq>(path: &Path, f: F)
+    where
+        F: Fn(&Path) -> nix::Result<T>,
+    {
+        assert_eq!(f(&path.join("test")).unwrap_err(), Errno::ENOENT);
+    }
+
+    fn assert_enoent_two_params<F, T: Debug + PartialEq>(fake_path: &Path, real_path: &Path, f: F)
+    where
+        F: Fn(&Path, &Path) -> nix::Result<T>,
+    {
+        assert_eq!(
+            f(&fake_path.join("test"), real_path).unwrap_err(),
+            Errno::ENOENT
+        );
+        assert_eq!(
+            f(real_path, &fake_path.join("test")).unwrap_err(),
+            Errno::ENOENT
+        );
+    }
+
+    assert_enoent(&fake_path, |p| chflags(p, FileFlag::empty()));
+    assert_enoent(&fake_path, |p| chmod(p, Mode::empty()));
+    assert_enoent(&link_to_fake_path, |p| chmod(p, Mode::empty()));
+    assert_enoent(&fake_path, |p| lchmod(p, Mode::empty()));
+    assert_enoent(&fake_path, |p| {
+        chown(
+            p,
+            Some(User::from_name("nobody").unwrap().unwrap().uid),
+            None,
+        )
+    });
+    assert_enoent(&link_to_fake_path, |p| {
+        chown(
+            p,
+            Some(User::from_name("nobody").unwrap().unwrap().uid),
+            None,
+        )
+    });
+    assert_enoent(&fake_path, |p| {
+        lchown(
+            p,
+            Some(User::from_name("nobody").unwrap().unwrap().uid),
+            None,
+        )
+    });
+    assert_enoent_two_params(&fake_path, &real_path, |p1, p2| link(p1, p2));
+    //TODO: DO link/09.t?
+    assert_enoent_final_comp(&fake_path, |p| mkdir(p, Mode::empty()));
+    assert_enoent_final_comp(&fake_path, |p| mkfifo(p, Mode::empty()));
+    assert_enoent_final_comp(&fake_path, |p| mknod(p, SFlag::S_IFCHR, Mode::empty(), 0));
+    assert_enoent(&fake_path, |p| open(p, OFlag::O_RDONLY, Mode::empty()));
+    assert_eq!(
+        open(&fake_path.join("test"), OFlag::O_CREAT, Mode::S_IRWXU).unwrap_err(),
+        Errno::ENOENT
+    );
+    assert_eq!(
+        open(&fake_path, OFlag::O_RDONLY, Mode::empty()).unwrap_err(),
+        Errno::ENOENT
+    );
+    assert_enoent_two_params(&fake_path, &real_path, |p1, p2| rename(p1, p2));
+    assert_enoent_final_comp(&fake_path, |p| symlink(Path::new("test"), p));
+    assert_enoent(&fake_path, |p| truncate(p, 0));
+    assert_enoent(&fake_path, |p| unlink(p));
+}
+
 crate::test_case! {enametoolong_comp_max}
 fn enametoolong_comp_max(ctx: &mut TestContext) {
     let path = ctx.create_name_max(FileType::Regular).unwrap();
