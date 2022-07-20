@@ -105,8 +105,8 @@ impl SerializedTestContext {
         let groups = [std::slice::from_ref(&user.gid), groups.unwrap_or_default()].concat();
         setgroups(&groups).unwrap();
 
-        seteuid(user.uid).unwrap();
         setegid(user.gid).unwrap();
+        seteuid(user.uid).unwrap();
 
         let res = catch_unwind(AssertUnwindSafe(f));
 
