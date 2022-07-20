@@ -4,7 +4,7 @@ use nix::{
         socket::{bind, socket, SockFlag, UnixAddr},
         stat::{mknod, stat, Mode, SFlag},
     },
-    unistd::{close, mkdir, mkfifo, pathconf, setegid, seteuid, Gid, Uid},
+    unistd::{close, mkdir, mkfifo, pathconf, setegid, seteuid, setgroups, Gid, Uid, User},
 };
 
 #[cfg(any(
@@ -22,7 +22,7 @@ use std::{
     fs::create_dir_all,
     ops::{Deref, DerefMut},
     os::unix::{fs::symlink, prelude::RawFd},
-    panic::{catch_unwind, resume_unwind, UnwindSafe},
+    panic::{catch_unwind, resume_unwind, AssertUnwindSafe},
     path::{Path, PathBuf},
     thread,
     time::Duration,
@@ -85,36 +85,33 @@ impl SerializedTestContext {
         Self(TestContext::new(settings, base_dir))
     }
 
+    pub fn default_user() -> User {
+        User::from_name("nobody").unwrap().unwrap()
+    }
+
     //TODO: Maybe better as a macro? unwrap?
     /// Execute the function as another user/group.
-    pub fn as_user<F>(&self, uid: Option<Uid>, gid: Option<Gid>, mut f: F)
+    pub fn as_user<F>(&self, user: Option<String>, groups: Option<&[Gid]>, f: F)
     where
-        F: FnMut() + UnwindSafe,
+        F: FnMut(),
     {
-        if uid.is_none() && gid.is_none() {
-            return f();
-        }
+        let user = user.map_or_else(SerializedTestContext::default_user, |name| {
+            User::from_name(&name).unwrap().unwrap()
+        });
 
         let original_euid = Uid::effective();
         let original_egid = Gid::effective();
 
-        if let Some(gid) = gid {
-            setegid(gid).unwrap();
-        }
+        let groups = [std::slice::from_ref(&user.gid), groups.unwrap_or_default()].concat();
+        setgroups(&groups).unwrap();
 
-        if let Some(uid) = uid {
-            seteuid(uid).unwrap();
-        }
+        seteuid(user.uid).unwrap();
+        setegid(user.gid).unwrap();
 
-        let res = catch_unwind(f);
+        let res = catch_unwind(AssertUnwindSafe(f));
 
-        if uid.is_some() {
-            seteuid(original_euid).unwrap();
-        }
-
-        if gid.is_some() {
-            setegid(original_egid).unwrap();
-        }
+        seteuid(original_euid).unwrap();
+        setegid(original_egid).unwrap();
 
         if let Err(e) = res {
             resume_unwind(e)

@@ -4,7 +4,6 @@ use nix::{
     errno::Errno,
     fcntl::{open, posix_fallocate, OFlag},
     sys::stat::{lstat, Mode},
-    unistd::Uid,
 };
 
 use crate::{
@@ -87,7 +86,7 @@ fn affected_only_create_flags(ctx: &mut SerializedTestContext) {
 
     chmod(&subdir, Mode::from_bits_truncate(0o0777)).unwrap();
 
-    ctx.as_user(Some(Uid::from_raw(65534)), None, || {
+    ctx.as_user(None, None, || {
         let path = subdir.join("test1");
         let file = open(&path, OFlag::O_CREAT | OFlag::O_RDWR, Mode::empty()).unwrap();
         assert!(posix_fallocate(file, 0, 1).is_ok());
