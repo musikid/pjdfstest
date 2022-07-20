@@ -2,7 +2,7 @@ use nix::{
     errno::Errno,
     fcntl::{open, OFlag},
     sys::stat::{mknod, Mode, SFlag},
-    unistd::{chown, mkdir, mkfifo, truncate, unlink, User},
+    unistd::{chown, mkdir, mkfifo, truncate, unlink, Uid, User},
 };
 
 #[cfg(any(
@@ -17,11 +17,12 @@ use nix::{sys::stat::FileFlag, unistd::chflags};
 
 use std::{
     fmt::Debug,
+    panic::AssertUnwindSafe,
     path::{Path, PathBuf},
 };
 
 use crate::{
-    runner::context::{FileType, TestContext},
+    runner::context::{FileType, SerializedTestContext, TestContext},
     utils::{chmod, lchmod, lchown, link, rename, symlink},
 };
 
@@ -154,21 +155,21 @@ fn enoent(ctx: &mut TestContext) {
         .create(FileType::Symlink(Some(fake_path.to_path_buf())))
         .unwrap();
 
-    fn assert_enoent<F, T: Debug + PartialEq>(path: &Path, f: F)
+    fn assert_enoent<F, T: Debug>(path: &Path, f: F)
     where
         F: Fn(&Path) -> nix::Result<T>,
     {
         assert_eq!(f(path).unwrap_err(), Errno::ENOENT);
     }
 
-    fn assert_enoent_final_comp<F, T: Debug + PartialEq>(path: &Path, f: F)
+    fn assert_enoent_final_comp<F, T: Debug>(path: &Path, f: F)
     where
         F: Fn(&Path) -> nix::Result<T>,
     {
         assert_eq!(f(&path.join("test")).unwrap_err(), Errno::ENOENT);
     }
 
-    fn assert_enoent_two_params<F, T: Debug + PartialEq>(fake_path: &Path, real_path: &Path, f: F)
+    fn assert_enoent_two_params<F, T: Debug>(fake_path: &Path, real_path: &Path, f: F)
     where
         F: Fn(&Path, &Path) -> nix::Result<T>,
     {
@@ -184,9 +185,18 @@ fn enoent(ctx: &mut TestContext) {
 
     assert_enoent(&fake_path, |p| chflags(p, FileFlag::empty()));
     assert_enoent(&fake_path, |p| chmod(p, Mode::empty()));
+    assert_enoent_final_comp(&fake_path, |p| chmod(p, Mode::empty()));
     assert_enoent(&link_to_fake_path, |p| chmod(p, Mode::empty()));
     assert_enoent(&fake_path, |p| lchmod(p, Mode::empty()));
+    assert_enoent_final_comp(&fake_path, |p| chmod(p, Mode::empty()));
     assert_enoent(&fake_path, |p| {
+        chown(
+            p,
+            Some(User::from_name("nobody").unwrap().unwrap().uid),
+            None,
+        )
+    });
+    assert_enoent_final_comp(&fake_path, |p| {
         chown(
             p,
             Some(User::from_name("nobody").unwrap().unwrap().uid),
@@ -225,6 +235,95 @@ fn enoent(ctx: &mut TestContext) {
     assert_enoent_final_comp(&fake_path, |p| symlink(Path::new("test"), p));
     assert_enoent(&fake_path, |p| truncate(p, 0));
     assert_enoent(&fake_path, |p| unlink(p));
+}
+
+crate::test_case! {eacces, serialized}
+fn eacces(ctx: &mut SerializedTestContext) {
+    /// Asserts that it returns EACCES when search permission is denied for a component of the path prefix
+    fn assert_eacces_search_perm<F, T: Debug>(ctx: &mut SerializedTestContext, f: F)
+    where
+        F: Fn(&Path) -> nix::Result<T>,
+    {
+        let dir = ctx.create(FileType::Dir).unwrap();
+        let user = User::from_name("nobody").unwrap().unwrap();
+        let mode = Mode::from_bits_truncate(0o644);
+
+        let f = AssertUnwindSafe(f);
+
+        let path = dir.join("test");
+        chmod(&dir, mode).unwrap();
+        ctx.as_user(Some(user.uid), Some(user.gid), || {
+            assert_eq!(f(&path).unwrap_err(), Errno::EACCES);
+        });
+    }
+
+    /// Asserts that it returns EACCES when write permission is denied on the parent directory of the directory to be created
+    fn assert_eacces_write_perm<F, T: Debug>(ctx: &mut SerializedTestContext, f: F)
+    where
+        F: Fn(&Path) -> nix::Result<T>,
+    {
+        let dir = ctx.create(FileType::Dir).unwrap();
+        let user = User::from_name("nobody").unwrap().unwrap();
+        let mode = Mode::from_bits_truncate(0o555);
+
+        let f = AssertUnwindSafe(f);
+
+        let path = dir.join("test");
+        chmod(&dir, mode).unwrap();
+        ctx.as_user(Some(user.uid), Some(user.gid), || {
+            assert_eq!(f(&path).unwrap_err(), Errno::EACCES);
+        });
+    }
+
+    /// Asserts that it returns EACCES if the named file is not writable by the user
+    fn assert_eacces_write_perm_file<F, T: Debug>(ctx: &mut SerializedTestContext, f: F)
+    where
+        F: Fn(&Path) -> nix::Result<T>,
+    {
+        let dir = ctx.create(FileType::Dir).unwrap();
+        let user = User::from_name("nobody").unwrap().unwrap();
+        let mode = Mode::from_bits_truncate(0o444);
+
+        let f = AssertUnwindSafe(f);
+
+        let path = dir.join("test");
+        chmod(&dir, mode).unwrap();
+        ctx.as_user(Some(user.uid), Some(user.gid), || {
+            assert_eq!(f(&path).unwrap_err(), Errno::EACCES);
+        });
+    }
+
+    assert_eacces_search_perm(ctx, |p| chflags(p, FileFlag::empty()));
+    assert_eacces_search_perm(ctx, |p| chmod(p, Mode::empty()));
+    assert_eacces_search_perm(ctx, |p| lchmod(p, Mode::empty()));
+    // TODO: Blocked by #63
+    // assert_eacces(ctx, |p| {
+    //     chown(
+    //         p,
+    //         Some(User::from_name("nobody").unwrap().unwrap().uid),
+    //         None,
+    //     )
+    // });
+    // assert_eacces(ctx, |p| {
+    //     lchown(
+    //         p,
+    //         Some(User::from_name("nobody").unwrap().unwrap().uid),
+    //         None,
+    //     )
+    // });
+    // TODO: link specialization
+    assert_eacces_write_perm(ctx, |p| mkdir(p, Mode::empty()));
+    assert_eacces_search_perm(ctx, |p| mkdir(p, Mode::empty()));
+    assert_eacces_search_perm(ctx, |p| mkfifo(p, Mode::empty()));
+    assert_eacces_write_perm(ctx, |p| mkfifo(p, Mode::empty()));
+    assert_eacces_search_perm(ctx, |p| mknod(p, SFlag::S_IFIFO, Mode::empty(), 0));
+    //TODO: open
+    //TODO: rename
+    assert_eacces_write_perm(ctx, |p| symlink(Path::new("test"), p));
+    assert_eacces_search_perm(ctx, |p| symlink(Path::new("test"), p));
+    assert_eacces_write_perm_file(ctx, |p| truncate(p, 0));
+    assert_eacces_search_perm(ctx, |p| truncate(p, 0));
+    assert_eacces_search_perm(ctx, |p| unlink(p));
 }
 
 crate::test_case! {enametoolong_comp_max}
