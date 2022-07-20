@@ -324,7 +324,55 @@ fn eacces(ctx: &mut SerializedTestContext) {
     assert_eacces_write_perm_file(ctx, |p| truncate(p, 0));
     assert_eacces_search_perm(ctx, |p| truncate(p, 0));
     assert_eacces_search_perm(ctx, |p| unlink(p));
+    assert_eacces_search_perm(ctx, |p| unlink(p));
 }
+
+crate::test_case! {eexist => [Regular, Dir, Fifo, Block, Char, Socket, Symlink(None)]}
+fn eexist(ctx: &mut TestContext, ft: FileType) {
+    fn assert_eexist<F, T: Debug>(ctx: &mut TestContext, ft: &FileType, f: F)
+    where
+        F: Fn(&Path) -> nix::Result<T>,
+    {
+        let path = ctx.create(ft.clone()).unwrap();
+        assert_eq!(f(&path).unwrap_err(), Errno::EEXIST);
+    }
+
+    /// Asserts that it returns EEXIST or ENOTEMPTY
+    fn assert_eexist_enotempty<F, T: Debug>(ctx: &mut TestContext, ft: &FileType, f: F)
+    where
+        F: Fn(&Path, &Path) -> nix::Result<T>,
+    {
+        let from_dir = ctx.create(FileType::Dir).unwrap();
+        let to_dir = ctx.create(FileType::Dir).unwrap();
+        ctx.create_named(ft.clone(), to_dir.join("test")).unwrap();
+        assert!(match f(&from_dir, &to_dir).unwrap_err() {
+            Errno::EEXIST | Errno::ENOTEMPTY => true,
+            _ => false,
+        });
+    }
+
+    let default_mode = Mode::from_bits_truncate(0o644);
+
+    assert_eexist(ctx, &ft, |p| mkdir(p, Mode::empty()));
+    assert_eexist_enotempty(ctx, &ft, |from, to| rename(from, to));
+    assert_eexist(ctx, &ft, |p| mknod(p, SFlag::S_IFBLK, Mode::empty(), 0));
+    assert_eexist(ctx, &ft, |p| mknod(p, SFlag::S_IFCHR, Mode::empty(), 0));
+    assert_eexist(ctx, &ft, |p| mknod(p, SFlag::S_IFIFO, Mode::empty(), 0));
+    assert_eexist(ctx, &ft, |p| {
+        open(p, OFlag::O_CREAT | OFlag::O_EXCL, default_mode)
+    });
+    assert_eexist(ctx, &ft, |p| mkfifo(p, default_mode));
+
+    let regular_file = ctx.create(FileType::Regular).unwrap();
+    assert_eexist(ctx, &ft, |p| link(&*regular_file, p));
+
+    // TODO:rmdir
+    // assert_eexist_enotempty(ctx, &ft, |from, to| rmdir(from, to));
+    assert_eexist(ctx, &ft, |p| symlink(&*PathBuf::from("test"), p));
+}
+
+crate::test_case! {efault}
+fn efault(ctx: &mut TestContext) {}
 
 crate::test_case! {enametoolong_comp_max}
 fn enametoolong_comp_max(ctx: &mut TestContext) {
