@@ -16,7 +16,7 @@ use std::{
     time::Duration,
 };
 use strum_macros::EnumIter;
-use tempfile::{tempdir, TempDir};
+use tempfile::{tempdir_in, TempDir};
 use thiserror::Error;
 
 use crate::{config::SettingsConfig, test::TestError};
@@ -78,8 +78,8 @@ impl DerefMut for SerializedTestContext {
 }
 
 impl SerializedTestContext {
-    pub fn new(settings: &SettingsConfig) -> Self {
-        Self(TestContext::new(settings))
+    pub fn new<P: AsRef<Path>>(settings: &SettingsConfig, base_dir: P) -> Self {
+        Self(TestContext::new(settings, base_dir))
     }
 
     //TODO: Maybe better as a macro? unwrap?
@@ -121,9 +121,9 @@ impl SerializedTestContext {
 }
 
 impl TestContext {
-    pub fn new(settings: &SettingsConfig) -> Self {
+    pub fn new<P: AsRef<Path>>(settings: &SettingsConfig, base_dir: P) -> Self {
         let naptime = Duration::from_secs_f64(settings.naptime);
-        let temp_dir = tempdir().unwrap();
+        let temp_dir = tempdir_in(base_dir).unwrap();
         TestContext { naptime, temp_dir }
     }
 

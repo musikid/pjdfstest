@@ -1,5 +1,6 @@
 use std::{
     collections::HashSet,
+    env::current_dir,
     io::{stdout, Write},
     panic::{catch_unwind, set_hook, AssertUnwindSafe},
     path::PathBuf,
@@ -13,6 +14,8 @@ use figment::{
 use gumdrop::Options;
 use once_cell::sync::OnceCell;
 use strum::IntoEnumIterator;
+
+use tempfile::{tempdir_in, TempDir};
 
 mod config;
 mod macros;
@@ -43,6 +46,9 @@ struct ArgOptions {
     #[options(help = "Verbose mode")]
     verbose: bool,
 
+    #[options(help = "Path where the test suite will be executed")]
+    path: Option<PathBuf>,
+
     #[options(free, help = "Filter test names")]
     test_patterns: Vec<String>,
 }
@@ -64,6 +70,12 @@ fn main() -> anyhow::Result<()> {
     }
     .extract()
     .unwrap_or_default();
+
+    let path = args
+        .path
+        .ok_or(anyhow::anyhow!("cannot get current dir"))
+        .or_else(|_| current_dir())?;
+    let base_dir = tempdir_in(&path)?;
 
     let enabled_features: HashSet<_> = config.features.fs_features.keys().into_iter().collect();
 
@@ -100,6 +112,7 @@ fn main() -> anyhow::Result<()> {
         &test_cases,
         args.verbose,
         &config,
+        base_dir,
         &enabled_features,
         &enabled_flags,
     )?;
@@ -124,6 +137,7 @@ fn run_test_cases(
     test_cases: &Vec<&TestCase>,
     verbose: bool,
     config: &Config,
+    base_dir: TempDir,
     enabled_features: &HashSet<&FileSystemFeature>,
     enabled_flags: &HashSet<&FileFlags>,
 ) -> Result<(usize, usize, usize), anyhow::Error> {
@@ -187,17 +201,17 @@ fn run_test_cases(
             continue;
         }
 
-        let result = catch_unwind(move || {
+        let result = catch_unwind(|| {
             match test_case.fun {
                 TestFn::NonSerialized(fun) => {
-                    let mut context = TestContext::new(&config.settings);
+                    let mut context = TestContext::new(&config.settings, base_dir.path());
                     //TODO: AssertUnwindSafe should be used with caution
                     let mut ctx_wrapper = AssertUnwindSafe(&mut context);
 
                     (fun)(&mut ctx_wrapper)
                 }
                 TestFn::Serialized(fun) => {
-                    let mut context = SerializedTestContext::new(&config.settings);
+                    let mut context = SerializedTestContext::new(&config.settings, base_dir.path());
                     //TODO: AssertUnwindSafe should be used with caution
                     let mut ctx_wrapper = AssertUnwindSafe(&mut context);
 
