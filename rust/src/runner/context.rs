@@ -138,7 +138,7 @@ impl TestContext {
         mode: Option<Mode>,
     ) -> Result<(PathBuf, RawFd), TestError> {
         let path = self.create(FileType::Regular)?;
-        let file = open(&path, oflag, mode.unwrap_or_else(|| Mode::empty()))?;
+        let file = open(&path, oflag, mode.unwrap_or_else(Mode::empty))?;
         Ok((path, file))
     }
 

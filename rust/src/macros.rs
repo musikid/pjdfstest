@@ -84,9 +84,7 @@ macro_rules! test_case {
 
 #[cfg(test)]
 mod t {
-    use crate::{SerializedTestContext, TestCase, TestContext, TestFn};
     use crate::runner::context::FileType;
-    use crate::test::FileSystemFeature;
     #[cfg(any(
         target_os = "openbsd",
         target_os = "netbsd",
@@ -96,8 +94,10 @@ mod t {
         target_os = "ios",
     ))]
     use crate::test::FileFlags;
+    use crate::test::FileSystemFeature;
+    use crate::{SerializedTestContext, TestCase, TestContext, TestFn};
 
-    crate::test_case!{
+    crate::test_case! {
         /// description
         basic
     }
@@ -118,7 +118,7 @@ mod t {
         }
     }
 
-    crate::test_case!{
+    crate::test_case! {
         /// description
         features, FileSystemFeature::Chflags, FileSystemFeature::PosixFallocate
     }
@@ -130,8 +130,13 @@ mod t {
             .unwrap();
         assert_eq!(" description", tc.description);
         assert!(!tc.require_root);
-        assert_eq!(tc.required_features,
-            &[FileSystemFeature::Chflags, FileSystemFeature::PosixFallocate]);
+        assert_eq!(
+            tc.required_features,
+            &[
+                FileSystemFeature::Chflags,
+                FileSystemFeature::PosixFallocate
+            ]
+        );
         assert!(tc.required_file_flags.is_empty());
         if let TestFn::NonSerialized(f) = tc.fun {
             assert!(f as usize == features as usize);
@@ -148,7 +153,7 @@ mod t {
         target_os = "macos",
         target_os = "ios",
     ))]
-    crate::test_case!{
+    crate::test_case! {
         /// description
         flags, FileSystemFeature::Chflags; FileFlags::SF_IMMUTABLE, FileFlags::UF_IMMUTABLE
     }
@@ -177,7 +182,10 @@ mod t {
         assert_eq!(" description", tc.description);
         assert!(!tc.require_root);
         assert_eq!(tc.required_features, &[FileSystemFeature::Chflags]);
-        assert_eq!(tc.required_file_flags, &[FileFlags::SF_IMMUTABLE, FileFlags::UF_IMMUTABLE]);
+        assert_eq!(
+            tc.required_file_flags,
+            &[FileFlags::SF_IMMUTABLE, FileFlags::UF_IMMUTABLE]
+        );
         if let TestFn::NonSerialized(f) = tc.fun {
             assert!(f as usize == flags as usize);
         } else {
@@ -185,7 +193,7 @@ mod t {
         }
     }
 
-    crate::test_case!{
+    crate::test_case! {
         /// description
         root, root
     }
@@ -206,7 +214,7 @@ mod t {
         }
     }
 
-    crate::test_case!{
+    crate::test_case! {
         /// description
         file_types => [Regular, Fifo]
     }
@@ -232,7 +240,7 @@ mod t {
         // Can't check fun because it's a closure
     }
 
-    crate::test_case!{
+    crate::test_case! {
         /// description
         serialized, serialized
     }
