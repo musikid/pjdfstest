@@ -1,8 +1,9 @@
 use nix::{
     errno::Errno,
     fcntl::{open, OFlag},
+    libc::off_t,
     sys::stat::{mknod, Mode, SFlag},
-    unistd::{chown, mkdir, mkfifo, truncate, unlink, Uid, User},
+    unistd::{chown, ftruncate, mkdir, mkfifo, truncate, unlink, Uid, User},
 };
 
 #[cfg(any(
@@ -412,6 +413,62 @@ fn eisdir(ctx: &mut TestContext) {
     }
 
     assert_eisdir(ctx, |p| truncate(p, 0));
+}
+
+crate::test_case! {einval}
+fn einval(ctx: &mut TestContext) {
+    fn assert_einval<F, T: Debug>(ctx: &mut TestContext, f: F)
+    where
+        F: Fn(&Path) -> nix::Result<T>,
+    {
+        let path = ctx.create(FileType::Regular).unwrap();
+        assert_eq!(f(&path).unwrap_err(), Errno::EINVAL);
+    }
+
+    assert_einval(ctx, |p| {
+        let file = open(p, OFlag::O_RDWR, Mode::empty()).unwrap();
+        ftruncate(file, -1)
+    });
+    assert_einval(ctx, |p| {
+        let file = open(p, OFlag::O_WRONLY, Mode::empty()).unwrap();
+        ftruncate(file, off_t::MIN)
+    });
+
+    /// open may return EINVAL when an attempt was made to open a descriptor with an illegal combination of O_RDONLY, O_WRONLY, and O_RDWR
+    fn assert_einval_open(ctx: &mut TestContext, flags: OFlag) {
+        let path = ctx.create(FileType::Regular).unwrap();
+        assert!(match open(&path, flags, Mode::empty()) {
+            Ok(_) | Err(Errno::EINVAL) => true,
+            _ => false,
+        })
+    }
+
+    assert_einval_open(ctx, OFlag::O_RDONLY | OFlag::O_RDWR);
+    assert_einval_open(ctx, OFlag::O_WRONLY | OFlag::O_RDWR);
+    assert_einval_open(ctx, OFlag::O_RDONLY | OFlag::O_WRONLY | OFlag::O_RDWR);
+
+    // rename/18.t
+    // rename/19.t
+    let dir = ctx.create(FileType::Dir).unwrap();
+    let subdir = ctx.create_named(FileType::Dir, dir.join("subdir")).unwrap();
+    let nested_subdir = ctx
+        .create_named(FileType::Dir, subdir.join("nested"))
+        .unwrap();
+    assert!(match rename(&subdir.join("."), &PathBuf::from("test")) {
+        Err(Errno::EINVAL | Errno::EBUSY) => true,
+        _ => false,
+    });
+    assert!(match rename(&subdir.join(".."), &PathBuf::from("test")) {
+        Err(Errno::EINVAL | Errno::EBUSY) => true,
+        _ => false,
+    });
+    assert_eq!(rename(&dir, &subdir).unwrap_err(), Errno::EINVAL);
+    assert_eq!(rename(&dir, &nested_subdir).unwrap_err(), Errno::EINVAL);
+
+    assert_einval(ctx, |p| truncate(p, -1));
+    assert_einval(ctx, |p| truncate(p, off_t::MIN));
+
+    //TODO: rmdir
 }
 
 crate::test_case! {enametoolong}
