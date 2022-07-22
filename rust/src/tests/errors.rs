@@ -376,21 +376,114 @@ fn eexist(ctx: &mut TestContext, ft: FileType) {
 crate::test_case! {efault}
 fn efault(ctx: &mut TestContext) {}
 
-crate::test_case! {enametoolong_comp_max}
-fn enametoolong_comp_max(ctx: &mut TestContext) {
-    let path = ctx.create_name_max(FileType::Regular).unwrap();
-
-    fn assert_enametoolong<F, T: Debug + std::cmp::PartialEq>(
-        invalid_path: &Path,
-        valid_path: &Path,
-        expected: T,
-        f: F,
-    ) where
+crate::test_case! {enametoolong}
+fn enametoolong(ctx: &mut TestContext) {
+    /// Asserts that it returns ENAMETOOLONG if a component of a pathname exceeded {NAME_MAX} characters
+    fn assert_enametoolong_comp<F, T: Debug + std::cmp::PartialEq>(ctx: &mut TestContext, f: F)
+    where
         F: Fn(&Path) -> nix::Result<T>,
     {
-        let res = f(invalid_path);
-        assert!(res.is_ok());
-        assert_eq!(res.unwrap(), expected);
-        assert_eq!(f(invalid_path).unwrap_err(), Errno::ENOTDIR);
+        let mut invalid_path = ctx.create_name_max(FileType::Regular).unwrap();
+        invalid_path.set_extension("x");
+        assert_eq!(f(&invalid_path).unwrap_err(), Errno::ENAMETOOLONG);
     }
+
+    /// Asserts that it returns ENAMETOOLONG if a component of either pathname exceeded {NAME_MAX} characters
+    fn assert_enametoolong_comp_two_params<F, T: Debug + std::cmp::PartialEq>(
+        ctx: &mut TestContext,
+        f: F,
+    ) where
+        F: Fn(&Path, &Path) -> nix::Result<T>,
+    {
+        let mut invalid_path = ctx.create_name_max(FileType::Regular).unwrap();
+        invalid_path.set_extension("x");
+        let valid_path = ctx.create_path_max(FileType::Regular).unwrap();
+        assert_eq!(
+            f(&invalid_path, &valid_path).unwrap_err(),
+            Errno::ENAMETOOLONG
+        );
+        assert_eq!(
+            f(&invalid_path, &valid_path).unwrap_err(),
+            Errno::ENAMETOOLONG
+        );
+    }
+
+    /// Asserts that it returns ENAMETOOLONG if an entire path name exceeded {PATH_MAX} characters
+    fn assert_enametoolong_path<F, T: Debug + std::cmp::PartialEq>(ctx: &mut TestContext, f: F)
+    where
+        F: Fn(&Path) -> nix::Result<T>,
+    {
+        let mut invalid_path = ctx.create_path_max(FileType::Regular).unwrap();
+        invalid_path.set_extension("x");
+        assert_eq!(f(&invalid_path).unwrap_err(), Errno::ENAMETOOLONG);
+    }
+
+    /// Asserts that it returns ENAMETOOLONG if an entire of either path name exceeded {PATH_MAX} characters
+    fn assert_enametoolong_path_two_params<F, T: Debug + std::cmp::PartialEq>(
+        ctx: &mut TestContext,
+        f: F,
+    ) where
+        F: Fn(&Path, &Path) -> nix::Result<T>,
+    {
+        let mut invalid_path = ctx.create_path_max(FileType::Regular).unwrap();
+        invalid_path.set_extension("x");
+        let valid_path = ctx.create_path_max(FileType::Regular).unwrap();
+        assert_eq!(
+            f(&invalid_path, &valid_path).unwrap_err(),
+            Errno::ENAMETOOLONG
+        );
+        assert_eq!(
+            f(&invalid_path, &valid_path).unwrap_err(),
+            Errno::ENAMETOOLONG
+        );
+    }
+
+    //TODO: lchflags too?
+    assert_enametoolong_comp(ctx, |p| chflags(p, FileFlag::empty()));
+    assert_enametoolong_path(ctx, |p| chflags(p, FileFlag::empty()));
+
+    assert_enametoolong_comp(ctx, |p| chmod(p, Mode::empty()));
+    assert_enametoolong_path(ctx, |p| chmod(p, Mode::empty()));
+    assert_enametoolong_comp(ctx, |p| lchmod(p, Mode::empty()));
+    assert_enametoolong_path(ctx, |p| lchmod(p, Mode::empty()));
+
+    let user = User::from_name("nobody").unwrap().unwrap();
+    assert_enametoolong_comp(ctx, |p| chown(p, Some(user.uid), Some(user.gid)));
+    assert_enametoolong_path(ctx, |p| chown(p, Some(user.uid), Some(user.gid)));
+    assert_enametoolong_comp(ctx, |p| lchown(p, Some(user.uid), Some(user.gid)));
+    assert_enametoolong_path(ctx, |p| lchown(p, Some(user.uid), Some(user.gid)));
+
+    let valid_path = ctx.create(FileType::Regular).unwrap();
+    assert_enametoolong_comp(ctx, |p| symlink(&*valid_path, p));
+    assert_enametoolong_path_two_params(ctx, |p1, p2| symlink(p1, p2));
+
+    assert_enametoolong_comp_two_params(ctx, |p1, p2| link(p1, p2));
+    assert_enametoolong_path_two_params(ctx, |p1, p2| link(p1, p2));
+
+    assert_enametoolong_comp(ctx, |p| mkfifo(p, Mode::empty()));
+    assert_enametoolong_path(ctx, |p| mkfifo(p, Mode::empty()));
+
+    assert_enametoolong_comp(ctx, |p| mkdir(p, Mode::empty()));
+    assert_enametoolong_path(ctx, |p| mkdir(p, Mode::empty()));
+
+    assert_enametoolong_comp(ctx, |p| mknod(p, SFlag::S_IFBLK, Mode::empty(), 0));
+    assert_enametoolong_path(ctx, |p| mknod(p, SFlag::S_IFBLK, Mode::empty(), 0));
+    assert_enametoolong_comp(ctx, |p| mknod(p, SFlag::S_IFIFO, Mode::empty(), 0));
+    assert_enametoolong_path(ctx, |p| mknod(p, SFlag::S_IFIFO, Mode::empty(), 0));
+    assert_enametoolong_comp(ctx, |p| mknod(p, SFlag::S_IFCHR, Mode::empty(), 0));
+    assert_enametoolong_path(ctx, |p| mknod(p, SFlag::S_IFCHR, Mode::empty(), 0));
+
+    assert_enametoolong_comp(ctx, |p| open(p, OFlag::O_CREAT, Mode::empty()));
+    assert_enametoolong_path(ctx, |p| open(p, OFlag::O_CREAT, Mode::empty()));
+
+    assert_enametoolong_comp_two_params(ctx, |p1, p2| rename(p1, p2));
+    assert_enametoolong_path_two_params(ctx, |p1, p2| rename(p1, p2));
+
+    assert_enametoolong_comp(ctx, |p| truncate(p, 0));
+    assert_enametoolong_path(ctx, |p| truncate(p, 0));
+
+    assert_enametoolong_comp(ctx, |p| unlink(p));
+    assert_enametoolong_path(ctx, |p| unlink(p));
+
+    //TODO: rmdir
 }
