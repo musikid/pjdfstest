@@ -318,6 +318,8 @@ fn eacces(ctx: &mut SerializedTestContext) {
     assert_eacces_write_perm(ctx, |p| mkfifo(p, Mode::empty()));
     assert_eacces_search_perm(ctx, |p| mknod(p, SFlag::S_IFIFO, Mode::empty(), 0));
     //TODO: open
+    assert_eacces_search_perm(ctx, |p| open(p, OFlag::O_RDONLY, Mode::empty()));
+    assert_eacces_write_perm(ctx, |p| open(p, OFlag::O_CREAT, Mode::empty()));
     //TODO: rename
     assert_eacces_write_perm(ctx, |p| symlink(Path::new("test"), p));
     assert_eacces_search_perm(ctx, |p| symlink(Path::new("test"), p));
