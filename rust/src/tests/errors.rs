@@ -376,6 +376,44 @@ fn eexist(ctx: &mut TestContext, ft: FileType) {
 crate::test_case! {efault}
 fn efault(ctx: &mut TestContext) {}
 
+crate::test_case! {eisdir}
+fn eisdir(ctx: &mut TestContext) {
+    fn assert_eisdir<F, T: Debug>(ctx: &mut TestContext, f: F)
+    where
+        F: Fn(&Path) -> nix::Result<T>,
+    {
+        let path = ctx.create(FileType::Dir).unwrap();
+        assert_eq!(f(&path).unwrap_err(), Errno::EISDIR);
+    }
+
+    assert_eisdir(ctx, |p| open(p, OFlag::O_WRONLY, Mode::empty()));
+    assert_eisdir(ctx, |p| open(p, OFlag::O_RDWR, Mode::empty()));
+    assert_eisdir(ctx, |p| {
+        open(p, OFlag::O_RDONLY | OFlag::O_TRUNC, Mode::empty())
+    });
+    assert_eisdir(ctx, |p| {
+        open(p, OFlag::O_WRONLY | OFlag::O_TRUNC, Mode::empty())
+    });
+    assert_eisdir(ctx, |p| {
+        open(p, OFlag::O_RDWR | OFlag::O_TRUNC, Mode::empty())
+    });
+
+    // TODO: Should we replace the loop with a separate function?
+    for ft in [
+        FileType::Regular,
+        FileType::Fifo,
+        FileType::Block,
+        FileType::Char,
+        FileType::Socket,
+        FileType::Symlink(None),
+    ] {
+        let not_dir_file = ctx.create(ft).unwrap();
+        assert_eisdir(ctx, |p| rename(&*not_dir_file, p));
+    }
+
+    assert_eisdir(ctx, |p| truncate(p, 0));
+}
+
 crate::test_case! {enametoolong}
 fn enametoolong(ctx: &mut TestContext) {
     /// Asserts that it returns ENAMETOOLONG if a component of a pathname exceeded {NAME_MAX} characters
