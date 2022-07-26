@@ -76,7 +76,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded affix "><a href="introduction.html">Introduction</a></li><li class="chapter-item expanded affix "><li class="part-title">Running</li><li class="chapter-item expanded "><a href="configuration-file.html"><strong aria-hidden="true">1.</strong> Configuration file</a></li><li class="chapter-item expanded affix "><li class="part-title">Writing tests</li><li class="chapter-item expanded "><a href="tests-structure.html"><strong aria-hidden="true">2.</strong> Structure</a></li><li class="chapter-item expanded "><a href="test-declaration.html"><strong aria-hidden="true">3.</strong> Declaration</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="introduction.html">Introduction</a></li><li class="chapter-item expanded affix "><li class="part-title">Running tests</li><li class="chapter-item expanded "><a href="getting-started.html"><strong aria-hidden="true">1.</strong> Getting started</a></li><li class="chapter-item expanded "><a href="configuration-file.html"><strong aria-hidden="true">2.</strong> Configuration file</a></li><li class="chapter-item expanded affix "><li class="part-title">Writing tests</li><li class="chapter-item expanded "><a href="tests-structure.html"><strong aria-hidden="true">3.</strong> Structure</a></li><li class="chapter-item expanded "><a href="test-declaration.html"><strong aria-hidden="true">4.</strong> Declaration</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -149,75 +149,21 @@ cargo run
 <pre><code class="language-bash">cd rust
 cargo build &amp;&amp; sudo ./target/debug/pjdfstest
 </code></pre>
-<h2 id="architecture"><a class="header" href="#architecture">Architecture</a></h2>
-<p>The package is made of the tests, and a test runner to launch them.</p>
-<h3 id="tests-tests"><a class="header" href="#tests-tests">Tests (tests/)</a></h3>
-<p>To present how tests are organized, we take the <code>chmod</code> syscall as example.</p>
-<p>There is a separate module for each syscall being tested.  Within each of those
-modules, there may be either a single file, or a separate file for each aspect
-of the syscall.</p>
-<p>The hierarchy is like this:</p>
-<pre class="mermaid">graph TD
-TG[Syscall module&lt;br /&gt;&lt;i&gt;chmod&lt;/i&gt;] --&gt; TC1[Aspect&lt;br /&gt;&lt;i&gt;errno&lt;/i&gt;]
-
-TC1 --&gt; TC1F1[Test case]
-TC1 --&gt; TC1F2[Test case]
-TC1 --&gt; TC1F3[Test case]
-TC1 --&gt; TC1F4[Test case]
-
-TG --&gt; TC2[Aspect&lt;br /&gt;&lt;i&gt;permission&lt;/i&gt;]
-
-TC2 --&gt; TC2F1[Test case]
-TC2 --&gt; TC2F2[Test case]
-</pre>
-<h3 id="layout"><a class="header" href="#layout">Layout</a></h3>
-<pre><code>src/tests
-├── chmod (syscall)
-│   ├── errno.rs (aspect)
-│   ├── mod.rs (syscall declaration)
-│   └── permission.rs (aspect)
-└── mod.rs (glues syscalls together)
-</code></pre>
-<h4 id="testsmodrs"><a class="header" href="#testsmodrs">tests/mod.rs</a></h4>
-<p>All the modules for the test groups should be declared in this file.</p>
-<pre><code class="language-rust ignore">pub mod chmod;
-</code></pre>
-<h4 id="syscall-module"><a class="header" href="#syscall-module">Syscall module</a></h4>
-<p>A syscall module contains test cases related to a specific syscall.
-Its declaration should be in the <code>mod.rs</code> file 
-of the relevant folder (<code>chmod/</code> in our case).
-Common syscall-specific helpers can go here.</p>
-<h3 id="aspect"><a class="header" href="#aspect">Aspect</a></h3>
-<p>An optional aspect module contains test cases that all relate to a common
-aspect of the syscall.
-Here &quot;aspect&quot; is a subjective area of related functionality.
-The aspect module may be either:</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="getting-started"><a class="header" href="#getting-started">Getting started</a></h1>
+<p>The test suite is as file system agnostic as possible. 
+Its behavior can be modified with a configuration file.</p>
+<h2 id="command-line-interface"><a class="header" href="#command-line-interface">Command-line interface</a></h2>
+<p><em><code>pjdfstest [OPTIONS] [--] TEST_PATTERNS</code></em></p>
 <ul>
-<li>in a single file, which contains all the test functions and the case declaration,</li>
-<li>in a folder, which contains multiple modules for the test functions and a <code>mod.rs</code> file, in which the case is declared.</li>
+<li><code>-h, --help</code> - Print help message</li>
+<li><code>-c, --configuration-file CONFIGURATION-FILE</code> - Path of the configuration file</li>
+<li><code>-l, --list-features</code> - List opt-in features</li>
+<li><code>-e, --exact</code> - Match names exactly</li>
+<li><code>-v, --verbose</code> - Verbose mode</li>
+<li><code>-p, --path PATH</code> - Path where the test suite will be executed</li>
+<li><code>[--] TEST_PATTERNS</code> - Filter tests which match against the provided patterns</li>
 </ul>
-<p>Except in the case of a very large set of test functions, the first style
-should be preferred.</p>
-<h4 id="test-case"><a class="header" href="#test-case">Test case</a></h4>
-<p>Each test case exercises a minimal piece of the syscall's functionality.
-Each must be registered with the <code>test_case!</code> macro.</p>
-<p>For now, the test function takes a <code>&amp;mut TestContext</code> parameter.</p>
-<pre><code class="language-rust ignore">crate::test_case! {ctime =&gt; [FileType::Regular, FileType::Fifo, FileType::Block, FileType::Char, FileType::Socket]}
-fn ctime(ctx: &amp;mut TestContext, f_type: FileType) {
-    let path = ctx.create(f_type).unwrap();
-    let ctime_before = stat(&amp;path).unwrap().st_ctime;
-
-    sleep(Duration::from_secs(1));
-
-    chmod(&amp;path, Mode::from_bits_truncate(0o111)).unwrap();
-
-    let ctime_after = stat(&amp;path).unwrap().st_ctime;
-    assert!(ctime_after &gt; ctime_before);
-}
-</code></pre>
-<h3 id="test-runner-mainrs"><a class="header" href="#test-runner-mainrs">Test runner (main.rs)</a></h3>
-<p>The test runner has to run the tests, and provide a command-line interface to allow the user to modify how the tests should be run.
-It takes the tests from the specified test groups.</p>
+<p>Example: <code>pjdfstest -c pjdfstest.toml chmod</code></p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="configuration-file"><a class="header" href="#configuration-file">Configuration file</a></h1>
 <p>The test runner can read a configuration file. For now, only the TOML format is supported.
 Its path can be specified by using the <code>-c PATH</code> flag.</p>
@@ -258,24 +204,58 @@ timestamp granularity of the file system under test.  The default value is 1
 second.</li>
 </ul>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="structure"><a class="header" href="#structure">Structure</a></h1>
-<p>The tests should be grouped by syscalls, in the <code>tests/</code> folder.
-Each folder then have a <code>mod.rs</code> file, 
-which contains declarations of the modules inside this folder.
-For example:</p>
-<h3 id="layout-1"><a class="header" href="#layout-1">Layout</a></h3>
-<pre><code>chmod (syscall/test group)
-├── errno.rs (test case)
-├── mod.rs (test group declaration)
-└── permission.rs (test case)
+<p>The package is made of the tests, and a test runner to launch them.</p>
+<h2 id="tests-tests"><a class="header" href="#tests-tests">Tests (tests/)</a></h2>
+<p>To present how tests are organized, we take the <code>chmod</code> syscall as example.</p>
+<p>There is a separate module for each syscall being tested.  Within each of those
+modules, there may be either a single file, or a separate file for each aspect
+of the syscall.</p>
+<p>The hierarchy is like this:</p>
+<pre class="mermaid">graph TD
+TG[Syscall module&lt;br /&gt;&lt;i&gt;chmod&lt;/i&gt;] --&gt; TC1[Aspect&lt;br /&gt;&lt;i&gt;errno&lt;/i&gt;]
+
+TC1 --&gt; TC1F1[Test case]
+TC1 --&gt; TC1F2[Test case]
+TC1 --&gt; TC1F3[Test case]
+TC1 --&gt; TC1F4[Test case]
+
+TG --&gt; TC2[Aspect&lt;br /&gt;&lt;i&gt;permission&lt;/i&gt;]
+
+TC2 --&gt; TC2F1[Test case]
+TC2 --&gt; TC2F2[Test case]
+</pre>
+<h3 id="layout"><a class="header" href="#layout">Layout</a></h3>
+<pre><code>src/tests
+├── chmod (syscall)
+│   ├── errno.rs (aspect)
+│   ├── mod.rs (syscall declaration)
+│   └── permission.rs (aspect)
+└── mod.rs (glues syscalls together)
 </code></pre>
-<h3 id="modrs"><a class="header" href="#modrs">mod.rs</a></h3>
-<pre><code class="language-rust ignore">mod permission;
-mod errno;
+<h4 id="testsmodrs"><a class="header" href="#testsmodrs">tests/mod.rs</a></h4>
+<p>All the modules for the test groups should be declared in this file.</p>
+<pre><code class="language-rust ignore">pub mod chmod;
 </code></pre>
-<p>Each module inside a group should register its test cases with <code>test_case!</code>.
-In our example, <code>chmod/permission.rs</code> would be:</p>
-<pre><code class="language-rust ignore">// chmod/00.t:L58
-crate::test_case! {ctime =&gt; [FileType::Regular, FileType::Dir, FileType::Fifo, FileType::Block, FileType::Char, FileType::Socket]}
+<h2 id="syscall-module"><a class="header" href="#syscall-module">Syscall module</a></h2>
+<p>A syscall module contains test cases related to a specific syscall.
+Its declaration should be in the <code>mod.rs</code> file 
+of the relevant folder (<code>chmod/</code> in our case).
+Common syscall-specific helpers can go here.</p>
+<h3 id="aspect"><a class="header" href="#aspect">Aspect</a></h3>
+<p>An optional aspect module contains test cases that all relate to a common
+aspect of the syscall.
+Here &quot;aspect&quot; is a subjective area of related functionality.
+The aspect module may be either:</p>
+<ul>
+<li>in a single file, which contains all the test functions,</li>
+<li>in a folder, which contains multiple modules for the test functions and a <code>mod.rs</code> file, in which the case is declared.</li>
+</ul>
+<p>Except in the case of a very large set of test functions, the first style
+should be preferred.</p>
+<h3 id="test-case"><a class="header" href="#test-case">Test case</a></h3>
+<p>Each test case exercises a minimal piece of the syscall's functionality.
+Each must be registered with the <code>test_case!</code> macro.</p>
+<pre><code class="language-rust ignore">crate::test_case! {ctime =&gt; [Regular, Fifo, Block, Char, Socket]}
 fn ctime(ctx: &amp;mut TestContext, f_type: FileType) {
     let path = ctx.create(f_type).unwrap();
     let ctime_before = stat(&amp;path).unwrap().st_ctime;
@@ -288,6 +268,9 @@ fn ctime(ctx: &amp;mut TestContext, f_type: FileType) {
     assert!(ctime_after &gt; ctime_before);
 }
 </code></pre>
+<h2 id="test-runner-mainrs"><a class="header" href="#test-runner-mainrs">Test runner (main.rs)</a></h2>
+<p>The test runner has to run the tests, and provide a command-line interface to allow the user to modify how the tests should be run.
+It takes the tests from the specified test groups.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="test-declaration"><a class="header" href="#test-declaration">Test declaration</a></h1>
 <p>Test cases have the same anatomy than usual Rust tests, 
 that is <code>unwrap</code>ing <code>Result</code>s and using assertion macros (<code>assert</code> and <code>assert_eq</code>),
@@ -297,7 +280,7 @@ It also needs an additional declaration with the <code>test_case!</code> macro a
 with the function name being the only mandatory argument.</p>
 <p>For example:</p>
 <pre><code class="language-rust ignore">// chmod/00.t:L58
-crate::test_case! {ctime =&gt; [FileType::Regular, FileType::Fifo, FileType::Block, FileType::Char, FileType::Socket]}
+crate::test_case! {ctime =&gt; [Regular, Fifo, Block, Char, Socket]}
 fn ctime(ctx: &amp;mut TestContext, f_type: FileType) {
     let path = ctx.create(f_type).unwrap();
     let ctime_before = stat(&amp;path).unwrap().st_ctime;
@@ -324,6 +307,8 @@ Multiple features can be specified, each separated by a comma <code>,</code> sep
 <pre><code class="language-rust ignore">#[cfg(target_os = &quot;freebsd&quot;)]
 crate::test_case! {eperm_immutable_flag, FileSystemFeature::Chflags, FileSystemFeature::PosixFallocate ...}
 </code></pre>
+<h4 id="adding-features"><a class="header" href="#adding-features">Adding features</a></h4>
+<p>New features can be added to the <code>FileSystemFeature</code> enum.</p>
 <h4 id="file-flags"><a class="header" href="#file-flags">File flags</a></h4>
 <p><strong>NOTE: This feature is not supported by all POSIX systems, 
 therefore its use needs a <code>#[cfg(target_os = ...)]</code> attribute specifying the relevant system(s).</strong></p>
@@ -333,8 +318,6 @@ after potential <code>root</code> requirement and features.</p>
 <pre><code class="language-rust ignore">#[cfg(target_os = &quot;freebsd&quot;)]
 crate::test_case! {eperm_immutable_flag, root, FileSystemFeature::Chflags; FileFlags::SF_IMMUTABLE, FileFlags::UF_IMMUTABLE}
 </code></pre>
-<h4 id="adding-features"><a class="header" href="#adding-features">Adding features</a></h4>
-<p>New features can be added to the <code>FileSystemFeature</code> enum.</p>
 <h3 id="root-privileges"><a class="header" href="#root-privileges">Root privileges</a></h3>
 <p>Some tests may need root privileges to run.
 To declare that a test function require root privileges, 
@@ -347,11 +330,11 @@ namely block and char.</p>
 <h3 id="file-types"><a class="header" href="#file-types">File types</a></h3>
 <p>Some test cases need to test over different file types.
 The file types should be added at the end of the test case declaration,
-within brackets and with a fat arrow before (<code>=&gt; [FileType::Regular]</code>).
+within brackets and with a fat arrow before (<code>=&gt; [Regular]</code>).
 The test function should also accept a <code>FileType</code> parameter to operate on.</p>
 <p>For example:</p>
 <pre><code class="language-rust ignore">crate::test_case! {change_perm, root, FileSystemFeature::Chflags; FileFlags::SF_IMMUTABLE, FileFlags::UF_IMMUTABLE 
-=&gt; [FileType::Regular, FileType::Fifo, FileType::Block, FileType::Char, FileType::Socket]}
+=&gt; [Regular, Fifo, Block, Char, Socket]}
 fn change_perm(ctx: &amp;mut TestContext, f_type: FileType) {
 </code></pre>
 <h2 id="platform-specific-functions"><a class="header" href="#platform-specific-functions">Platform-specific functions</a></h2>
@@ -370,7 +353,13 @@ To have access to these functions, the test should be declared with a <code>Seri
 parameter in place of <code>TestContext</code> 
 and the <code>serialized</code> keyword should be prepended before features.</p>
 <p>For example:</p>
-<pre><code class="language-rust ignore">fn affected_only_create_flags(ctx: &amp;mut SerializedTestContext) {
+<pre><code class="language-rust ignore">crate::test_case! {
+    /// The file mode of a newly created file should not affect whether
+    /// posix_fallocate will work, only the create args
+    /// https://bugs.freebsd.org/bugzilla/show_bug.cgi?id=154873
+    affected_only_create_flags, serialized, root, FileSystemFeature::PosixFallocate
+}
+fn affected_only_create_flags(ctx: &amp;mut SerializedTestContext) {
     ctx.as_user(Some(Uid::from_raw(65534)), None, || {
         let path = subdir.join(&quot;test1&quot;);
         let file = open(&amp;path, OFlag::O_CREAT | OFlag::O_RDWR, Mode::empty()).unwrap();

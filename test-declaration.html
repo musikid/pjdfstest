@@ -75,7 +75,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded affix "><a href="introduction.html">Introduction</a></li><li class="chapter-item expanded affix "><li class="part-title">Running</li><li class="chapter-item expanded "><a href="configuration-file.html"><strong aria-hidden="true">1.</strong> Configuration file</a></li><li class="chapter-item expanded affix "><li class="part-title">Writing tests</li><li class="chapter-item expanded "><a href="tests-structure.html"><strong aria-hidden="true">2.</strong> Structure</a></li><li class="chapter-item expanded "><a href="test-declaration.html" class="active"><strong aria-hidden="true">3.</strong> Declaration</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="introduction.html">Introduction</a></li><li class="chapter-item expanded affix "><li class="part-title">Running tests</li><li class="chapter-item expanded "><a href="getting-started.html"><strong aria-hidden="true">1.</strong> Getting started</a></li><li class="chapter-item expanded "><a href="configuration-file.html"><strong aria-hidden="true">2.</strong> Configuration file</a></li><li class="chapter-item expanded affix "><li class="part-title">Writing tests</li><li class="chapter-item expanded "><a href="tests-structure.html"><strong aria-hidden="true">3.</strong> Structure</a></li><li class="chapter-item expanded "><a href="test-declaration.html" class="active"><strong aria-hidden="true">4.</strong> Declaration</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -143,7 +143,7 @@ It also needs an additional declaration with the <code>test_case!</code> macro a
 with the function name being the only mandatory argument.</p>
 <p>For example:</p>
 <pre><code class="language-rust ignore">// chmod/00.t:L58
-crate::test_case! {ctime =&gt; [FileType::Regular, FileType::Fifo, FileType::Block, FileType::Char, FileType::Socket]}
+crate::test_case! {ctime =&gt; [Regular, Fifo, Block, Char, Socket]}
 fn ctime(ctx: &amp;mut TestContext, f_type: FileType) {
     let path = ctx.create(f_type).unwrap();
     let ctime_before = stat(&amp;path).unwrap().st_ctime;
@@ -170,6 +170,8 @@ Multiple features can be specified, each separated by a comma <code>,</code> sep
 <pre><code class="language-rust ignore">#[cfg(target_os = &quot;freebsd&quot;)]
 crate::test_case! {eperm_immutable_flag, FileSystemFeature::Chflags, FileSystemFeature::PosixFallocate ...}
 </code></pre>
+<h4 id="adding-features"><a class="header" href="#adding-features">Adding features</a></h4>
+<p>New features can be added to the <code>FileSystemFeature</code> enum.</p>
 <h4 id="file-flags"><a class="header" href="#file-flags">File flags</a></h4>
 <p><strong>NOTE: This feature is not supported by all POSIX systems, 
 therefore its use needs a <code>#[cfg(target_os = ...)]</code> attribute specifying the relevant system(s).</strong></p>
@@ -179,8 +181,6 @@ after potential <code>root</code> requirement and features.</p>
 <pre><code class="language-rust ignore">#[cfg(target_os = &quot;freebsd&quot;)]
 crate::test_case! {eperm_immutable_flag, root, FileSystemFeature::Chflags; FileFlags::SF_IMMUTABLE, FileFlags::UF_IMMUTABLE}
 </code></pre>
-<h4 id="adding-features"><a class="header" href="#adding-features">Adding features</a></h4>
-<p>New features can be added to the <code>FileSystemFeature</code> enum.</p>
 <h3 id="root-privileges"><a class="header" href="#root-privileges">Root privileges</a></h3>
 <p>Some tests may need root privileges to run.
 To declare that a test function require root privileges, 
@@ -193,11 +193,11 @@ namely block and char.</p>
 <h3 id="file-types"><a class="header" href="#file-types">File types</a></h3>
 <p>Some test cases need to test over different file types.
 The file types should be added at the end of the test case declaration,
-within brackets and with a fat arrow before (<code>=&gt; [FileType::Regular]</code>).
+within brackets and with a fat arrow before (<code>=&gt; [Regular]</code>).
 The test function should also accept a <code>FileType</code> parameter to operate on.</p>
 <p>For example:</p>
 <pre><code class="language-rust ignore">crate::test_case! {change_perm, root, FileSystemFeature::Chflags; FileFlags::SF_IMMUTABLE, FileFlags::UF_IMMUTABLE 
-=&gt; [FileType::Regular, FileType::Fifo, FileType::Block, FileType::Char, FileType::Socket]}
+=&gt; [Regular, Fifo, Block, Char, Socket]}
 fn change_perm(ctx: &amp;mut TestContext, f_type: FileType) {
 </code></pre>
 <h2 id="platform-specific-functions"><a class="header" href="#platform-specific-functions">Platform-specific functions</a></h2>
@@ -216,7 +216,13 @@ To have access to these functions, the test should be declared with a <code>Seri
 parameter in place of <code>TestContext</code> 
 and the <code>serialized</code> keyword should be prepended before features.</p>
 <p>For example:</p>
-<pre><code class="language-rust ignore">fn affected_only_create_flags(ctx: &amp;mut SerializedTestContext) {
+<pre><code class="language-rust ignore">crate::test_case! {
+    /// The file mode of a newly created file should not affect whether
+    /// posix_fallocate will work, only the create args
+    /// https://bugs.freebsd.org/bugzilla/show_bug.cgi?id=154873
+    affected_only_create_flags, serialized, root, FileSystemFeature::PosixFallocate
+}
+fn affected_only_create_flags(ctx: &amp;mut SerializedTestContext) {
     ctx.as_user(Some(Uid::from_raw(65534)), None, || {
         let path = subdir.join(&quot;test1&quot;);
         let file = open(&amp;path, OFlag::O_CREAT | OFlag::O_RDWR, Mode::empty()).unwrap();

@@ -75,7 +75,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded affix "><a href="introduction.html" class="active">Introduction</a></li><li class="chapter-item expanded affix "><li class="part-title">Running</li><li class="chapter-item expanded "><a href="configuration-file.html"><strong aria-hidden="true">1.</strong> Configuration file</a></li><li class="chapter-item expanded affix "><li class="part-title">Writing tests</li><li class="chapter-item expanded "><a href="tests-structure.html"><strong aria-hidden="true">2.</strong> Structure</a></li><li class="chapter-item expanded "><a href="test-declaration.html"><strong aria-hidden="true">3.</strong> Declaration</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="introduction.html" class="active">Introduction</a></li><li class="chapter-item expanded affix "><li class="part-title">Running tests</li><li class="chapter-item expanded "><a href="getting-started.html"><strong aria-hidden="true">1.</strong> Getting started</a></li><li class="chapter-item expanded "><a href="configuration-file.html"><strong aria-hidden="true">2.</strong> Configuration file</a></li><li class="chapter-item expanded affix "><li class="part-title">Writing tests</li><li class="chapter-item expanded "><a href="tests-structure.html"><strong aria-hidden="true">3.</strong> Structure</a></li><li class="chapter-item expanded "><a href="test-declaration.html"><strong aria-hidden="true">4.</strong> Declaration</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -148,81 +148,12 @@ cargo run
 <pre><code class="language-bash">cd rust
 cargo build &amp;&amp; sudo ./target/debug/pjdfstest
 </code></pre>
-<h2 id="architecture"><a class="header" href="#architecture">Architecture</a></h2>
-<p>The package is made of the tests, and a test runner to launch them.</p>
-<h3 id="tests-tests"><a class="header" href="#tests-tests">Tests (tests/)</a></h3>
-<p>To present how tests are organized, we take the <code>chmod</code> syscall as example.</p>
-<p>There is a separate module for each syscall being tested.  Within each of those
-modules, there may be either a single file, or a separate file for each aspect
-of the syscall.</p>
-<p>The hierarchy is like this:</p>
-<pre class="mermaid">graph TD
-TG[Syscall module&lt;br /&gt;&lt;i&gt;chmod&lt;/i&gt;] --&gt; TC1[Aspect&lt;br /&gt;&lt;i&gt;errno&lt;/i&gt;]
-
-TC1 --&gt; TC1F1[Test case]
-TC1 --&gt; TC1F2[Test case]
-TC1 --&gt; TC1F3[Test case]
-TC1 --&gt; TC1F4[Test case]
-
-TG --&gt; TC2[Aspect&lt;br /&gt;&lt;i&gt;permission&lt;/i&gt;]
-
-TC2 --&gt; TC2F1[Test case]
-TC2 --&gt; TC2F2[Test case]
-</pre>
-<h3 id="layout"><a class="header" href="#layout">Layout</a></h3>
-<pre><code>src/tests
-├── chmod (syscall)
-│   ├── errno.rs (aspect)
-│   ├── mod.rs (syscall declaration)
-│   └── permission.rs (aspect)
-└── mod.rs (glues syscalls together)
-</code></pre>
-<h4 id="testsmodrs"><a class="header" href="#testsmodrs">tests/mod.rs</a></h4>
-<p>All the modules for the test groups should be declared in this file.</p>
-<pre><code class="language-rust ignore">pub mod chmod;
-</code></pre>
-<h4 id="syscall-module"><a class="header" href="#syscall-module">Syscall module</a></h4>
-<p>A syscall module contains test cases related to a specific syscall.
-Its declaration should be in the <code>mod.rs</code> file 
-of the relevant folder (<code>chmod/</code> in our case).
-Common syscall-specific helpers can go here.</p>
-<h3 id="aspect"><a class="header" href="#aspect">Aspect</a></h3>
-<p>An optional aspect module contains test cases that all relate to a common
-aspect of the syscall.
-Here &quot;aspect&quot; is a subjective area of related functionality.
-The aspect module may be either:</p>
-<ul>
-<li>in a single file, which contains all the test functions and the case declaration,</li>
-<li>in a folder, which contains multiple modules for the test functions and a <code>mod.rs</code> file, in which the case is declared.</li>
-</ul>
-<p>Except in the case of a very large set of test functions, the first style
-should be preferred.</p>
-<h4 id="test-case"><a class="header" href="#test-case">Test case</a></h4>
-<p>Each test case exercises a minimal piece of the syscall's functionality.
-Each must be registered with the <code>test_case!</code> macro.</p>
-<p>For now, the test function takes a <code>&amp;mut TestContext</code> parameter.</p>
-<pre><code class="language-rust ignore">crate::test_case! {ctime =&gt; [FileType::Regular, FileType::Fifo, FileType::Block, FileType::Char, FileType::Socket]}
-fn ctime(ctx: &amp;mut TestContext, f_type: FileType) {
-    let path = ctx.create(f_type).unwrap();
-    let ctime_before = stat(&amp;path).unwrap().st_ctime;
-
-    sleep(Duration::from_secs(1));
-
-    chmod(&amp;path, Mode::from_bits_truncate(0o111)).unwrap();
-
-    let ctime_after = stat(&amp;path).unwrap().st_ctime;
-    assert!(ctime_after &gt; ctime_before);
-}
-</code></pre>
-<h3 id="test-runner-mainrs"><a class="header" href="#test-runner-mainrs">Test runner (main.rs)</a></h3>
-<p>The test runner has to run the tests, and provide a command-line interface to allow the user to modify how the tests should be run.
-It takes the tests from the specified test groups.</p>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="next" href="configuration-file.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next" href="getting-started.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <i class="fa fa-angle-right"></i>
                             </a>
                         <div style="clear: both"></div>
@@ -231,7 +162,7 @@ It takes the tests from the specified test groups.</p>
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="next" href="configuration-file.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next" href="getting-started.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <i class="fa fa-angle-right"></i>
                     </a>
             </nav>
