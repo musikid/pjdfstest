@@ -2,10 +2,21 @@ use nix::{
     fcntl::{open, OFlag},
     sys::{
         socket::{bind, socket, SockFlag, UnixAddr},
-        stat::{mknod, Mode, SFlag},
+        stat::{mknod, stat, Mode, SFlag},
     },
     unistd::{close, mkdir, mkfifo, pathconf, setegid, seteuid, Gid, Uid},
 };
+
+#[cfg(any(
+    target_os = "openbsd",
+    target_os = "netbsd",
+    target_os = "freebsd",
+    target_os = "dragonfly",
+    target_os = "macos",
+    target_os = "ios"
+))]
+use nix::{sys::stat::FileFlag, unistd::chflags};
+
 use rand::{distributions::Alphanumeric, thread_rng, Rng};
 use std::{
     ops::{Deref, DerefMut},
@@ -19,7 +30,7 @@ use strum_macros::EnumIter;
 use tempfile::{tempdir_in, TempDir};
 use thiserror::Error;
 
-use crate::{config::SettingsConfig, test::TestError};
+use crate::{config::SettingsConfig, test::TestError, tests::lchmod};
 
 /// File type, mainly used with [TestContext::create].
 #[derive(Debug, Clone, Eq, PartialEq, EnumIter)]
@@ -226,5 +237,40 @@ impl TestContext {
     /// A short sleep, long enough for file system timestamps to change.
     pub fn nap(&self) {
         thread::sleep(self.naptime)
+    }
+}
+
+// We implement Drop to circumvent the errors which arise from unlinking a directory for which
+// search or write permission is denied, or a flag denying delete for a file.
+impl Drop for TestContext {
+    fn drop(&mut self) {
+        let iter = walkdir::WalkDir::new(self.base_path()).into_iter();
+        for entry in iter {
+            let entry = match entry {
+                Ok(e) => e,
+                _ => continue,
+            };
+
+            let file_stat = match stat(entry.path()) {
+                Ok(s) => s,
+                _ => continue,
+            };
+
+            if entry.file_type().is_dir() && (file_stat.st_mode & Mode::S_IRWXU.bits()) == 0 {
+                let _ = lchmod(entry.path(), Mode::S_IRWXU);
+            }
+
+            #[cfg(any(
+                target_os = "openbsd",
+                target_os = "netbsd",
+                target_os = "freebsd",
+                target_os = "dragonfly",
+                target_os = "macos",
+                target_os = "ios"
+            ))]
+            if file_stat.st_flags != 0 {
+                let _ = chflags(entry.path(), FileFlag::empty());
+            }
+        }
     }
 }
