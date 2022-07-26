@@ -2,8 +2,9 @@
 
 [Introduction](introduction.md)
 
-# Running
+# Running tests
 
+- [Getting started](getting-started.md)
 - [Configuration file](configuration-file.md)
 
 # Writing tests

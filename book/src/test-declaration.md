@@ -11,7 +11,7 @@ For example:
 
 ```rust,ignore
 // chmod/00.t:L58
-crate::test_case! {ctime => [FileType::Regular, FileType::Fifo, FileType::Block, FileType::Char, FileType::Socket]}
+crate::test_case! {ctime => [Regular, Fifo, Block, Char, Socket]}
 fn ctime(ctx: &mut TestContext, f_type: FileType) {
     let path = ctx.create(f_type).unwrap();
     let ctime_before = stat(&path).unwrap().st_ctime;
@@ -46,6 +46,10 @@ For example:
 crate::test_case! {eperm_immutable_flag, FileSystemFeature::Chflags, FileSystemFeature::PosixFallocate ...}
 ```
 
+#### Adding features
+
+New features can be added to the `FileSystemFeature` enum.
+
 #### File flags
 
 **NOTE: This feature is not supported by all POSIX systems, 
@@ -59,10 +63,6 @@ after potential `root` requirement and features.
 #[cfg(target_os = "freebsd")]
 crate::test_case! {eperm_immutable_flag, root, FileSystemFeature::Chflags; FileFlags::SF_IMMUTABLE, FileFlags::UF_IMMUTABLE}
 ```
-
-#### Adding features
-
-New features can be added to the `FileSystemFeature` enum.
 
 ### Root privileges
 
@@ -82,14 +82,14 @@ namely block and char.
 
 Some test cases need to test over different file types.
 The file types should be added at the end of the test case declaration,
-within brackets and with a fat arrow before (`=> [FileType::Regular]`).
+within brackets and with a fat arrow before (`=> [Regular]`).
 The test function should also accept a `FileType` parameter to operate on.
 
 For example:
 
 ```rust,ignore
 crate::test_case! {change_perm, root, FileSystemFeature::Chflags; FileFlags::SF_IMMUTABLE, FileFlags::UF_IMMUTABLE 
-=> [FileType::Regular, FileType::Fifo, FileType::Block, FileType::Char, FileType::Socket]}
+=> [Regular, Fifo, Block, Char, Socket]}
 fn change_perm(ctx: &mut TestContext, f_type: FileType) {
 ```
 
@@ -117,6 +117,12 @@ and the `serialized` keyword should be prepended before features.
 For example:
 
 ```rust,ignore
+crate::test_case! {
+    /// The file mode of a newly created file should not affect whether
+    /// posix_fallocate will work, only the create args
+    /// https://bugs.freebsd.org/bugzilla/show_bug.cgi?id=154873
+    affected_only_create_flags, serialized, root, FileSystemFeature::PosixFallocate
+}
 fn affected_only_create_flags(ctx: &mut SerializedTestContext) {
     ctx.as_user(Some(Uid::from_raw(65534)), None, || {
         let path = subdir.join("test1");
