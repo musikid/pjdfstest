@@ -9,6 +9,7 @@ build: &BUILD
     - cargo test
     - cargo build --all-targets --release
     - target/release/pjdfstest -c $CFG
+    - su -m nobody -c "target/release/pjdfstest -c $CFG"
     - rustup component add clippy
     - cargo clippy --all-targets
 
