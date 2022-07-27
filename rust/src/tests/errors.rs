@@ -156,6 +156,7 @@ fn enoent(ctx: &mut TestContext) {
         .create(FileType::Symlink(Some(fake_path.to_path_buf())))
         .unwrap();
 
+    /// Asserts that it returns ENOENT if the named file does not exist
     fn assert_enoent<F, T: Debug>(path: &Path, f: F)
     where
         F: Fn(&Path) -> nix::Result<T>,
@@ -163,6 +164,7 @@ fn enoent(ctx: &mut TestContext) {
         assert_eq!(f(path).unwrap_err(), Errno::ENOENT);
     }
 
+    /// Asserts that it returns ENOENT if a component of the path prefix does not exist
     fn assert_enoent_final_comp<F, T: Debug>(path: &Path, f: F)
     where
         F: Fn(&Path) -> nix::Result<T>,
@@ -170,6 +172,7 @@ fn enoent(ctx: &mut TestContext) {
         assert_eq!(f(&path.join("test")).unwrap_err(), Errno::ENOENT);
     }
 
+    /// Asserts that it returns ENOENT if a component of either path prefix does not exist
     fn assert_enoent_two_params<F, T: Debug>(fake_path: &Path, real_path: &Path, f: F)
     where
         F: Fn(&Path, &Path) -> nix::Result<T>,
@@ -320,7 +323,9 @@ fn eacces(ctx: &mut SerializedTestContext) {
     assert_eacces_search_perm(ctx, |p| mknod(p, SFlag::S_IFIFO, Mode::empty(), 0));
     //TODO: open
     assert_eacces_search_perm(ctx, |p| open(p, OFlag::O_RDONLY, Mode::empty()));
-    assert_eacces_write_perm(ctx, |p| open(p, OFlag::O_CREAT, Mode::empty()));
+    assert_eacces_write_perm(ctx, |p| {
+        open(p, OFlag::O_CREAT | OFlag::O_RDONLY, Mode::empty())
+    });
     //TODO: rename
     assert_eacces_write_perm(ctx, |p| symlink(Path::new("test"), p));
     assert_eacces_search_perm(ctx, |p| symlink(Path::new("test"), p));
