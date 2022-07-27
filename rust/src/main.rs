@@ -112,7 +112,6 @@ fn main() -> anyhow::Result<()> {
     let (failed_count, skipped_count, success_count) = run_test_cases(
         &test_cases,
         args.verbose,
-        Uid::current().is_root(),
         &config,
         base_dir,
         &enabled_features,
@@ -139,7 +138,6 @@ fn main() -> anyhow::Result<()> {
 fn run_test_cases(
     test_cases: &Vec<&TestCase>,
     verbose: bool,
-    is_root: bool,
     config: &Config,
     base_dir: TempDir,
     enabled_features: &HashSet<&FileSystemFeature>,
@@ -148,6 +146,8 @@ fn run_test_cases(
     let mut failed_tests_count: usize = 0;
     let mut succeeded_tests_count: usize = 0;
     let mut skipped_tests_count: usize = 0;
+
+    let is_root = Uid::current().is_root();
 
     for test_case in test_cases {
         //TODO: There's probably a better way to do this...
