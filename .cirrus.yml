@@ -8,9 +8,8 @@ build: &BUILD
     - cd rust
     - cargo test
     - cargo build --all-targets --release
-    - target/release/pjdfstest -c $CFG
-    - mkdir nobody && chown nobody nobody
-    - su -m nobody -c "target/release/pjdfstest -c $CFG -p nobody"
+    - target/release/pjdfstest -c $CFG -p /tmp
+    - su -m nobody -c "target/release/pjdfstest -c $CFG -p /tmp"
     - rustup component add clippy
     - cargo clippy --all-targets
 
