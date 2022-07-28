@@ -37,9 +37,33 @@ const fn default_naptime() -> f64 {
     1.0
 }
 
+/// Auth entries, which are composed of a [`User`](nix::unistd::User) and its associated [`Group`](nix::unistd::Group).
+/// The user and the group have the same name and the user should be part of the associated group.
+///
+#[derive(Debug, Deserialize)]
+pub struct DummyAuthConfig {
+    pub entries: [String; 6],
+}
+
+impl Default for DummyAuthConfig {
+    fn default() -> Self {
+        Self {
+            entries: [
+                String::from("pjdfs_dummy_1"),
+                String::from("pjdfs_dummy_2"),
+                String::from("pjdfs_dummy_3"),
+                String::from("pjdfs_dummy_4"),
+                String::from("pjdfs_dummy_5"),
+                String::from("pjdfs_dummy_6"),
+            ],
+        }
+    }
+}
+
 #[derive(Debug, Default, Deserialize)]
 pub struct Config {
     /// File-system features.
     pub features: FeaturesConfig,
     pub settings: SettingsConfig,
+    pub dummy_auth: DummyAuthConfig,
 }

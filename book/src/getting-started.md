@@ -32,3 +32,47 @@ Tests are usually identified by syscall and optionally the file type on which it
 The test suite can be run without privileges.
 However, not all tests can be completed without privileges,
 therefore the coverage will be incomplete.
+
+## Dummy users/groups
+
+The test suite needs dummy users and groups to be set up. 
+This should be handled automatically when installing it via a package,
+but they need to be created otherwise.
+By default, the users (with the same name for the group associated to each of them) to create are:
+
+- pjdfs_dummy_1
+- pjdfs_dummy_2
+- pjdfs_dummy_3
+- pjdfs_dummy_4
+- pjdfs_dummy_5
+- pjdfs_dummy_6
+
+It is also possible to specify other users with the configuration file.
+
+### Create users
+
+#### FreeBSD
+
+```bash
+cat <<EOF | adduser -w none -f -
+pjdfs_dummy_1::::::Dummy User for pjdfstest:/nonexistent:/bin/nologin:
+pjdfs_dummy_2::::::Dummy User for pjdfstest:/nonexistent:/bin/nologin:
+pjdfs_dummy_3::::::Dummy User for pjdfstest:/nonexistent:/bin/nologin:
+pjdfs_dummy_4::::::Dummy User for pjdfstest:/nonexistent:/bin/nologin:
+pjdfs_dummy_5::::::Dummy User for pjdfstest:/nonexistent:/bin/nologin:
+pjdfs_dummy_6::::::Dummy User for pjdfstest:/nonexistent:/bin/nologin:
+EOF
+```
+
+#### Linux
+
+```bash
+cat <<EOF | newusers
+pjdfs_dummy_1::::Dummy User for pjdfstest:/:/usr/bin/nologin
+pjdfs_dummy_2::::Dummy User for pjdfstest:/:/usr/bin/nologin
+pjdfs_dummy_3::::Dummy User for pjdfstest:/:/usr/bin/nologin
+pjdfs_dummy_4::::Dummy User for pjdfstest:/:/usr/bin/nologin
+pjdfs_dummy_5::::Dummy User for pjdfstest:/:/usr/bin/nologin
+pjdfs_dummy_6::::Dummy User for pjdfstest:/:/usr/bin/nologin
+EOF
+```

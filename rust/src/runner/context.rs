@@ -4,7 +4,10 @@ use nix::{
         socket::{bind, socket, SockFlag, UnixAddr},
         stat::{mknod, stat, Mode, SFlag},
     },
-    unistd::{close, mkdir, mkfifo, pathconf, setegid, seteuid, setgroups, Gid, Uid, User},
+    unistd::{
+        close, getgroups, mkdir, mkfifo, pathconf, setegid, seteuid, setgroups, Gid, Group, Uid,
+        User,
+    },
 };
 
 #[cfg(any(
@@ -59,50 +62,93 @@ pub enum ContextError {
     Nix(#[from] nix::Error),
 }
 
+/// Auth entries which are composed of a [`User`] and its associated [`Group`].
+/// It works like a stack, with entries being poped and not kept.
+#[derive(Debug)]
+pub struct DummyAuthEntries {
+    entries: Vec<(User, Group)>,
+}
+
+impl DummyAuthEntries {
+    pub fn new(entries: Vec<(User, Group)>) -> Self {
+        Self { entries }
+    }
+
+    /// Returns a new entry.
+    pub fn get_new_entry(&mut self) -> (User, Group) {
+        self.entries.pop().unwrap()
+    }
+}
+
 pub struct TestContext {
     naptime: Duration,
     temp_dir: TempDir,
 }
 
-pub struct SerializedTestContext(TestContext);
+pub struct SerializedTestContext {
+    ctx: TestContext,
+    auth_entries: DummyAuthEntries,
+}
 
 impl Deref for SerializedTestContext {
     type Target = TestContext;
 
     fn deref(&self) -> &Self::Target {
-        &self.0
+        &self.ctx
     }
 }
 
 impl DerefMut for SerializedTestContext {
     fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.0
+        &mut self.ctx
     }
 }
 
 impl SerializedTestContext {
-    pub fn new<P: AsRef<Path>>(settings: &SettingsConfig, base_dir: P) -> Self {
-        Self(TestContext::new(settings, base_dir))
+    pub fn new<P: AsRef<Path>>(
+        settings: &SettingsConfig,
+        entries: &Vec<(User, Group)>,
+        base_dir: P,
+    ) -> Self {
+        Self {
+            ctx: TestContext::new(settings, base_dir),
+            auth_entries: DummyAuthEntries::new(entries.to_vec()),
+        }
     }
 
-    pub fn default_user() -> User {
-        User::from_name("nobody").unwrap().unwrap()
+    /// Returns a new entry.
+    pub fn get_new_entry(&mut self) -> (User, Group) {
+        self.auth_entries.get_new_entry()
+    }
+
+    /// Returns a new user.
+    /// Alias of `get_new_entry`.
+    pub fn get_new_user(&mut self) -> User {
+        self.get_new_entry().0
+    }
+
+    /// Returns a new group.
+    /// Alias of `get_new_entry`.
+    pub fn get_new_group(&mut self) -> Group {
+        self.get_new_entry().1
     }
 
     //TODO: Maybe better as a macro? unwrap?
-    /// Execute the function as another user/group.
-    pub fn as_user<F>(&self, user: Option<String>, groups: Option<&[Gid]>, f: F)
+    /// Execute the function as another user/group(s).
+    /// If `groups` is set to `None`, only the default group associated to the user will be used
+    /// and the effective [`Gid`] will be this one.
+    /// Otherwise, the first provided [`Gid`] will be the effective one and the other other will be added with `setgroups`.
+    pub fn as_user<F>(&self, user: &User, groups: Option<&[Gid]>, f: F)
     where
         F: FnMut(),
     {
-        let user = user.map_or_else(SerializedTestContext::default_user, |name| {
-            User::from_name(&name).unwrap().unwrap()
-        });
-
         let original_euid = Uid::effective();
         let original_egid = Gid::effective();
+        let original_groups = getgroups().unwrap();
 
-        let groups = [std::slice::from_ref(&user.gid), groups.unwrap_or_default()].concat();
+        let groups: Vec<_> = groups
+            .unwrap_or_else(|| std::slice::from_ref(&user.gid))
+            .to_vec();
         setgroups(&groups).unwrap();
 
         setegid(user.gid).unwrap();
@@ -112,6 +158,7 @@ impl SerializedTestContext {
 
         seteuid(original_euid).unwrap();
         setegid(original_egid).unwrap();
+        setgroups(&original_groups).unwrap();
 
         if let Err(e) = res {
             resume_unwind(e)

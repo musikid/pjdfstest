@@ -198,7 +198,8 @@ fn utime_now_nobody(ctx: &mut SerializedTestContext) {
     let mode = Mode::from_bits_truncate(0o644);
     let path = ctx.create(FileType::Regular).unwrap();
     chmod(&path, mode).unwrap();
-    ctx.as_user(None, None, || {
+    let user = ctx.get_new_user();
+    ctx.as_user(&user, None, || {
         assert_eq!(
             Errno::EACCES,
             utimensat(None, &path, &UTIME_NOW, &UTIME_NOW, FollowSymlink).unwrap_err()
@@ -239,7 +240,8 @@ fn utime_now_write_perm(ctx: &mut SerializedTestContext) {
     let mode = Mode::from_bits_truncate(0o666);
     let path = ctx.create(FileType::Regular).unwrap();
     chmod(&path, mode).unwrap();
-    ctx.as_user(None, None, || {
+    let user = ctx.get_new_user();
+    ctx.as_user(&user, None, || {
         utimensat(None, &path, &UTIME_OMIT, &UTIME_OMIT, FollowSymlink).unwrap();
     });
 }
@@ -255,7 +257,8 @@ fn nobody(ctx: &mut SerializedTestContext) {
     let date2 = TimeSpec::seconds(1950000000); // Fri Oct 17 04:40:00 MDT 2031
     let path = ctx.create(FileType::Regular).unwrap();
     chmod(&path, mode).unwrap();
-    ctx.as_user(None, None, || {
+    let user = ctx.get_new_user();
+    ctx.as_user(&user, None, || {
         assert_eq!(
             Errno::EPERM,
             utimensat(None, &path, &UTIME_OMIT, &date2, FollowSymlink).unwrap_err()
@@ -282,7 +285,8 @@ fn write_perm(ctx: &mut SerializedTestContext) {
     let date2 = TimeSpec::seconds(1950000000); // Fri Oct 17 04:40:00 MDT 2031
     let path = ctx.create(FileType::Regular).unwrap();
     chmod(&path, mode).unwrap();
-    ctx.as_user(None, None, || {
+    let user = ctx.get_new_user();
+    ctx.as_user(&user, None, || {
         assert_eq!(
             Errno::EPERM,
             utimensat(None, &path, &UTIME_OMIT, &date2, FollowSymlink).unwrap_err()

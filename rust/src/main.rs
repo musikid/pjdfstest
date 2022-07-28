@@ -12,7 +12,7 @@ use figment::{
     Figment,
 };
 use gumdrop::Options;
-use nix::unistd::Uid;
+use nix::unistd::{Group, Uid, User};
 use once_cell::sync::OnceCell;
 use strum::IntoEnumIterator;
 
@@ -25,7 +25,7 @@ mod test;
 mod tests;
 mod utils;
 
-use test::{FileFlags, FileSystemFeature, SerializedTestContext, TestCase, TestContext, TestFn};
+use test::{FileSystemFeature, SerializedTestContext, TestCase, TestContext, TestFn};
 
 struct PanicLocation(u32, u32, String);
 
@@ -79,8 +79,6 @@ fn main() -> anyhow::Result<()> {
         .or_else(|_| current_dir())?;
     let base_dir = tempdir_in(&path)?;
 
-    let enabled_features: HashSet<_> = config.features.fs_features.keys().into_iter().collect();
-
     set_hook(Box::new(|ctx| {
         if let Some(location) = ctx.location() {
             let _ = PANIC_LOCATION.set(PanicLocation(
@@ -92,8 +90,6 @@ fn main() -> anyhow::Result<()> {
             unimplemented!()
         }
     }));
-
-    let enabled_flags: HashSet<_> = config.features.file_flags.iter().collect();
 
     let test_cases = inventory::iter::<TestCase>;
     let test_cases: Vec<_> = test_cases
@@ -110,14 +106,8 @@ fn main() -> anyhow::Result<()> {
         })
         .collect();
 
-    let (failed_count, skipped_count, success_count) = run_test_cases(
-        &test_cases,
-        args.verbose,
-        &config,
-        base_dir,
-        &enabled_features,
-        &enabled_flags,
-    )?;
+    let (failed_count, skipped_count, success_count) =
+        run_test_cases(&test_cases, args.verbose, &config, base_dir)?;
 
     println!(
         "\nTests: {} failed, {} skipped, {} passed, {} total",
@@ -141,14 +131,29 @@ fn run_test_cases(
     verbose: bool,
     config: &Config,
     base_dir: TempDir,
-    enabled_features: &HashSet<&FileSystemFeature>,
-    enabled_flags: &HashSet<&FileFlags>,
 ) -> Result<(usize, usize, usize), anyhow::Error> {
     let mut failed_tests_count: usize = 0;
     let mut succeeded_tests_count: usize = 0;
     let mut skipped_tests_count: usize = 0;
 
     let is_root = Uid::current().is_root();
+
+    let enabled_features: HashSet<_> = config.features.fs_features.keys().into_iter().collect();
+    let enabled_flags: HashSet<_> = config.features.file_flags.iter().collect();
+
+    let entries: Vec<_> = config
+        .dummy_auth
+        .entries
+        .iter()
+        .map(|e| {
+            User::from_name(e).and_then(|u| {
+                Group::from_name(e).map(|g| {
+                    u.zip(g)
+                        .ok_or_else(|| anyhow::anyhow!("User {} is not available", e))
+                })
+            })
+        })
+        .collect::<Result<Result<_, _>, _>>()??;
 
     for test_case in test_cases {
         //TODO: There's probably a better way to do this...
@@ -160,7 +165,7 @@ fn run_test_cases(
         }
 
         let features: HashSet<_> = test_case.required_features.iter().collect();
-        let missing_features: Vec<_> = features.difference(enabled_features).collect();
+        let missing_features: Vec<_> = features.difference(&enabled_features).collect();
         if !missing_features.is_empty() {
             should_skip = true;
 
@@ -176,7 +181,7 @@ fn run_test_cases(
         }
 
         let required_flags: HashSet<_> = test_case.required_file_flags.iter().collect();
-        let missing_flags: Vec<_> = required_flags.difference(enabled_flags).collect();
+        let missing_flags: Vec<_> = required_flags.difference(&enabled_flags).collect();
         if !missing_flags.is_empty() {
             should_skip = true;
 
@@ -219,7 +224,8 @@ fn run_test_cases(
                     (fun)(&mut ctx_wrapper)
                 }
                 TestFn::Serialized(fun) => {
-                    let mut context = SerializedTestContext::new(&config.settings, base_dir.path());
+                    let mut context =
+                        SerializedTestContext::new(&config.settings, &entries, base_dir.path());
                     //TODO: AssertUnwindSafe should be used with caution
                     let mut ctx_wrapper = AssertUnwindSafe(&mut context);
 
