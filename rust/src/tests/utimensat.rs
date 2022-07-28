@@ -11,7 +11,8 @@ use std::{
     target_os = "openbsd"
 ))]
 use crate::tests::birthtime_ts;
-use crate::tests::{chmod, MetadataExt};
+use crate::tests::MetadataExt;
+use crate::utils::chmod;
 use crate::{runner::context::FileType, test::TestContext};
 use crate::{runner::context::SerializedTestContext, test::FileSystemFeature};
 

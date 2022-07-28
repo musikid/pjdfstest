@@ -30,7 +30,7 @@ use strum_macros::EnumIter;
 use tempfile::{tempdir_in, TempDir};
 use thiserror::Error;
 
-use crate::{config::SettingsConfig, test::TestError, tests::lchmod};
+use crate::{config::SettingsConfig, test::TestError, utils::lchmod};
 
 /// File type, mainly used with [TestContext::create].
 #[derive(Debug, Clone, Eq, PartialEq, EnumIter)]
