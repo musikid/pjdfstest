@@ -70,7 +70,17 @@ fn eloop(ctx: &mut TestContext) {
 
     // TODO: Add rmdir upstream
     // assert_eloop(&p1, &p2, |p| rmdir(p, Mode::empty()));
-    assert_eloop_final(&p1, &p2, |p| chflags(p, FileFlag::empty()));
+    #[cfg(any(
+        target_os = "openbsd",
+        target_os = "netbsd",
+        target_os = "freebsd",
+        target_os = "dragonfly",
+        target_os = "macos",
+        target_os = "ios"
+    ))]
+    {
+        assert_eloop_final(&p1, &p2, |p| chflags(p, FileFlag::empty()));
+    }
     assert_eloop_all(&p1, &p2, |p| chmod(p, Mode::empty()));
     assert_eloop_final(&p1, &p2, |p| lchmod(p, Mode::empty()));
     assert_eloop_all(&p1, &p2, |p| {
@@ -113,7 +123,17 @@ fn enotdir(ctx: &mut TestContext, ft: FileType) {
 
     // TODO: Add rmdir upstream
     // assert_enotdir(&path, |p| rmdir(p, Mode::empty()));
-    assert_enotdir(&path, |p| chflags(p, FileFlag::empty()));
+    #[cfg(any(
+        target_os = "openbsd",
+        target_os = "netbsd",
+        target_os = "freebsd",
+        target_os = "dragonfly",
+        target_os = "macos",
+        target_os = "ios"
+    ))]
+    {
+        assert_enotdir(&path, |p| chflags(p, FileFlag::empty()));
+    }
     assert_enotdir(&path, |p| chmod(p, Mode::empty()));
     assert_enotdir(&path, |p| lchmod(p, Mode::empty()));
     assert_enotdir(&path, |p| {
@@ -187,7 +207,17 @@ fn enoent(ctx: &mut TestContext) {
         );
     }
 
-    assert_enoent(&fake_path, |p| chflags(p, FileFlag::empty()));
+    #[cfg(any(
+        target_os = "openbsd",
+        target_os = "netbsd",
+        target_os = "freebsd",
+        target_os = "dragonfly",
+        target_os = "macos",
+        target_os = "ios"
+    ))]
+    {
+        assert_enoent(&fake_path, |p| chflags(p, FileFlag::empty()));
+    }
     assert_enoent(&fake_path, |p| chmod(p, Mode::empty()));
     assert_enoent_final_comp(&fake_path, |p| chmod(p, Mode::empty()));
     assert_enoent(&link_to_fake_path, |p| chmod(p, Mode::empty()));
@@ -297,7 +327,17 @@ fn eacces(ctx: &mut SerializedTestContext) {
         });
     }
 
-    assert_eacces_search_perm(ctx, |p| chflags(p, FileFlag::empty()));
+    #[cfg(any(
+        target_os = "openbsd",
+        target_os = "netbsd",
+        target_os = "freebsd",
+        target_os = "dragonfly",
+        target_os = "macos",
+        target_os = "ios"
+    ))]
+    {
+        assert_eacces_search_perm(ctx, |p| chflags(p, FileFlag::empty()));
+    }
     assert_eacces_search_perm(ctx, |p| chmod(p, Mode::empty()));
     assert_eacces_search_perm(ctx, |p| lchmod(p, Mode::empty()));
     // TODO: Blocked by #63
@@ -539,9 +579,18 @@ fn enametoolong(ctx: &mut TestContext) {
     }
 
     //TODO: lchflags too?
-    assert_enametoolong_comp(ctx, |p| chflags(p, FileFlag::empty()));
-    assert_enametoolong_path(ctx, |p| chflags(p, FileFlag::empty()));
-
+    #[cfg(any(
+        target_os = "openbsd",
+        target_os = "netbsd",
+        target_os = "freebsd",
+        target_os = "dragonfly",
+        target_os = "macos",
+        target_os = "ios"
+    ))]
+    {
+        assert_enametoolong_comp(ctx, |p| chflags(p, FileFlag::empty()));
+        assert_enametoolong_path(ctx, |p| chflags(p, FileFlag::empty()));
+    }
     assert_enametoolong_comp(ctx, |p| chmod(p, Mode::empty()));
     assert_enametoolong_path(ctx, |p| chmod(p, Mode::empty()));
     assert_enametoolong_comp(ctx, |p| lchmod(p, Mode::empty()));
