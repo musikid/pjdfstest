@@ -393,10 +393,10 @@ fn eexist(ctx: &mut TestContext, ft: FileType) {
         let from_dir = ctx.create(FileType::Dir).unwrap();
         let to_dir = ctx.create(FileType::Dir).unwrap();
         ctx.create_named(ft.clone(), to_dir.join("test")).unwrap();
-        assert!(match f(&from_dir, &to_dir).unwrap_err() {
-            Errno::EEXIST | Errno::ENOTEMPTY => true,
-            _ => false,
-        });
+        assert!(matches!(
+            f(&from_dir, &to_dir).unwrap_err(),
+            Errno::EEXIST | Errno::ENOTEMPTY
+        ));
     }
 
     let default_mode = Mode::from_bits_truncate(0o644);
@@ -482,10 +482,10 @@ fn einval(ctx: &mut TestContext) {
     /// open may return EINVAL when an attempt was made to open a descriptor with an illegal combination of O_RDONLY, O_WRONLY, and O_RDWR
     fn assert_einval_open(ctx: &mut TestContext, flags: OFlag) {
         let path = ctx.create(FileType::Regular).unwrap();
-        assert!(match open(&path, flags, Mode::empty()) {
-            Ok(_) | Err(Errno::EINVAL) => true,
-            _ => false,
-        })
+        assert!(matches!(
+            open(&path, flags, Mode::empty()),
+            Ok(_) | Err(Errno::EINVAL)
+        ));
     }
 
     assert_einval_open(ctx, OFlag::O_RDONLY | OFlag::O_RDWR);
@@ -499,14 +499,14 @@ fn einval(ctx: &mut TestContext) {
     let nested_subdir = ctx
         .create_named(FileType::Dir, subdir.join("nested"))
         .unwrap();
-    assert!(match rename(&subdir.join("."), &PathBuf::from("test")) {
-        Err(Errno::EINVAL | Errno::EBUSY) => true,
-        _ => false,
-    });
-    assert!(match rename(&subdir.join(".."), &PathBuf::from("test")) {
-        Err(Errno::EINVAL | Errno::EBUSY) => true,
-        _ => false,
-    });
+    assert!(matches!(
+        rename(&subdir.join("."), &PathBuf::from("test")),
+        Err(Errno::EINVAL | Errno::EBUSY)
+    ));
+    assert!(matches!(
+        rename(&subdir.join(".."), &PathBuf::from("test")),
+        Err(Errno::EINVAL | Errno::EBUSY)
+    ));
     assert_eq!(rename(&dir, &subdir).unwrap_err(), Errno::EINVAL);
     assert_eq!(rename(&dir, &nested_subdir).unwrap_err(), Errno::EINVAL);
 
