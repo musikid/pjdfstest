@@ -12,6 +12,7 @@ use figment::{
     Figment,
 };
 use gumdrop::Options;
+use nix::unistd::Uid;
 use once_cell::sync::OnceCell;
 use strum::IntoEnumIterator;
 
@@ -133,6 +134,7 @@ fn main() -> anyhow::Result<()> {
 }
 
 /// Run provided test cases and filter according to features and flags availability.
+//TODO: Refactor this function
 fn run_test_cases(
     test_cases: &Vec<&TestCase>,
     verbose: bool,
@@ -145,11 +147,16 @@ fn run_test_cases(
     let mut succeeded_tests_count: usize = 0;
     let mut skipped_tests_count: usize = 0;
 
+    let is_root = Uid::current().is_root();
+
     for test_case in test_cases {
         //TODO: There's probably a better way to do this...
-        let mut should_skip = false;
+        let mut should_skip = test_case.require_root && !is_root;
+        let mut skip_message = String::new();
 
-        let mut message = String::new();
+        if should_skip {
+            skip_message += "requires root privileges\n";
+        }
 
         let features: HashSet<_> = test_case.required_features.iter().collect();
         let missing_features: Vec<_> = features.difference(enabled_features).collect();
@@ -162,9 +169,9 @@ fn run_test_cases(
                 .collect::<Vec<_>>()
                 .join(", ");
 
-            message += "requires features: ";
-            message += features;
-            message += "\n";
+            skip_message += "requires features: ";
+            skip_message += features;
+            skip_message += "\n";
         }
 
         let required_flags: HashSet<_> = test_case.required_file_flags.iter().collect();
@@ -182,9 +189,9 @@ fn run_test_cases(
                 .collect::<Vec<_>>()
                 .join(", ");
 
-            message += "requires flags: ";
-            message += &flags;
-            message += "\n";
+            skip_message += "requires flags: ";
+            skip_message += &flags;
+            skip_message += "\n";
         }
 
         print!("{}\t", test_case.name);
@@ -196,7 +203,7 @@ fn run_test_cases(
         stdout().lock().flush()?;
 
         if should_skip {
-            println!("skipped\n{}", message);
+            println!("skipped\n{}", skip_message);
             skipped_tests_count += 1;
             continue;
         }
