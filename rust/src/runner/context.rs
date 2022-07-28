@@ -251,25 +251,37 @@ impl Drop for TestContext {
                 _ => continue,
             };
 
-            let file_stat = match stat(entry.path()) {
-                Ok(s) => s,
-                _ => continue,
-            };
-
-            if entry.file_type().is_dir() && (file_stat.st_mode & Mode::S_IRWXU.bits()) == 0 {
-                let _ = lchmod(entry.path(), Mode::S_IRWXU);
-            }
-
-            #[cfg(any(
+            if cfg!(any(
                 target_os = "openbsd",
                 target_os = "netbsd",
                 target_os = "freebsd",
                 target_os = "dragonfly",
                 target_os = "macos",
                 target_os = "ios"
-            ))]
-            if file_stat.st_flags != 0 {
-                let _ = chflags(entry.path(), FileFlag::empty());
+            )) || entry.file_type().is_dir()
+            {
+                let file_stat = match stat(entry.path()) {
+                    Ok(s) => s,
+                    _ => continue,
+                };
+
+                let mode = Mode::S_IRWXU;
+                if (file_stat.st_mode & mode.bits()) != mode.bits() {
+                    let _ = lchmod(entry.path(), mode);
+                }
+
+                // We remove all flags
+                #[cfg(any(
+                    target_os = "openbsd",
+                    target_os = "netbsd",
+                    target_os = "freebsd",
+                    target_os = "dragonfly",
+                    target_os = "macos",
+                    target_os = "ios"
+                ))]
+                if file_stat.st_flags != 0 {
+                    let _ = chflags(entry.path(), FileFlag::empty());
+                }
             }
         }
     }
