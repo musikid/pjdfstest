@@ -31,4 +31,6 @@ task:
    image: rust:latest
   env:
     CFG: ci/linux-ext4.toml
+  setup_script:
+    - getent passwd
   << : *BUILD
