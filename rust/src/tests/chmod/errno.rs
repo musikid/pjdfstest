@@ -3,7 +3,7 @@ use nix::{
     sys::stat::{stat, Mode},
 };
 
-use crate::{runner::context::FileType, test::TestContext, tests::chmod};
+use crate::{runner::context::FileType, test::TestContext, utils::chmod};
 
 #[cfg(target_os = "freebsd")]
 use crate::test::{FileFlags, FileSystemFeature};

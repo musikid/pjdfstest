@@ -23,6 +23,7 @@ mod macros;
 mod runner;
 mod test;
 mod tests;
+mod utils;
 
 use test::{FileFlags, FileSystemFeature, SerializedTestContext, TestCase, TestContext, TestFn};
 
