@@ -9,7 +9,7 @@ build: &BUILD
     - cargo test
     - cargo build --all-targets --release
     - target/release/pjdfstest -c $CFG -p /tmp
-    - su -m nobody -c "target/release/pjdfstest -c $CFG -p /tmp"
+    - su $SU_ARGS "target/release/pjdfstest -c $CFG -p /tmp"
     - rustup component add clippy
     - cargo clippy --all-targets
 
@@ -19,6 +19,7 @@ task:
     image: freebsd-12-3-release-amd64
   env:
     CFG: ci/freebsd-ufs.toml
+    SU_ARGS: -m nobody -c
   setup_script:
     - fetch https://sh.rustup.rs -o rustup.sh
     - sh rustup.sh -y --profile=minimal
@@ -31,6 +32,5 @@ task:
    image: rust:latest
   env:
     CFG: ci/linux-ext4.toml
-  setup_script:
-    - getent passwd
+    SU_ARGS: -s /bin/sh -m nobody -c
   << : *BUILD
