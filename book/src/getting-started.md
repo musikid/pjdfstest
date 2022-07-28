@@ -55,12 +55,12 @@ It is also possible to specify other users with the configuration file.
 
 ```bash
 cat <<EOF | adduser -w none -f -
-pjdfs_dummy_1::::::Dummy User for pjdfstest:/nonexistent:/bin/nologin:
-pjdfs_dummy_2::::::Dummy User for pjdfstest:/nonexistent:/bin/nologin:
-pjdfs_dummy_3::::::Dummy User for pjdfstest:/nonexistent:/bin/nologin:
-pjdfs_dummy_4::::::Dummy User for pjdfstest:/nonexistent:/bin/nologin:
-pjdfs_dummy_5::::::Dummy User for pjdfstest:/nonexistent:/bin/nologin:
-pjdfs_dummy_6::::::Dummy User for pjdfstest:/nonexistent:/bin/nologin:
+pjdfs_dummy_1::::::Dummy User for pjdfstest:/nonexistent:/sbin/nologin:
+pjdfs_dummy_2::::::Dummy User for pjdfstest:/nonexistent:/sbin/nologin:
+pjdfs_dummy_3::::::Dummy User for pjdfstest:/nonexistent:/sbin/nologin:
+pjdfs_dummy_4::::::Dummy User for pjdfstest:/nonexistent:/sbin/nologin:
+pjdfs_dummy_5::::::Dummy User for pjdfstest:/nonexistent:/sbin/nologin:
+pjdfs_dummy_6::::::Dummy User for pjdfstest:/nonexistent:/sbin/nologin:
 EOF
 ```
 
@@ -68,11 +68,11 @@ EOF
 
 ```bash
 cat <<EOF | newusers
-pjdfs_dummy_1::::Dummy User for pjdfstest:/:/usr/bin/nologin
-pjdfs_dummy_2::::Dummy User for pjdfstest:/:/usr/bin/nologin
-pjdfs_dummy_3::::Dummy User for pjdfstest:/:/usr/bin/nologin
-pjdfs_dummy_4::::Dummy User for pjdfstest:/:/usr/bin/nologin
-pjdfs_dummy_5::::Dummy User for pjdfstest:/:/usr/bin/nologin
-pjdfs_dummy_6::::Dummy User for pjdfstest:/:/usr/bin/nologin
+pjdfs_dummy_1:x:::Dummy User for pjdfstest:/:/usr/bin/nologin
+pjdfs_dummy_2:x:::Dummy User for pjdfstest:/:/usr/bin/nologin
+pjdfs_dummy_3:x:::Dummy User for pjdfstest:/:/usr/bin/nologin
+pjdfs_dummy_4:x:::Dummy User for pjdfstest:/:/usr/bin/nologin
+pjdfs_dummy_5:x:::Dummy User for pjdfstest:/:/usr/bin/nologin
+pjdfs_dummy_6:x:::Dummy User for pjdfstest:/:/usr/bin/nologin
 EOF
 ```
