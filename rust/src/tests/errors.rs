@@ -507,7 +507,7 @@ fn eexist(ctx: &mut TestContext, ft: FileType) {
     assert_eexist(ctx, &ft, |p| symlink(&*PathBuf::from("test"), p));
 }
 
-crate::test_case! {eexist_privileged => [Regular, Dir, Fifo, Block, Char, Socket, Symlink(None)]}
+crate::test_case! {eexist_privileged, root => [Regular, Dir, Fifo, Block, Char, Socket, Symlink(None)]}
 fn eexist_privileged(ctx: &mut TestContext, ft: FileType) {
     assert_eexist(ctx, &ft, |p| mknod(p, SFlag::S_IFBLK, Mode::empty(), 0));
     assert_eexist(ctx, &ft, |p| mknod(p, SFlag::S_IFCHR, Mode::empty(), 0));
