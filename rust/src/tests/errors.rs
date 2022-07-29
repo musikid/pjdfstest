@@ -3,7 +3,7 @@ use nix::{
     fcntl::{open, OFlag},
     libc::off_t,
     sys::stat::{mknod, Mode, SFlag},
-    unistd::{chown, ftruncate, mkdir, mkfifo, pathconf, truncate, unlink, PathconfVar, User},
+    unistd::{chown, ftruncate, mkdir, mkfifo, truncate, unlink, User},
 };
 
 #[cfg(any(
@@ -20,6 +20,7 @@ use std::{
     fmt::Debug,
     panic::AssertUnwindSafe,
     path::{Path, PathBuf},
+    process::Command,
 };
 
 use crate::{
@@ -725,6 +726,32 @@ fn enametoolong(ctx: &mut TestContext) {
     assert_enametoolong_path(ctx, |p| unlink(p));
 
     //TODO: rmdir
+}
+
+crate::test_case! {etxtbsy}
+fn etxtbsy(ctx: &mut TestContext) {
+    fn assert_etxtbsy<F, T: Debug>(ctx: &mut TestContext, f: F)
+    where
+        F: Fn(&Path) -> nix::Result<T>,
+    {
+        let sleep_path =
+            String::from_utf8(Command::new("which").arg("sleep").output().unwrap().stdout).unwrap();
+        let sleep_path = sleep_path.trim();
+        let exec_path = ctx.base_path().join("sleep");
+        std::fs::copy(sleep_path, &exec_path).unwrap();
+        let mut sleep_process = Command::new(&exec_path).arg("5").spawn().unwrap();
+        assert_eq!(f(&exec_path).unwrap_err(), Errno::ETXTBSY);
+        sleep_process.kill().unwrap();
+    }
+
+    // open/20.t
+    assert_etxtbsy(ctx, |p| open(p, OFlag::O_WRONLY, Mode::empty()));
+    assert_etxtbsy(ctx, |p| open(p, OFlag::O_RDWR, Mode::empty()));
+    assert_etxtbsy(ctx, |p| {
+        open(p, OFlag::O_RDONLY | OFlag::O_TRUNC, Mode::empty())
+    });
+    // (f)truncate/11.t
+    assert_etxtbsy(ctx, |p| truncate(p, 123));
 }
 
 crate::test_case! {enametoolong_privileged, root}
