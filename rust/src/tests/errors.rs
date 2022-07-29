@@ -3,7 +3,7 @@ use nix::{
     fcntl::{open, OFlag},
     libc::off_t,
     sys::stat::{mknod, Mode, SFlag},
-    unistd::{chown, ftruncate, mkdir, mkfifo, truncate, unlink, Uid, User},
+    unistd::{chown, ftruncate, mkdir, mkfifo, truncate, unlink, User},
 };
 
 #[cfg(any(
@@ -27,49 +27,64 @@ use crate::{
     utils::{chmod, lchmod, lchown, link, rename, symlink},
 };
 
+fn create_symlinks(ctx: &mut TestContext) -> (PathBuf, PathBuf) {
+    let base_dir = ctx.create(FileType::Dir).unwrap();
+    let loop1 = base_dir.join("loop1");
+    let loop2 = base_dir.join("loop2");
+
+    (
+        ctx.create_named(FileType::Symlink(Some(loop2.clone())), &loop1)
+            .unwrap(),
+        ctx.create_named(FileType::Symlink(Some(loop1)), loop2)
+            .unwrap(),
+    )
+}
+
+fn assert_eloop_final<F, T: Debug>(ctx: &mut TestContext, f: F)
+where
+    F: Fn(&Path) -> nix::Result<T>,
+{
+    let (p1, p2) = create_symlinks(ctx);
+
+    assert_eq!(f(&p1.join("test")).unwrap_err(), Errno::ELOOP);
+    assert_eq!(f(&p2.join("test")).unwrap_err(), Errno::ELOOP);
+}
+
 crate::test_case! {eloop}
 fn eloop(ctx: &mut TestContext) {
-    let p1 = ctx
-        .create_named(FileType::Symlink(Some(PathBuf::from("loop2"))), "loop1")
-        .unwrap();
-    let p2 = ctx
-        .create_named(FileType::Symlink(Some(PathBuf::from("loop1"))), "loop2")
-        .unwrap();
-    let p3 = ctx.create(FileType::Regular).unwrap();
+    fn assert_eloop_folder<F, T: Debug>(ctx: &mut TestContext, f: F)
+    where
+        F: Fn(&Path) -> nix::Result<T>,
+    {
+        let (p1, p2) = create_symlinks(ctx);
 
-    fn assert_eloop_folder<F, T: Debug>(p1: &Path, p2: &Path, f: F)
-    where
-        F: Fn(&Path) -> nix::Result<T>,
-    {
-        assert_eq!(f(p1).unwrap_err(), Errno::ELOOP);
-        assert_eq!(f(p2).unwrap_err(), Errno::ELOOP);
+        assert_eq!(f(&p1).unwrap_err(), Errno::ELOOP);
+        assert_eq!(f(&p2).unwrap_err(), Errno::ELOOP);
     }
-    fn assert_eloop_final<F, T: Debug>(p1: &Path, p2: &Path, f: F)
-    where
-        F: Fn(&Path) -> nix::Result<T>,
-    {
-        assert_eq!(f(&p1.join("test")).unwrap_err(), Errno::ELOOP);
-        assert_eq!(f(&p2.join("test")).unwrap_err(), Errno::ELOOP);
-    }
-    fn assert_eloop_link<F, T: Debug>(p1: &Path, p2: &Path, p3: &Path, f: F)
+
+    fn assert_eloop_link<F, T: Debug>(ctx: &mut TestContext, f: F)
     where
         F: Fn(&Path, &Path) -> nix::Result<T>,
     {
+        let (p1, p2) = create_symlinks(ctx);
+        let p3 = ctx.create(FileType::Regular).unwrap();
+
         assert_eq!(f(&p1.join("test"), &p3).unwrap_err(), Errno::ELOOP);
         assert_eq!(f(&p2.join("test"), &p3).unwrap_err(), Errno::ELOOP);
         assert_eq!(f(&p3, &p1.join("test")).unwrap_err(), Errno::ELOOP);
         assert_eq!(f(&p3, &p2.join("test")).unwrap_err(), Errno::ELOOP);
     }
-    fn assert_eloop_all<F, T: Debug>(p1: &Path, p2: &Path, f: F)
+
+    fn assert_eloop_all<F, T: Debug>(ctx: &mut TestContext, f: F)
     where
         F: Fn(&Path) -> nix::Result<T>,
     {
-        assert_eloop_folder(p1, p2, &f);
-        assert_eloop_final(p1, p2, f);
+        assert_eloop_folder(ctx, &f);
+        assert_eloop_final(ctx, f);
     }
 
     // TODO: Add rmdir upstream
-    // assert_eloop(&p1, &p2, |p| rmdir(p, Mode::empty()));
+    // assert_eloop(ctx, |p| rmdir(p, Mode::empty()));
     #[cfg(any(
         target_os = "openbsd",
         target_os = "netbsd",
@@ -79,51 +94,83 @@ fn eloop(ctx: &mut TestContext) {
         target_os = "ios"
     ))]
     {
-        assert_eloop_final(&p1, &p2, |p| chflags(p, FileFlag::empty()));
+        assert_eloop_final(ctx, |p| chflags(p, FileFlag::empty()));
     }
-    assert_eloop_all(&p1, &p2, |p| chmod(p, Mode::empty()));
+    assert_eloop_all(ctx, |p| chmod(p, Mode::empty()));
 
     #[cfg(any(target_os = "netbsd", target_os = "freebsd", target_os = "dragonfly"))]
     {
-        assert_eloop_final(&p1, &p2, |p| lchmod(p, Mode::empty()));
+        assert_eloop_final(ctx, |p| lchmod(p, Mode::empty()));
     }
 
-    assert_eloop_all(&p1, &p2, |p| {
+    assert_eloop_all(ctx, |p| {
         chown(
             p,
             Some(User::from_name("nobody").unwrap().unwrap().uid),
             None,
         )
     });
-    assert_eloop_final(&p1, &p2, |p| {
+    assert_eloop_final(ctx, |p| {
         lchown(
             p,
             Some(User::from_name("nobody").unwrap().unwrap().uid),
             None,
         )
     });
-    assert_eloop_link(&p1, &p2, &p3, |p1, p2| link(p1, p2));
-    assert_eloop_final(&p1, &p2, |p| mkdir(p, Mode::empty()));
-    assert_eloop_final(&p1, &p2, |p| mkfifo(p, Mode::empty()));
-    assert_eloop_final(&p1, &p2, |p| mknod(p, SFlag::S_IFCHR, Mode::empty(), 0));
-    assert_eloop_final(&p1, &p2, |p| open(p, OFlag::empty(), Mode::empty()));
-    assert_eloop_link(&p1, &p2, &p3, |p1, p2| rename(p1, p2));
-    assert_eloop_final(&p1, &p2, |p| symlink(Path::new("test"), p));
-    assert_eloop_final(&p1, &p2, |p| truncate(p, 0));
-    assert_eloop_final(&p1, &p2, |p| unlink(p));
+    assert_eloop_link(ctx, |p1, p2| link(p1, p2));
+    assert_eloop_final(ctx, |p| mkdir(p, Mode::empty()));
+    assert_eloop_final(ctx, |p| mkfifo(p, Mode::empty()));
+    assert_eloop_final(ctx, |p| open(p, OFlag::empty(), Mode::empty()));
+    assert_eloop_link(ctx, |p1, p2| rename(p1, p2));
+    assert_eloop_final(ctx, |p| symlink(Path::new("test"), p));
+    assert_eloop_final(ctx, |p| truncate(p, 0));
+    assert_eloop_final(ctx, |p| unlink(p));
+}
+
+crate::test_case! {eloop_privileged, root}
+fn eloop_privileged(ctx: &mut TestContext) {
+    assert_eloop_final(ctx, |p| mknod(p, SFlag::S_IFCHR, Mode::empty(), 0));
 }
 
 crate::test_case! {enotdir => [Regular, Fifo, Block, Char, Socket]}
 fn enotdir(ctx: &mut TestContext, ft: FileType) {
-    let base_path = ctx.create(ft).unwrap();
-    let path = base_path.join("previous_not_dir");
-    let dir = ctx.create(FileType::Dir).unwrap();
-
-    fn assert_enotdir<T: Debug, F>(path: &Path, f: F)
+    /// Asserts that it returns ENOTDIR if a component of the path prefix is not a directory.
+    fn assert_enotdir<T: Debug, F>(ctx: &mut TestContext, ft: &FileType, f: F)
     where
         F: Fn(&Path) -> nix::Result<T>,
     {
-        assert_eq!(f(path).unwrap_err(), Errno::ENOTDIR);
+        let base_path = ctx.create(ft.clone()).unwrap();
+        let path = base_path.join("previous_not_dir");
+
+        assert_eq!(f(&path).unwrap_err(), Errno::ENOTDIR);
+    }
+
+    /// Asserts that it returns ENOTDIR if a component of either path prefix is not a directory.
+    fn assert_enotdir_two_params<T: Debug, F>(ctx: &mut TestContext, ft: &FileType, f: F)
+    where
+        F: Fn(&Path, &Path) -> nix::Result<T>,
+    {
+        let base_path = ctx.create(ft.clone()).unwrap();
+        let path = base_path.join("previous_not_dir");
+        let new_path = ctx.base_path().join("not_existent");
+
+        assert_eq!(f(&path, &new_path).unwrap_err(), Errno::ENOTDIR);
+
+        let file = ctx.create(ft.clone()).unwrap();
+
+        assert_eq!(f(&file, &path).unwrap_err(), Errno::ENOTDIR);
+    }
+
+    /// Asserts that it returns ENOTDIR when the 'from' argument is a directory, but 'to' is not a directory.
+    // rename/12.t
+    fn assert_enotdir_from_to<T: Debug, F>(ctx: &mut TestContext, ft: &FileType, f: F)
+    where
+        F: Fn(&Path, &Path) -> nix::Result<T>,
+    {
+        let path = ctx.create(ft.clone()).unwrap();
+        let dir = ctx.create(FileType::Dir).unwrap();
+
+        assert_eq!(f(&dir, &path).unwrap_err(), Errno::ENOTDIR);
     }
 
     // TODO: Add rmdir upstream
@@ -137,81 +184,106 @@ fn enotdir(ctx: &mut TestContext, ft: FileType) {
         target_os = "ios"
     ))]
     {
-        assert_enotdir(&path, |p| chflags(p, FileFlag::empty()));
+        assert_enotdir(ctx, &ft, |p| chflags(p, FileFlag::empty()));
     }
-    assert_enotdir(&path, |p| chmod(p, Mode::empty()));
+    assert_enotdir(ctx, &ft, |p| chmod(p, Mode::empty()));
 
     #[cfg(any(target_os = "netbsd", target_os = "freebsd", target_os = "dragonfly"))]
     {
-        assert_enotdir(&path, |p| lchmod(p, Mode::empty()));
+        assert_enotdir(ctx, &ft, |p| lchmod(p, Mode::empty()));
     }
-    assert_enotdir(&path, |p| {
+    assert_enotdir(ctx, &ft, |p| {
         chown(
             p,
             Some(User::from_name("nobody").unwrap().unwrap().uid),
             None,
         )
     });
-    assert_enotdir(&path, |p| {
+    assert_enotdir(ctx, &ft, |p| {
         lchown(
             p,
             Some(User::from_name("nobody").unwrap().unwrap().uid),
             None,
         )
     });
-    assert_enotdir(&path, |p| link(p, &base_path));
-    assert_enotdir(&path, |p| link(&*base_path, p));
-    assert_enotdir(&path, |p| mkdir(p, Mode::empty()));
-    assert_enotdir(&path, |p| mkfifo(p, Mode::empty()));
-    assert_enotdir(&path, |p| mknod(p, SFlag::S_IFCHR, Mode::empty(), 0));
-    assert_enotdir(&path, |p| open(p, OFlag::O_RDONLY, Mode::empty()));
-    assert_enotdir(&path, |p| {
+    // link/01.t
+    assert_enotdir_two_params(ctx, &ft, |p1, p2| link(p1, p2));
+    assert_enotdir(ctx, &ft, |p| mkdir(p, Mode::empty()));
+    assert_enotdir(ctx, &ft, |p| mkfifo(p, Mode::empty()));
+    assert_enotdir(ctx, &ft, |p| open(p, OFlag::O_RDONLY, Mode::empty()));
+    assert_enotdir(ctx, &ft, |p| {
         open(p, OFlag::O_CREAT, Mode::from_bits_truncate(0o644))
     });
-    assert_enotdir(&path, |p| rename(&dir, &base_path));
-    assert_enotdir(&path, |p| rename(p, Path::new("test")));
-    assert_enotdir(&path, |p| rename(&*base_path, p));
-    assert_enotdir(&path, |p| symlink(Path::new("test"), p));
-    assert_enotdir(&path, |p| truncate(p, 0));
-    assert_enotdir(&path, |p| unlink(p));
+    assert_enotdir_two_params(ctx, &ft, |p1, p2| rename(p1, p2));
+    // rename/13.t
+    assert_enotdir_from_to(ctx, &ft, |from, to| rename(from, to));
+    assert_enotdir(ctx, &ft, |p| symlink(Path::new("test"), p));
+    assert_enotdir(ctx, &ft, |p| truncate(p, 0));
+    assert_enotdir(ctx, &ft, |p| unlink(p));
+}
+
+crate::test_case! {enotdir_privileged, root => [Regular, Fifo, Block, Char, Socket]}
+fn enotdir_privileged(ctx: &mut TestContext, ft: FileType) {
+    let base_path = ctx.create(ft.clone()).unwrap();
+    let path = base_path.join("previous_not_dir");
+
+    assert_eq!(
+        mknod(&path, SFlag::S_IFCHR, Mode::empty(), 0).unwrap_err(),
+        Errno::ENOTDIR
+    );
+}
+
+fn create_fake_path(ctx: &mut TestContext) -> PathBuf {
+    let dir = ctx.create(FileType::Dir).unwrap();
+    dir.join("not_existent")
+}
+
+/// Asserts that it returns ENOENT if a component of the path prefix does not exist
+fn assert_enoent_final_comp<F, T: Debug>(ctx: &mut TestContext, f: F)
+where
+    F: Fn(&Path) -> nix::Result<T>,
+{
+    let fake_path = create_fake_path(ctx);
+    assert_eq!(f(&fake_path.join("test")).unwrap_err(), Errno::ENOENT);
 }
 
 crate::test_case! {enoent}
 fn enoent(ctx: &mut TestContext) {
-    let dir = ctx.create(FileType::Dir).unwrap();
-    let fake_path = dir.join("not_existent");
-    let real_path = ctx.create(FileType::Regular).unwrap();
-    let link_to_fake_path = ctx
-        .create(FileType::Symlink(Some(fake_path.to_path_buf())))
-        .unwrap();
-
     /// Asserts that it returns ENOENT if the named file does not exist
-    fn assert_enoent<F, T: Debug>(path: &Path, f: F)
+    fn assert_enoent<F, T: Debug>(ctx: &mut TestContext, f: F)
     where
         F: Fn(&Path) -> nix::Result<T>,
     {
-        assert_eq!(f(path).unwrap_err(), Errno::ENOENT);
+        let fake_path = create_fake_path(ctx);
+        assert_eq!(f(&fake_path).unwrap_err(), Errno::ENOENT);
     }
 
-    /// Asserts that it returns ENOENT if a component of the path prefix does not exist
-    fn assert_enoent_final_comp<F, T: Debug>(path: &Path, f: F)
+    /// Asserts that it returns ENOENT if the named file does not exist
+    fn assert_enoent_link<F, T: Debug>(ctx: &mut TestContext, f: F)
     where
         F: Fn(&Path) -> nix::Result<T>,
     {
-        assert_eq!(f(&path.join("test")).unwrap_err(), Errno::ENOENT);
+        let fake_path = create_fake_path(ctx);
+        let link_to_fake_path = ctx
+            .create(FileType::Symlink(Some(fake_path.to_path_buf())))
+            .unwrap();
+        assert_eq!(f(&link_to_fake_path).unwrap_err(), Errno::ENOENT);
     }
 
     /// Asserts that it returns ENOENT if a component of either path prefix does not exist
-    fn assert_enoent_two_params<F, T: Debug>(fake_path: &Path, real_path: &Path, f: F)
+    fn assert_enoent_two_params<F, T: Debug>(ctx: &mut TestContext, f: F)
     where
         F: Fn(&Path, &Path) -> nix::Result<T>,
     {
+        let fake_path = create_fake_path(ctx);
+        let real_path = ctx.create(FileType::Regular).unwrap();
+
         assert_eq!(
-            f(&fake_path.join("test"), real_path).unwrap_err(),
+            f(&fake_path.join("test"), &real_path).unwrap_err(),
             Errno::ENOENT
         );
         assert_eq!(
-            f(real_path, &fake_path.join("test")).unwrap_err(),
+            f(&real_path, &fake_path.join("test")).unwrap_err(),
             Errno::ENOENT
         );
     }
@@ -225,64 +297,62 @@ fn enoent(ctx: &mut TestContext) {
         target_os = "ios"
     ))]
     {
-        assert_enoent(&fake_path, |p| chflags(p, FileFlag::empty()));
+        assert_enoent(ctx, |p| chflags(p, FileFlag::empty()));
     }
-    assert_enoent(&fake_path, |p| chmod(p, Mode::empty()));
-    assert_enoent_final_comp(&fake_path, |p| chmod(p, Mode::empty()));
-    assert_enoent(&link_to_fake_path, |p| chmod(p, Mode::empty()));
+    assert_enoent(ctx, |p| chmod(p, Mode::empty()));
+    assert_enoent_final_comp(ctx, |p| chmod(p, Mode::empty()));
+    assert_enoent_link(ctx, |p| chmod(p, Mode::empty()));
 
     #[cfg(any(target_os = "netbsd", target_os = "freebsd", target_os = "dragonfly"))]
     {
-        assert_enoent(&fake_path, |p| lchmod(p, Mode::empty()));
+        assert_enoent(ctx, |p| lchmod(p, Mode::empty()));
     }
 
-    assert_enoent_final_comp(&fake_path, |p| chmod(p, Mode::empty()));
-    assert_enoent(&fake_path, |p| {
+    assert_enoent_final_comp(ctx, |p| chmod(p, Mode::empty()));
+    assert_enoent(ctx, |p| {
         chown(
             p,
             Some(User::from_name("nobody").unwrap().unwrap().uid),
             None,
         )
     });
-    assert_enoent_final_comp(&fake_path, |p| {
+    assert_enoent_final_comp(ctx, |p| {
         chown(
             p,
             Some(User::from_name("nobody").unwrap().unwrap().uid),
             None,
         )
     });
-    assert_enoent(&link_to_fake_path, |p| {
+    assert_enoent_link(ctx, |p| {
         chown(
             p,
             Some(User::from_name("nobody").unwrap().unwrap().uid),
             None,
         )
     });
-    assert_enoent(&fake_path, |p| {
+    assert_enoent(ctx, |p| {
         lchown(
             p,
             Some(User::from_name("nobody").unwrap().unwrap().uid),
             None,
         )
     });
-    assert_enoent_two_params(&fake_path, &real_path, |p1, p2| link(p1, p2));
+    assert_enoent_two_params(ctx, |p1, p2| link(p1, p2));
     //TODO: DO link/09.t?
-    assert_enoent_final_comp(&fake_path, |p| mkdir(p, Mode::empty()));
-    assert_enoent_final_comp(&fake_path, |p| mkfifo(p, Mode::empty()));
-    assert_enoent_final_comp(&fake_path, |p| mknod(p, SFlag::S_IFCHR, Mode::empty(), 0));
-    assert_enoent(&fake_path, |p| open(p, OFlag::O_RDONLY, Mode::empty()));
-    assert_eq!(
-        open(&fake_path.join("test"), OFlag::O_CREAT, Mode::S_IRWXU).unwrap_err(),
-        Errno::ENOENT
-    );
-    assert_eq!(
-        open(&fake_path, OFlag::O_RDONLY, Mode::empty()).unwrap_err(),
-        Errno::ENOENT
-    );
-    assert_enoent_two_params(&fake_path, &real_path, |p1, p2| rename(p1, p2));
-    assert_enoent_final_comp(&fake_path, |p| symlink(Path::new("test"), p));
-    assert_enoent(&fake_path, |p| truncate(p, 0));
-    assert_enoent(&fake_path, |p| unlink(p));
+    assert_enoent_final_comp(ctx, |p| mkdir(p, Mode::empty()));
+    assert_enoent_final_comp(ctx, |p| mkfifo(p, Mode::empty()));
+    assert_enoent(ctx, |p| open(p, OFlag::O_RDONLY, Mode::empty()));
+    assert_enoent_final_comp(ctx, |p| open(p, OFlag::O_CREAT, Mode::S_IRWXU));
+    assert_enoent(ctx, |p| open(p, OFlag::O_RDONLY, Mode::empty()));
+    assert_enoent_two_params(ctx, |p1, p2| rename(p1, p2));
+    assert_enoent_final_comp(ctx, |p| symlink(Path::new("test"), p));
+    assert_enoent(ctx, |p| truncate(p, 0));
+    assert_enoent(ctx, |p| unlink(p));
+}
+
+crate::test_case! {enoent_privileged, root}
+fn enoent_privileged(ctx: &mut TestContext) {
+    assert_enoent_final_comp(ctx, |p| mknod(p, SFlag::S_IFCHR, Mode::empty(), 0));
 }
 
 crate::test_case! {eacces, serialized}
@@ -352,6 +422,7 @@ fn eacces(ctx: &mut SerializedTestContext) {
     {
         assert_eacces_search_perm(ctx, |p| chflags(p, FileFlag::empty()));
     }
+
     assert_eacces_search_perm(ctx, |p| chmod(p, Mode::empty()));
 
     #[cfg(any(target_os = "netbsd", target_os = "freebsd", target_os = "dragonfly"))]
@@ -394,16 +465,16 @@ fn eacces(ctx: &mut SerializedTestContext) {
     assert_eacces_search_perm(ctx, |p| unlink(p));
 }
 
+fn assert_eexist<F, T: Debug>(ctx: &mut TestContext, ft: &FileType, f: F)
+where
+    F: Fn(&Path) -> nix::Result<T>,
+{
+    let path = ctx.create(ft.clone()).unwrap();
+    assert_eq!(f(&path).unwrap_err(), Errno::EEXIST);
+}
+
 crate::test_case! {eexist => [Regular, Dir, Fifo, Block, Char, Socket, Symlink(None)]}
 fn eexist(ctx: &mut TestContext, ft: FileType) {
-    fn assert_eexist<F, T: Debug>(ctx: &mut TestContext, ft: &FileType, f: F)
-    where
-        F: Fn(&Path) -> nix::Result<T>,
-    {
-        let path = ctx.create(ft.clone()).unwrap();
-        assert_eq!(f(&path).unwrap_err(), Errno::EEXIST);
-    }
-
     /// Asserts that it returns EEXIST or ENOTEMPTY
     fn assert_eexist_enotempty<F, T: Debug>(ctx: &mut TestContext, ft: &FileType, f: F)
     where
@@ -422,8 +493,6 @@ fn eexist(ctx: &mut TestContext, ft: FileType) {
 
     assert_eexist(ctx, &ft, |p| mkdir(p, Mode::empty()));
     assert_eexist_enotempty(ctx, &ft, |from, to| rename(from, to));
-    assert_eexist(ctx, &ft, |p| mknod(p, SFlag::S_IFBLK, Mode::empty(), 0));
-    assert_eexist(ctx, &ft, |p| mknod(p, SFlag::S_IFCHR, Mode::empty(), 0));
     assert_eexist(ctx, &ft, |p| mknod(p, SFlag::S_IFIFO, Mode::empty(), 0));
     assert_eexist(ctx, &ft, |p| {
         open(p, OFlag::O_CREAT | OFlag::O_EXCL, default_mode)
@@ -438,8 +507,14 @@ fn eexist(ctx: &mut TestContext, ft: FileType) {
     assert_eexist(ctx, &ft, |p| symlink(&*PathBuf::from("test"), p));
 }
 
+crate::test_case! {eexist_privileged => [Regular, Dir, Fifo, Block, Char, Socket, Symlink(None)]}
+fn eexist_privileged(ctx: &mut TestContext, ft: FileType) {
+    assert_eexist(ctx, &ft, |p| mknod(p, SFlag::S_IFBLK, Mode::empty(), 0));
+    assert_eexist(ctx, &ft, |p| mknod(p, SFlag::S_IFCHR, Mode::empty(), 0));
+}
+
 crate::test_case! {efault}
-fn efault(ctx: &mut TestContext) {}
+fn efault(_ctx: &mut TestContext) {}
 
 crate::test_case! {eisdir}
 fn eisdir(ctx: &mut TestContext) {
@@ -463,20 +538,14 @@ fn eisdir(ctx: &mut TestContext) {
         open(p, OFlag::O_RDWR | OFlag::O_TRUNC, Mode::empty())
     });
 
-    // TODO: Should we replace the loop with a separate function?
-    for ft in [
-        FileType::Regular,
-        FileType::Fifo,
-        FileType::Block,
-        FileType::Char,
-        FileType::Socket,
-        FileType::Symlink(None),
-    ] {
-        let not_dir_file = ctx.create(ft).unwrap();
-        assert_eisdir(ctx, |p| rename(&*not_dir_file, p));
-    }
-
     assert_eisdir(ctx, |p| truncate(p, 0));
+}
+
+crate::test_case! {eisdir_rename => [Regular, Fifo, Block, Char, Socket, Symlink(None)]}
+fn eisdir_rename(ctx: &mut TestContext, ft: FileType) {
+    let dir = ctx.create(FileType::Dir).unwrap();
+    let not_dir_file = ctx.create(ft).unwrap();
+    assert_eq!(rename(&not_dir_file, &dir).unwrap_err(), Errno::EISDIR);
 }
 
 crate::test_case! {einval}
@@ -511,21 +580,22 @@ fn einval(ctx: &mut TestContext) {
     assert_einval_open(ctx, OFlag::O_WRONLY | OFlag::O_RDWR);
     assert_einval_open(ctx, OFlag::O_RDONLY | OFlag::O_WRONLY | OFlag::O_RDWR);
 
-    // rename/18.t
     // rename/19.t
     let dir = ctx.create(FileType::Dir).unwrap();
     let subdir = ctx.create_named(FileType::Dir, dir.join("subdir")).unwrap();
+    assert!(matches!(
+        rename(&subdir.join("."), &subdir.join("test")).unwrap_err(),
+        Errno::EINVAL | Errno::EBUSY
+    ));
+    assert!(matches!(
+        rename(&subdir.join(".."), &subdir.join("test")).unwrap_err(),
+        Errno::EINVAL | Errno::EBUSY
+    ));
+
+    // rename/18.t
     let nested_subdir = ctx
         .create_named(FileType::Dir, subdir.join("nested"))
         .unwrap();
-    assert!(matches!(
-        rename(&subdir.join("."), &PathBuf::from("test")),
-        Err(Errno::EINVAL | Errno::EBUSY)
-    ));
-    assert!(matches!(
-        rename(&subdir.join(".."), &PathBuf::from("test")),
-        Err(Errno::EINVAL | Errno::EBUSY)
-    ));
     assert_eq!(rename(&dir, &subdir).unwrap_err(), Errno::EINVAL);
     assert_eq!(rename(&dir, &nested_subdir).unwrap_err(), Errno::EINVAL);
 
@@ -535,18 +605,28 @@ fn einval(ctx: &mut TestContext) {
     //TODO: rmdir
 }
 
+/// Asserts that it returns ENAMETOOLONG if a component of a pathname exceeded {NAME_MAX} characters
+fn assert_enametoolong_comp<F, T: Debug + std::cmp::PartialEq>(ctx: &mut TestContext, f: F)
+where
+    F: Fn(&Path) -> nix::Result<T>,
+{
+    let mut invalid_path = ctx.create_name_max(FileType::Regular).unwrap();
+    invalid_path.set_extension("x");
+    assert_eq!(f(&invalid_path).unwrap_err(), Errno::ENAMETOOLONG);
+}
+
+/// Asserts that it returns ENAMETOOLONG if an entire path name exceeded {PATH_MAX} characters
+fn assert_enametoolong_path<F, T: Debug + std::cmp::PartialEq>(ctx: &mut TestContext, f: F)
+where
+    F: Fn(&Path) -> nix::Result<T>,
+{
+    let mut invalid_path = ctx.create_path_max(FileType::Regular).unwrap();
+    invalid_path.set_extension("x");
+    assert_eq!(f(&invalid_path).unwrap_err(), Errno::ENAMETOOLONG);
+}
+
 crate::test_case! {enametoolong}
 fn enametoolong(ctx: &mut TestContext) {
-    /// Asserts that it returns ENAMETOOLONG if a component of a pathname exceeded {NAME_MAX} characters
-    fn assert_enametoolong_comp<F, T: Debug + std::cmp::PartialEq>(ctx: &mut TestContext, f: F)
-    where
-        F: Fn(&Path) -> nix::Result<T>,
-    {
-        let mut invalid_path = ctx.create_name_max(FileType::Regular).unwrap();
-        invalid_path.set_extension("x");
-        assert_eq!(f(&invalid_path).unwrap_err(), Errno::ENAMETOOLONG);
-    }
-
     /// Asserts that it returns ENAMETOOLONG if a component of either pathname exceeded {NAME_MAX} characters
     fn assert_enametoolong_comp_two_params<F, T: Debug + std::cmp::PartialEq>(
         ctx: &mut TestContext,
@@ -565,16 +645,6 @@ fn enametoolong(ctx: &mut TestContext) {
             f(&invalid_path, &valid_path).unwrap_err(),
             Errno::ENAMETOOLONG
         );
-    }
-
-    /// Asserts that it returns ENAMETOOLONG if an entire path name exceeded {PATH_MAX} characters
-    fn assert_enametoolong_path<F, T: Debug + std::cmp::PartialEq>(ctx: &mut TestContext, f: F)
-    where
-        F: Fn(&Path) -> nix::Result<T>,
-    {
-        let mut invalid_path = ctx.create_path_max(FileType::Regular).unwrap();
-        invalid_path.set_extension("x");
-        assert_eq!(f(&invalid_path).unwrap_err(), Errno::ENAMETOOLONG);
     }
 
     /// Asserts that it returns ENAMETOOLONG if an entire of either path name exceeded {PATH_MAX} characters
@@ -610,10 +680,9 @@ fn enametoolong(ctx: &mut TestContext) {
         assert_enametoolong_comp(ctx, |p| chflags(p, FileFlag::empty()));
         assert_enametoolong_path(ctx, |p| chflags(p, FileFlag::empty()));
     }
+
     assert_enametoolong_comp(ctx, |p| chmod(p, Mode::empty()));
     assert_enametoolong_path(ctx, |p| chmod(p, Mode::empty()));
-    assert_enametoolong_comp(ctx, |p| lchmod(p, Mode::empty()));
-    assert_enametoolong_path(ctx, |p| lchmod(p, Mode::empty()));
 
     #[cfg(any(target_os = "netbsd", target_os = "freebsd", target_os = "dragonfly"))]
     {
@@ -640,12 +709,8 @@ fn enametoolong(ctx: &mut TestContext) {
     assert_enametoolong_comp(ctx, |p| mkdir(p, Mode::empty()));
     assert_enametoolong_path(ctx, |p| mkdir(p, Mode::empty()));
 
-    assert_enametoolong_comp(ctx, |p| mknod(p, SFlag::S_IFBLK, Mode::empty(), 0));
-    assert_enametoolong_path(ctx, |p| mknod(p, SFlag::S_IFBLK, Mode::empty(), 0));
     assert_enametoolong_comp(ctx, |p| mknod(p, SFlag::S_IFIFO, Mode::empty(), 0));
     assert_enametoolong_path(ctx, |p| mknod(p, SFlag::S_IFIFO, Mode::empty(), 0));
-    assert_enametoolong_comp(ctx, |p| mknod(p, SFlag::S_IFCHR, Mode::empty(), 0));
-    assert_enametoolong_path(ctx, |p| mknod(p, SFlag::S_IFCHR, Mode::empty(), 0));
 
     assert_enametoolong_comp(ctx, |p| open(p, OFlag::O_CREAT, Mode::empty()));
     assert_enametoolong_path(ctx, |p| open(p, OFlag::O_CREAT, Mode::empty()));
@@ -660,4 +725,13 @@ fn enametoolong(ctx: &mut TestContext) {
     assert_enametoolong_path(ctx, |p| unlink(p));
 
     //TODO: rmdir
+}
+
+crate::test_case! {enametoolong_privileged, root}
+fn enametoolong_privileged(ctx: &mut TestContext) {
+    assert_enametoolong_comp(ctx, |p| mknod(p, SFlag::S_IFBLK, Mode::empty(), 0));
+    assert_enametoolong_path(ctx, |p| mknod(p, SFlag::S_IFBLK, Mode::empty(), 0));
+
+    assert_enametoolong_comp(ctx, |p| mknod(p, SFlag::S_IFCHR, Mode::empty(), 0));
+    assert_enametoolong_path(ctx, |p| mknod(p, SFlag::S_IFCHR, Mode::empty(), 0));
 }
