@@ -82,7 +82,12 @@ fn eloop(ctx: &mut TestContext) {
         assert_eloop_final(&p1, &p2, |p| chflags(p, FileFlag::empty()));
     }
     assert_eloop_all(&p1, &p2, |p| chmod(p, Mode::empty()));
-    assert_eloop_final(&p1, &p2, |p| lchmod(p, Mode::empty()));
+
+    #[cfg(any(target_os = "netbsd", target_os = "freebsd", target_os = "dragonfly"))]
+    {
+        assert_eloop_final(&p1, &p2, |p| lchmod(p, Mode::empty()));
+    }
+
     assert_eloop_all(&p1, &p2, |p| {
         chown(
             p,
@@ -135,7 +140,11 @@ fn enotdir(ctx: &mut TestContext, ft: FileType) {
         assert_enotdir(&path, |p| chflags(p, FileFlag::empty()));
     }
     assert_enotdir(&path, |p| chmod(p, Mode::empty()));
-    assert_enotdir(&path, |p| lchmod(p, Mode::empty()));
+
+    #[cfg(any(target_os = "netbsd", target_os = "freebsd", target_os = "dragonfly"))]
+    {
+        assert_enotdir(&path, |p| lchmod(p, Mode::empty()));
+    }
     assert_enotdir(&path, |p| {
         chown(
             p,
@@ -221,7 +230,12 @@ fn enoent(ctx: &mut TestContext) {
     assert_enoent(&fake_path, |p| chmod(p, Mode::empty()));
     assert_enoent_final_comp(&fake_path, |p| chmod(p, Mode::empty()));
     assert_enoent(&link_to_fake_path, |p| chmod(p, Mode::empty()));
-    assert_enoent(&fake_path, |p| lchmod(p, Mode::empty()));
+
+    #[cfg(any(target_os = "netbsd", target_os = "freebsd", target_os = "dragonfly"))]
+    {
+        assert_enoent(&fake_path, |p| lchmod(p, Mode::empty()));
+    }
+
     assert_enoent_final_comp(&fake_path, |p| chmod(p, Mode::empty()));
     assert_enoent(&fake_path, |p| {
         chown(
@@ -339,7 +353,12 @@ fn eacces(ctx: &mut SerializedTestContext) {
         assert_eacces_search_perm(ctx, |p| chflags(p, FileFlag::empty()));
     }
     assert_eacces_search_perm(ctx, |p| chmod(p, Mode::empty()));
-    assert_eacces_search_perm(ctx, |p| lchmod(p, Mode::empty()));
+
+    #[cfg(any(target_os = "netbsd", target_os = "freebsd", target_os = "dragonfly"))]
+    {
+        assert_eacces_search_perm(ctx, |p| lchmod(p, Mode::empty()));
+    }
+
     // TODO: Blocked by #63
     // assert_eacces(ctx, |p| {
     //     chown(
@@ -595,6 +614,12 @@ fn enametoolong(ctx: &mut TestContext) {
     assert_enametoolong_path(ctx, |p| chmod(p, Mode::empty()));
     assert_enametoolong_comp(ctx, |p| lchmod(p, Mode::empty()));
     assert_enametoolong_path(ctx, |p| lchmod(p, Mode::empty()));
+
+    #[cfg(any(target_os = "netbsd", target_os = "freebsd", target_os = "dragonfly"))]
+    {
+        assert_enametoolong_comp(ctx, |p| lchmod(p, Mode::empty()));
+        assert_enametoolong_path(ctx, |p| lchmod(p, Mode::empty()));
+    }
 
     let user = User::from_name("nobody").unwrap().unwrap();
     assert_enametoolong_comp(ctx, |p| chown(p, Some(user.uid), Some(user.gid)));
