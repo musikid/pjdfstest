@@ -3,7 +3,7 @@ use nix::{
     fcntl::{open, OFlag},
     libc::off_t,
     sys::stat::{mknod, Mode, SFlag},
-    unistd::{chown, ftruncate, mkdir, mkfifo, truncate, unlink, User},
+    unistd::{chown, ftruncate, mkdir, mkfifo, pathconf, truncate, unlink, PathconfVar, User},
 };
 
 #[cfg(any(
@@ -27,7 +27,7 @@ use crate::{
     utils::{chmod, lchmod, lchown, link, rename, symlink},
 };
 
-fn create_symlinks(ctx: &mut TestContext) -> (PathBuf, PathBuf) {
+fn create_loop_symlinks(ctx: &mut TestContext) -> (PathBuf, PathBuf) {
     let base_dir = ctx.create(FileType::Dir).unwrap();
     let loop1 = base_dir.join("loop1");
     let loop2 = base_dir.join("loop2");
@@ -44,7 +44,7 @@ fn assert_eloop_final<F, T: Debug>(ctx: &mut TestContext, f: F)
 where
     F: Fn(&Path) -> nix::Result<T>,
 {
-    let (p1, p2) = create_symlinks(ctx);
+    let (p1, p2) = create_loop_symlinks(ctx);
 
     assert_eq!(f(&p1.join("test")).unwrap_err(), Errno::ELOOP);
     assert_eq!(f(&p2.join("test")).unwrap_err(), Errno::ELOOP);
@@ -56,7 +56,7 @@ fn eloop(ctx: &mut TestContext) {
     where
         F: Fn(&Path) -> nix::Result<T>,
     {
-        let (p1, p2) = create_symlinks(ctx);
+        let (p1, p2) = create_loop_symlinks(ctx);
 
         assert_eq!(f(&p1).unwrap_err(), Errno::ELOOP);
         assert_eq!(f(&p2).unwrap_err(), Errno::ELOOP);
@@ -66,13 +66,13 @@ fn eloop(ctx: &mut TestContext) {
     where
         F: Fn(&Path, &Path) -> nix::Result<T>,
     {
-        let (p1, p2) = create_symlinks(ctx);
-        let p3 = ctx.create(FileType::Regular).unwrap();
+        let (p1, p2) = create_loop_symlinks(ctx);
+        let valid_path = ctx.create(FileType::Regular).unwrap();
 
-        assert_eq!(f(&p1.join("test"), &p3).unwrap_err(), Errno::ELOOP);
-        assert_eq!(f(&p2.join("test"), &p3).unwrap_err(), Errno::ELOOP);
-        assert_eq!(f(&p3, &p1.join("test")).unwrap_err(), Errno::ELOOP);
-        assert_eq!(f(&p3, &p2.join("test")).unwrap_err(), Errno::ELOOP);
+        assert_eq!(f(&p1.join("test"), &valid_path).unwrap_err(), Errno::ELOOP);
+        assert_eq!(f(&p2.join("test"), &valid_path).unwrap_err(), Errno::ELOOP);
+        assert_eq!(f(&valid_path, &p1.join("test")).unwrap_err(), Errno::ELOOP);
+        assert_eq!(f(&valid_path, &p2.join("test")).unwrap_err(), Errno::ELOOP);
     }
 
     fn assert_eloop_all<F, T: Debug>(ctx: &mut TestContext, f: F)
