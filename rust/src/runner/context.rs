@@ -63,7 +63,7 @@ pub enum ContextError {
 }
 
 /// Auth entries which are composed of a [`User`] and its associated [`Group`].
-/// It works like a stack, with entries being poped and not kept.
+/// It works like a stack, with entries being popped and not kept.
 #[derive(Debug)]
 pub struct DummyAuthEntries {
     entries: Vec<(User, Group)>,
