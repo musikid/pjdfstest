@@ -832,6 +832,8 @@ fn enametoolong_privileged(ctx: &mut TestContext) {
 
 crate::test_case! {etxtbsy}
 fn etxtbsy(ctx: &mut TestContext) {
+    /// Asserts that it returns ETXTBSY when the file is a pure procedure (shared text) file that is being executed.
+    // TODO: Refactor this
     fn assert_etxtbsy<F, T: Debug>(ctx: &mut TestContext, f: F)
     where
         F: Fn(&Path) -> nix::Result<T>,
@@ -839,10 +841,17 @@ fn etxtbsy(ctx: &mut TestContext) {
         let sleep_path =
             String::from_utf8(Command::new("which").arg("sleep").output().unwrap().stdout).unwrap();
         let sleep_path = sleep_path.trim();
+
         let exec_path = ctx.base_path().join("sleep");
-        std::fs::copy(sleep_path, &exec_path).unwrap();
+        let mut exec_file = File::create(&exec_path).unwrap();
+        std::io::copy(&mut File::open(sleep_path).unwrap(), &mut exec_file).unwrap();
+
+        chmod(&exec_path, Mode::from_bits_truncate(0o755)).unwrap();
+        std::mem::drop(exec_file);
+
         let mut sleep_process = Command::new(&exec_path).arg("5").spawn().unwrap();
         assert_eq!(f(&exec_path).unwrap_err(), Errno::ETXTBSY);
+
         sleep_process.kill().unwrap();
     }
 
