@@ -36,6 +36,7 @@ task:
   setup_script:
     - |
       cat <<EOF | newusers
+      nobody:x::::/:/usr/bin/nologin
       tests:x:::Dummy User for pjdfstest:/:/usr/bin/nologin
       EOF
   << : *BUILD
