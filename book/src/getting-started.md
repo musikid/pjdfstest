@@ -40,12 +40,8 @@ This should be handled automatically when installing it via a package,
 but they need to be created otherwise.
 By default, the users (with the same name for the group associated to each of them) to create are:
 
-- pjdfs_dummy_1
-- pjdfs_dummy_2
-- pjdfs_dummy_3
-- pjdfs_dummy_4
-- pjdfs_dummy_5
-- pjdfs_dummy_6
+- nobody (already created on most systems)
+- tests
 
 It is also possible to specify other users with the configuration file.
 
@@ -55,12 +51,7 @@ It is also possible to specify other users with the configuration file.
 
 ```bash
 cat <<EOF | adduser -w none -f -
-pjdfs_dummy_1::::::Dummy User for pjdfstest:/nonexistent:/sbin/nologin:
-pjdfs_dummy_2::::::Dummy User for pjdfstest:/nonexistent:/sbin/nologin:
-pjdfs_dummy_3::::::Dummy User for pjdfstest:/nonexistent:/sbin/nologin:
-pjdfs_dummy_4::::::Dummy User for pjdfstest:/nonexistent:/sbin/nologin:
-pjdfs_dummy_5::::::Dummy User for pjdfstest:/nonexistent:/sbin/nologin:
-pjdfs_dummy_6::::::Dummy User for pjdfstest:/nonexistent:/sbin/nologin:
+tests::::::Dummy User for pjdfstest:/nonexistent:/sbin/nologin:
 EOF
 ```
 
@@ -68,11 +59,6 @@ EOF
 
 ```bash
 cat <<EOF | newusers
-pjdfs_dummy_1:x:::Dummy User for pjdfstest:/:/usr/bin/nologin
-pjdfs_dummy_2:x:::Dummy User for pjdfstest:/:/usr/bin/nologin
-pjdfs_dummy_3:x:::Dummy User for pjdfstest:/:/usr/bin/nologin
-pjdfs_dummy_4:x:::Dummy User for pjdfstest:/:/usr/bin/nologin
-pjdfs_dummy_5:x:::Dummy User for pjdfstest:/:/usr/bin/nologin
-pjdfs_dummy_6:x:::Dummy User for pjdfstest:/:/usr/bin/nologin
+tests:x:::Dummy User for pjdfstest:/:/usr/bin/nologin
 EOF
 ```

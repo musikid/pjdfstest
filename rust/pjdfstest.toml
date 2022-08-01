@@ -21,13 +21,9 @@ naptime = 0.001
 # This section allows to modify the mecanism for switching users, which is required by some tests.
 [dummy_auth]
 # An entry is the name of a user and its associated group.
-# For now, the array requires 6 entries exactly.
+# For now, the array requires exactly 2 entries.
 # Please see the book for more details.
 # entries = [
-#   "pjdfs_dummy_1",
-#   "pjdfs_dummy_2",
-#   "pjdfs_dummy_3",
-#   "pjdfs_dummy_4",
-#   "pjdfs_dummy_5",
-#   "pjdfs_dummy_6",
+#   "nobody",
+#   "tests",
 # ]

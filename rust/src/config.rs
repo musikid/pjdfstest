@@ -42,20 +42,13 @@ const fn default_naptime() -> f64 {
 ///
 #[derive(Debug, Deserialize)]
 pub struct DummyAuthConfig {
-    pub entries: [String; 6],
+    pub entries: [String; 2],
 }
 
 impl Default for DummyAuthConfig {
     fn default() -> Self {
         Self {
-            entries: [
-                String::from("pjdfs_dummy_1"),
-                String::from("pjdfs_dummy_2"),
-                String::from("pjdfs_dummy_3"),
-                String::from("pjdfs_dummy_4"),
-                String::from("pjdfs_dummy_5"),
-                String::from("pjdfs_dummy_6"),
-            ],
+            entries: [String::from("nobody"), String::from("tests")],
         }
     }
 }
