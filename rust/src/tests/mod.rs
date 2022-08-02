@@ -17,6 +17,7 @@ use crate::test::TestContext;
 pub mod chmod;
 pub mod ftruncate;
 pub mod posix_fallocate;
+pub mod unlink;
 pub mod utimensat;
 
 /// A handy extention to std::os::unix::fs::MetadataExt
@@ -57,7 +58,7 @@ fn birthtime_ts(path: &Path) -> TimeSpec {
 }
 
 /// Assert that a certain operation changes the ctime of a file.
-fn assert_ctime_changed<F>(ctx: &mut TestContext, path: &Path, f: F)
+fn assert_ctime_changed<F>(ctx: &TestContext, path: &Path, f: F)
 where
     F: FnOnce(),
 {
@@ -69,6 +70,21 @@ where
 
     let ctime_after = metadata(&path).unwrap().ctime_ts();
     assert!(ctime_after > ctime_before);
+}
+
+/// Assert that a certain operation changes the ctime of a file.
+fn assert_mtime_changed<F>(ctx: &TestContext, path: &Path, f: F)
+where
+    F: FnOnce(),
+{
+    let mtime_before = metadata(&path).unwrap().mtime_ts();
+
+    ctx.nap();
+
+    f();
+
+    let mtime_after = metadata(&path).unwrap().mtime_ts();
+    assert!(mtime_after > mtime_before);
 }
 
 /// Assert that a certain operation does not change the ctime of a file.
