@@ -1,3 +1,4 @@
+use std::fs::symlink_metadata;
 use std::os::unix::fs::MetadataExt as StdMetadataExt;
 
 use std::{fs::metadata, path::Path};
@@ -18,6 +19,7 @@ pub mod chmod;
 pub mod ftruncate;
 pub mod link;
 pub mod posix_fallocate;
+pub mod rename;
 pub mod unlink;
 pub mod utimensat;
 
@@ -109,7 +111,7 @@ where
     assert!(ctime_after > ctime_before);
 }
 
-/// Assert that a certain operation changes the ctime of a file.
+/// Assert that a certain operation changes the mtime of a file.
 fn assert_mtime_changed<F>(ctx: &TestContext, path: &Path, f: F)
 where
     F: FnOnce(),
@@ -122,6 +124,21 @@ where
 
     let mtime_after = metadata(&path).unwrap().mtime_ts();
     assert!(mtime_after > mtime_before);
+}
+
+/// Assert that a certain operation changes the ctime of a file without following symlinks.
+fn assert_symlink_ctime_changed<F>(ctx: &mut TestContext, path: &Path, f: F)
+where
+    F: FnOnce(),
+{
+    let ctime_before = symlink_metadata(&path).unwrap().ctime_ts();
+
+    ctx.nap();
+
+    f();
+
+    let ctime_after = symlink_metadata(&path).unwrap().ctime_ts();
+    assert!(ctime_after > ctime_before);
 }
 
 /// Assert that a certain operation does not change the ctime of a file.
@@ -139,7 +156,7 @@ where
     assert!(ctime_after == ctime_before);
 }
 
-/// Assert that a certain operation does not change the ctime of a file.
+/// Assert that a certain operation does not change the mtime of a file.
 fn assert_mtime_unchanged<F>(ctx: &TestContext, path: &Path, f: F)
 where
     F: FnOnce(),
@@ -152,4 +169,19 @@ where
 
     let mtime_after = metadata(&path).unwrap().mtime_ts();
     assert!(mtime_after == mtime_before);
+}
+
+/// Assert that a certain operation does not change the ctime without following symlinks.
+fn assert_symlink_ctime_unchanged<F>(ctx: &TestContext, path: &Path, f: F)
+where
+    F: FnOnce(),
+{
+    let ctime_before = symlink_metadata(&path).unwrap().ctime_ts();
+
+    ctx.nap();
+
+    f();
+
+    let ctime_after = symlink_metadata(&path).unwrap().ctime_ts();
+    assert!(ctime_after == ctime_before);
 }
