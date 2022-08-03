@@ -25,7 +25,7 @@ crate::test_case! {
     enametoolong
 }
 fn enametoolong(ctx: &mut TestContext) {
-    let path = ctx.create_max(FileType::Regular).unwrap();
+    let path = ctx.create_name_max(FileType::Regular).unwrap();
     let expected_mode = 0o620;
     chmod(&path, Mode::from_bits_truncate(expected_mode)).unwrap();
     let actual_mode = stat(&path).unwrap().st_mode;
