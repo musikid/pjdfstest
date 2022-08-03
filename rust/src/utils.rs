@@ -17,3 +17,5 @@ pub fn lchmod<P: ?Sized + nix::NixPath>(path: &P, mode: nix::sys::stat::Mode) ->
         nix::sys::stat::FchmodatFlags::NoFollowSymlink,
     )
 }
+
+pub const ALLPERMS: nix::sys::stat::mode_t = 0o777;

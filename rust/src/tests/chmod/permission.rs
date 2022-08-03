@@ -2,14 +2,12 @@ use crate::{
     runner::context::{FileType, SerializedTestContext},
     test::TestContext,
     tests::{assert_ctime_changed, assert_ctime_unchanged},
-    utils::chmod,
+    utils::{chmod, ALLPERMS},
 };
 use nix::{
     sys::stat::{lstat, mode_t, stat, Mode},
     unistd::{chown, Gid, Uid},
 };
-
-const FILE_PERMS: mode_t = 0o777;
 
 // chmod/00.t:L24
 crate::test_case! {
@@ -24,7 +22,7 @@ fn change_perm(ctx: &mut TestContext, f_type: FileType) {
 
     let actual_mode = stat(&path).unwrap().st_mode;
 
-    assert_eq!(actual_mode & FILE_PERMS, expected_mode.bits());
+    assert_eq!(actual_mode & ALLPERMS, expected_mode.bits());
 
     // We test if it applies through symlinks
     let symlink_path = ctx.create(FileType::Symlink(Some(path.clone()))).unwrap();
@@ -35,11 +33,11 @@ fn change_perm(ctx: &mut TestContext, f_type: FileType) {
 
     let actual_mode = stat(&path).unwrap().st_mode;
     let actual_sym_mode = stat(&symlink_path).unwrap().st_mode;
-    assert_eq!(actual_mode & FILE_PERMS, expected_mode.bits());
-    assert_eq!(actual_sym_mode & FILE_PERMS, expected_mode.bits());
+    assert_eq!(actual_mode & ALLPERMS, expected_mode.bits());
+    assert_eq!(actual_sym_mode & ALLPERMS, expected_mode.bits());
 
     let actual_link_mode = lstat(&symlink_path).unwrap().st_mode;
-    assert_eq!(link_mode & FILE_PERMS, actual_link_mode & FILE_PERMS);
+    assert_eq!(link_mode & ALLPERMS, actual_link_mode & ALLPERMS);
 }
 
 // chmod/00.t:L58
