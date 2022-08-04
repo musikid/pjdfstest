@@ -299,19 +299,25 @@ impl FileBuilder {
         }
     }
 
-    /// Create the file according to the provided information.
-    pub fn create(self) -> nix::Result<PathBuf> {
-        let mode = self.mode;
-        let mut path = self.path;
+    /// [`Take`](std::mem::take) and return the path final form.
+    fn final_path(&mut self) -> PathBuf {
         if self.random_name {
-            path = path.join(
+            self.path.push(
                 thread_rng()
                     .sample_iter(&Alphanumeric)
                     .take(NUM_RAND_CHARS)
                     .map(char::from)
                     .collect::<String>(),
-            );
+            )
         }
+
+        std::mem::take(&mut self.path)
+    }
+
+    /// Create the file according to the provided information.
+    pub fn create(mut self) -> nix::Result<PathBuf> {
+        let mode = self.mode;
+        let path = self.final_path();
 
         match self.file_type {
             FileType::Regular => open(&path, OFlag::O_CREAT, mode).and_then(close),
@@ -340,9 +346,17 @@ impl FileBuilder {
     }
 
     /// Create the file according to the provided information and open it.
-    pub fn open(self, oflags: OFlag) -> nix::Result<(PathBuf, RawFd)> {
-        let path = self.create()?;
-        Ok((path.clone(), open(&path, oflags, Mode::empty())?))
+    /// This function automatically adds [`O_CREAT`](nix::fcntl::OFlag::O_CREAT) to the [`open`](nix::fcntl::open) flags when creating a regular file.
+    pub fn open(mut self, oflags: OFlag) -> nix::Result<(PathBuf, RawFd)> {
+        match self.file_type {
+            FileType::Regular => {
+                let path = self.final_path();
+                open(&path, OFlag::O_CREAT | oflags, self.mode).map(|fd| (path, fd))
+            }
+            _ => self
+                .create()
+                .and_then(|p| open(&p, oflags, Mode::empty()).map(|fd| (p, fd))),
+        }
     }
 
     /// Change file mode.
@@ -513,5 +527,18 @@ mod tests {
             let actual_mode = file_stat.st_mode & ALLPERMS;
             assert_eq!(actual_mode, expected_mode & (!current_umask.bits()));
         }
+    }
+
+    #[test]
+    fn regular_unique_syscall() {
+        let tmpdir = TempDir::new().unwrap();
+        let settings = SettingsConfig { naptime: 0. };
+        let ctx = TestContext::new(&settings, &tmpdir.path());
+
+        assert!(ctx
+            .new_file(FileType::Regular)
+            .mode(0o444)
+            .open(OFlag::O_RDWR)
+            .is_ok());
     }
 }
