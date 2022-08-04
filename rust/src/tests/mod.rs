@@ -15,6 +15,7 @@ use nix::sys::time::TimeSpec;
 use crate::test::TestContext;
 
 pub mod chmod;
+pub mod ftruncate;
 pub mod posix_fallocate;
 pub mod utimensat;
 
