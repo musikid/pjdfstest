@@ -67,9 +67,7 @@ crate::test_case! {
     update_ctime_success
 }
 fn update_ctime_success(ctx: &mut TestContext) {
-    let (path, file) = ctx
-        .create_file(OFlag::O_RDWR, Some(Mode::from_bits_truncate(0o644)))
-        .unwrap();
+    let (path, file) = ctx.create_file(OFlag::O_RDWR, Some(0o644)).unwrap();
 
     assert_ctime_changed(ctx, &path, || {
         ftruncate(file, 123).unwrap();
@@ -80,9 +78,7 @@ crate::test_case! {
     unchanged_ctime_failed
 }
 fn unchanged_ctime_failed(ctx: &mut TestContext) {
-    let (path, file) = ctx
-        .create_file(OFlag::O_RDONLY, Some(Mode::from_bits_truncate(0o644)))
-        .unwrap();
+    let (path, file) = ctx.create_file(OFlag::O_RDONLY, Some(0o644)).unwrap();
 
     assert_ctime_unchanged(ctx, &path, || {
         assert_eq!(ftruncate(file, 123).unwrap_err(), Errno::EINVAL);
