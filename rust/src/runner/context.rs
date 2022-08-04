@@ -289,13 +289,13 @@ impl FileBuilder {
     /// Create a file builder.
     pub fn new<P: AsRef<Path>>(file_type: FileType, base_path: &P) -> Self {
         Self {
-            file_type: file_type.clone(),
             path: base_path.as_ref().to_path_buf(),
             random_name: true,
-            mode: match file_type {
+            mode: match &file_type {
                 FileType::Dir => Mode::from_bits_truncate(0o755),
                 _ => Mode::from_bits_truncate(0o644),
             },
+            file_type,
         }
     }
 
@@ -354,7 +354,7 @@ impl FileBuilder {
     /// Join `name` to the base path.
     /// An absolute path can also be provided, in this case it completely replaces the path.
     pub fn name<P: AsRef<Path>>(mut self, name: P) -> Self {
-        self.path = self.path.join(name.as_ref());
+        self.path.push(name.as_ref());
         self.random_name = false;
         self
     }
@@ -500,7 +500,7 @@ mod tests {
             let ctx = TestContext::new(&settings, &tmpdir.path());
             let name = "testing";
             let expected_mode = 0o725;
-            let (path, file) = ctx
+            let (path, _file) = ctx
                 .new_file(ft)
                 .mode(expected_mode)
                 .name(name)
