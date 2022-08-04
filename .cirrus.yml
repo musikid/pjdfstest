@@ -39,8 +39,7 @@ task:
     SU_ARGS: -s /bin/sh -m nobody -c
   setup_script:
     - |
-      cat <<EOF | newusers
-      nobody:x::::/:/usr/bin/nologin
+      cat <<EOF | newusers -r
       tests:x:::Dummy User for pjdfstest:/:/usr/bin/nologin
       dummy:x:::Dummy User for pjdfstest:/:/usr/bin/nologin
       EOF

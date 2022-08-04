@@ -2,6 +2,8 @@ use std::collections::HashMap;
 
 use crate::test::FileFlags;
 use crate::test::FileSystemFeature;
+use nix::unistd::Group;
+use nix::unistd::User;
 use serde::Deserialize;
 
 #[derive(Debug, Default, Deserialize)]
@@ -38,19 +40,30 @@ const fn default_naptime() -> f64 {
 }
 
 /// Auth entries, which are composed of a [`User`](nix::unistd::User) and its associated [`Group`](nix::unistd::Group).
-/// The user and the group have the same name and the user should be part of the associated group.
+/// The user should be part of the associated group.
 #[derive(Debug, Deserialize)]
 pub struct DummyAuthConfig {
-    pub entries: [String; 3],
+    pub entries: [(String, String); 3],
 }
 
 impl Default for DummyAuthConfig {
     fn default() -> Self {
         Self {
             entries: [
-                String::from("nobody"),
-                String::from("tests"),
-                String::from("dummy"),
+                (
+                    String::from("nobody"),
+                    if let Ok(Some(nobody)) = User::from_name("nobody") {
+                        if let Ok(Some(group)) = Group::from_gid(nobody.gid) {
+                            group.name
+                        } else {
+                            String::from("nobody")
+                        }
+                    } else {
+                        String::from("nobody")
+                    },
+                ),
+                (String::from("tests"), String::from("tests")),
+                (String::from("dummy"), String::from("dummy")),
             ],
         }
     }

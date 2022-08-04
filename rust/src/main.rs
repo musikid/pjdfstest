@@ -141,19 +141,29 @@ fn run_test_cases(
     let enabled_features: HashSet<_> = config.features.fs_features.keys().into_iter().collect();
     let enabled_flags: HashSet<_> = config.features.file_flags.iter().collect();
 
-    let entries: Vec<_> = config
+    let entries: Vec<(User, Group)> = config
         .dummy_auth
         .entries
         .iter()
-        .map(|e| {
-            User::from_name(e).and_then(|u| {
-                Group::from_name(e).map(|g| {
-                    u.zip(g)
-                        .ok_or_else(|| anyhow::anyhow!("User {} is not available", e))
+        .map(|(username, groupname)| {
+            User::from_name(username)
+                .map_err(anyhow::Error::new)
+                .and_then(|user| {
+                    user.ok_or_else(|| anyhow::anyhow!("User {username} is not available"))
+                        .and_then(|user| {
+                            Group::from_name(groupname)
+                                .map_err(anyhow::Error::new)
+                                .and_then(|group| {
+                                    group
+                                        .ok_or_else(|| {
+                                            anyhow::anyhow!("Group {groupname} is not available")
+                                        })
+                                        .map(|group| (user, group))
+                                })
+                        })
                 })
-            })
         })
-        .collect::<Result<Result<_, _>, _>>()??;
+        .collect::<Result<_, _>>()?;
 
     for test_case in test_cases {
         //TODO: There's probably a better way to do this...
