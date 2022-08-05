@@ -4,7 +4,10 @@ use nix::{
         socket::{bind, socket, SockFlag, UnixAddr},
         stat::{mknod, stat, Mode, SFlag},
     },
-    unistd::{close, mkdir, mkfifo, pathconf, setegid, seteuid, Gid, Uid},
+    unistd::{
+        close, getgroups, mkdir, mkfifo, pathconf, setegid, seteuid, setgroups, Gid, Group, Uid,
+        User,
+    },
 };
 
 #[cfg(any(
@@ -22,7 +25,7 @@ use std::{
     fs::create_dir_all,
     ops::{Deref, DerefMut},
     os::unix::{fs::symlink, prelude::RawFd},
-    panic::{catch_unwind, resume_unwind, UnwindSafe},
+    panic::{catch_unwind, resume_unwind, AssertUnwindSafe},
     path::{Path, PathBuf},
     thread,
     time::Duration,
@@ -59,62 +62,103 @@ pub enum ContextError {
     Nix(#[from] nix::Error),
 }
 
+/// Auth entries which are composed of a [`User`] and its associated [`Group`].
+/// It works like a stack, with entries being popped and not kept.
+#[derive(Debug)]
+pub struct DummyAuthEntries {
+    entries: Vec<(User, Group)>,
+}
+
+impl DummyAuthEntries {
+    pub fn new(entries: Vec<(User, Group)>) -> Self {
+        Self { entries }
+    }
+
+    /// Returns a new entry.
+    pub fn get_new_entry(&mut self) -> (User, Group) {
+        self.entries.pop().unwrap()
+    }
+}
+
 pub struct TestContext {
     naptime: Duration,
     temp_dir: TempDir,
 }
 
-pub struct SerializedTestContext(TestContext);
+pub struct SerializedTestContext {
+    ctx: TestContext,
+    auth_entries: DummyAuthEntries,
+}
 
 impl Deref for SerializedTestContext {
     type Target = TestContext;
 
     fn deref(&self) -> &Self::Target {
-        &self.0
+        &self.ctx
     }
 }
 
 impl DerefMut for SerializedTestContext {
     fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.0
+        &mut self.ctx
     }
 }
 
 impl SerializedTestContext {
-    pub fn new<P: AsRef<Path>>(settings: &SettingsConfig, base_dir: P) -> Self {
-        Self(TestContext::new(settings, base_dir))
+    pub fn new<P: AsRef<Path>>(
+        settings: &SettingsConfig,
+        entries: &Vec<(User, Group)>,
+        base_dir: P,
+    ) -> Self {
+        Self {
+            ctx: TestContext::new(settings, base_dir),
+            auth_entries: DummyAuthEntries::new(entries.to_vec()),
+        }
+    }
+
+    /// Returns a new entry.
+    pub fn get_new_entry(&mut self) -> (User, Group) {
+        self.auth_entries.get_new_entry()
+    }
+
+    /// Returns a new user.
+    /// Alias of `get_new_entry`.
+    pub fn get_new_user(&mut self) -> User {
+        self.get_new_entry().0
+    }
+
+    /// Returns a new group.
+    /// Alias of `get_new_entry`.
+    pub fn get_new_group(&mut self) -> Group {
+        self.get_new_entry().1
     }
 
     //TODO: Maybe better as a macro? unwrap?
-    /// Execute the function as another user/group.
-    pub fn as_user<F>(&self, uid: Option<Uid>, gid: Option<Gid>, mut f: F)
+    /// Execute the function as another user/group(s).
+    /// If `groups` is set to `None`, only the default group associated to the user will be used
+    /// and the effective [`Gid`] will be this one.
+    /// Otherwise, the first provided [`Gid`] will be the effective one and the other other will be added with `setgroups`.
+    pub fn as_user<F>(&self, user: &User, groups: Option<&[Gid]>, f: F)
     where
-        F: FnMut() + UnwindSafe,
+        F: FnMut(),
     {
-        if uid.is_none() && gid.is_none() {
-            return f();
-        }
-
         let original_euid = Uid::effective();
         let original_egid = Gid::effective();
+        let original_groups = getgroups().unwrap();
 
-        if let Some(gid) = gid {
-            setegid(gid).unwrap();
-        }
+        let groups: Vec<_> = groups
+            .unwrap_or_else(|| std::slice::from_ref(&user.gid))
+            .to_vec();
+        setgroups(&groups).unwrap();
 
-        if let Some(uid) = uid {
-            seteuid(uid).unwrap();
-        }
+        setegid(user.gid).unwrap();
+        seteuid(user.uid).unwrap();
 
-        let res = catch_unwind(f);
+        let res = catch_unwind(AssertUnwindSafe(f));
 
-        if uid.is_some() {
-            seteuid(original_euid).unwrap();
-        }
-
-        if gid.is_some() {
-            setegid(original_egid).unwrap();
-        }
+        seteuid(original_euid).unwrap();
+        setegid(original_egid).unwrap();
+        setgroups(&original_groups).unwrap();
 
         if let Err(e) = res {
             resume_unwind(e)

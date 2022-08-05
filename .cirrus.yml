@@ -23,6 +23,10 @@ task:
   setup_script:
     - fetch https://sh.rustup.rs -o rustup.sh
     - sh rustup.sh -y --profile=minimal
+    - |
+      cat <<EOF | adduser -w none -f -
+      pjdfstest::::::Dummy User for pjdfstest:/nonexistent:/sbin/nologin:
+      EOF
     - . $HOME/.cargo/env
   << : *BUILD
 
@@ -33,4 +37,10 @@ task:
   env:
     CFG: ci/linux-ext4.toml
     SU_ARGS: -s /bin/sh -m nobody -c
+  setup_script:
+    - |
+      cat <<EOF | newusers -r
+      tests:x:::Dummy User for pjdfstest:/:/usr/bin/nologin
+      pjdfstest:x:::Dummy User for pjdfstest:/:/usr/bin/nologin
+      EOF
   << : *BUILD

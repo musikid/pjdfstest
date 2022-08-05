@@ -32,3 +32,34 @@ Tests are usually identified by syscall and optionally the file type on which it
 The test suite can be run without privileges.
 However, not all tests can be completed without privileges,
 therefore the coverage will be incomplete.
+
+## Dummy users/groups
+
+The test suite needs dummy users and groups to be set up. 
+This should be handled automatically when installing it via a package,
+but they need to be created otherwise.
+By default, the users (with the same name for the group associated to each of them) to create are:
+
+- nobody (already created on most systems)
+- tests
+
+It is also possible to specify other users with the configuration file.
+
+### Create users
+
+#### FreeBSD
+
+```bash
+cat <<EOF | adduser -w none -f -
+pjdfstest::::::Dummy User for pjdfstest:/nonexistent:/sbin/nologin:
+EOF
+```
+
+#### Linux
+
+```bash
+cat <<EOF | newusers
+tests:x:::Dummy User for pjdfstest:/:/usr/bin/nologin
+pjdfstest:x:::Dummy User for pjdfstest:/:/usr/bin/nologin
+EOF
+```
