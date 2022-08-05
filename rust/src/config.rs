@@ -5,13 +5,14 @@ use crate::test::FileSystemFeature;
 use nix::unistd::Group;
 use nix::unistd::User;
 use serde::Deserialize;
+use serde::Serialize;
 
-#[derive(Debug, Default, Deserialize)]
+#[derive(Debug, Default, Serialize, Deserialize)]
 pub struct CommonFeatureConfig {}
 
 /// Configuration for file-system specific features.
 /// Please see the book for more details.
-#[derive(Debug, Default, Deserialize)]
+#[derive(Debug, Default, Serialize, Deserialize)]
 pub struct FeaturesConfig {
     #[serde(default)]
     pub file_flags: Vec<FileFlags>,
@@ -21,7 +22,7 @@ pub struct FeaturesConfig {
 
 /// Adjustable file-system specific settings.
 /// Please see the book for more details.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct SettingsConfig {
     #[serde(default = "default_naptime")]
     pub naptime: f64,
@@ -41,7 +42,7 @@ const fn default_naptime() -> f64 {
 
 /// Auth entries, which are composed of a [`User`](nix::unistd::User) and its associated [`Group`](nix::unistd::Group).
 /// The user should be part of the associated group.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct DummyAuthConfig {
     pub entries: [(String, String); 3],
 }
@@ -64,7 +65,7 @@ impl Default for DummyAuthConfig {
     }
 }
 
-#[derive(Debug, Default, Deserialize)]
+#[derive(Debug, Default, Serialize, Deserialize)]
 pub struct Config {
     /// File-system features.
     pub features: FeaturesConfig,

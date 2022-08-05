@@ -1,6 +1,6 @@
 use std::fmt::Debug;
 
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
 pub use crate::runner::context::{SerializedTestContext, TestContext};
@@ -39,6 +39,7 @@ inventory::collect!(TestCase);
     strum::EnumString,
     strum::Display,
     strum::EnumIter,
+    Serialize,
     Deserialize,
 )]
 /// File flags (see https://docs.freebsd.org/en/books/handbook/basics/#permissions).
@@ -189,7 +190,9 @@ pub enum FileFlags {
 }
 
 /// Features which are not available for every file system.
-#[derive(Debug, Clone, PartialEq, Eq, Hash, strum::Display, strum::EnumIter, Deserialize)]
+#[derive(
+    Debug, Clone, PartialEq, Eq, Hash, strum::Display, strum::EnumIter, Serialize, Deserialize,
+)]
 #[serde(rename_all = "snake_case")]
 #[strum(serialize_all = "snake_case")]
 pub enum FileSystemFeature {

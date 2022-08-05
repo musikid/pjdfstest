@@ -8,7 +8,7 @@ use std::{
 
 use config::Config;
 use figment::{
-    providers::{Format, Toml},
+    providers::{Format, Serialized, Toml},
     Figment,
 };
 use gumdrop::Options;
@@ -65,13 +65,14 @@ fn main() -> anyhow::Result<()> {
         return Ok(());
     }
 
-    let config: Config = if let Some(path) = args.configuration_file.as_deref() {
-        Figment::new().merge(Toml::file(path))
-    } else {
-        Figment::new()
-    }
-    .extract()
-    .unwrap_or_default();
+    let config: Config = {
+        let mut config = Figment::from(Serialized::defaults(Config::default()));
+        if let Some(path) = args.configuration_file.as_deref() {
+            config = config.merge(Toml::file(path))
+        }
+
+        config.extract()?
+    };
 
     let path = args
         .path
