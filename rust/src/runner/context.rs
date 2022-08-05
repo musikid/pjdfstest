@@ -174,8 +174,20 @@ impl TestContext {
         TestContext { naptime, temp_dir }
     }
 
+    /// Return the base path for this context.
     pub fn base_path(&self) -> &Path {
         self.temp_dir.path()
+    }
+
+    /// Generate a random path.
+    pub fn gen_path(&self) -> PathBuf {
+        self.base_path().join(
+            thread_rng()
+                .sample_iter(&Alphanumeric)
+                .take(NUM_RAND_CHARS)
+                .map(char::from)
+                .collect::<String>(),
+        )
     }
 
     /// Create a regular file and open it.
