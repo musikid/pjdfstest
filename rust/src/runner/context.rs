@@ -34,7 +34,11 @@ use strum_macros::EnumIter;
 use tempfile::{tempdir_in, TempDir};
 use thiserror::Error;
 
-use crate::{config::SettingsConfig, test::TestError, utils::lchmod};
+use crate::{
+    config::SettingsConfig,
+    test::TestError,
+    utils::{chmod, lchmod},
+};
 
 /// File type, mainly used with [TestContext::create].
 #[derive(Debug, Clone, Eq, PartialEq, EnumIter)]
@@ -193,6 +197,8 @@ impl TestContext {
     pub fn new<P: AsRef<Path>>(settings: &SettingsConfig, base_dir: P) -> Self {
         let naptime = Duration::from_secs_f64(settings.naptime);
         let temp_dir = tempdir_in(base_dir).unwrap();
+        // FIX: some tests need a 0o755 base dir
+        chmod(temp_dir.path(), Mode::from_bits_truncate(0o755)).unwrap();
         TestContext { naptime, temp_dir }
     }
 
