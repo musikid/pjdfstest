@@ -52,15 +52,10 @@ impl Default for DummyAuthConfig {
             entries: [
                 (
                     String::from("nobody"),
-                    if let Ok(Some(nobody)) = User::from_name("nobody") {
-                        if let Ok(Some(group)) = Group::from_gid(nobody.gid) {
-                            group.name
-                        } else {
-                            String::from("nobody")
-                        }
-                    } else {
-                        String::from("nobody")
-                    },
+                    Group::from_gid(User::from_name("nobody").unwrap().unwrap().gid)
+                        .unwrap()
+                        .unwrap()
+                        .name,
                 ),
                 (String::from("tests"), String::from("tests")),
                 (String::from("pjdfstest"), String::from("pjdfstest")),
