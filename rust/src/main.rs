@@ -2,7 +2,7 @@ use std::{
     collections::HashSet,
     env::current_dir,
     io::{stdout, Write},
-    panic::{catch_unwind, set_hook, AssertUnwindSafe},
+    panic::{catch_unwind, set_hook},
     path::PathBuf,
 };
 
@@ -75,7 +75,7 @@ fn main() -> anyhow::Result<()> {
 
     let path = args
         .path
-        .ok_or(anyhow::anyhow!("cannot get current dir"))
+        .ok_or_else(|| anyhow::anyhow!("cannot get current dir"))
         .or_else(|_| current_dir())?;
     let base_dir = tempdir_in(&path)?;
 
@@ -224,23 +224,17 @@ fn run_test_cases(
             continue;
         }
 
-        let result = catch_unwind(|| {
-            match test_case.fun {
-                TestFn::NonSerialized(fun) => {
-                    let mut context = TestContext::new(&config.settings, base_dir.path());
-                    //TODO: AssertUnwindSafe should be used with caution
-                    let mut ctx_wrapper = AssertUnwindSafe(&mut context);
+        let result = catch_unwind(|| match test_case.fun {
+            TestFn::NonSerialized(fun) => {
+                let mut context = TestContext::new(&config.settings, base_dir.path());
 
-                    (fun)(&mut ctx_wrapper)
-                }
-                TestFn::Serialized(fun) => {
-                    let mut context =
-                        SerializedTestContext::new(&config.settings, &entries, base_dir.path());
-                    //TODO: AssertUnwindSafe should be used with caution
-                    let mut ctx_wrapper = AssertUnwindSafe(&mut context);
+                (fun)(&mut context)
+            }
+            TestFn::Serialized(fun) => {
+                let mut context =
+                    SerializedTestContext::new(&config.settings, &entries, base_dir.path());
 
-                    (fun)(&mut ctx_wrapper)
-                }
+                (fun)(&mut context)
             }
         });
 
