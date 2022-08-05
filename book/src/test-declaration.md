@@ -108,11 +108,12 @@ mod lchmod;
 
 ## Serialized test cases
 
-Some test cases need functions only available when they are run serialized.
-An example is changing user (`SerializedTestContext::as_user`), which affects the whole process.
+Some test cases need functions only available when they are run serialized, especially when they affect the whole process.
+An example is changing user (`SerializedTestContext::as_user`).
 To have access to these functions, the test should be declared with a `SerializedTestContext`
 parameter in place of `TestContext` 
 and the `serialized` keyword should be prepended before features.
+umask is automatically set to 0 for serialized test cases.
 
 For example:
 
