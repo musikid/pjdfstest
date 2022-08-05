@@ -60,6 +60,6 @@ EOF
 ```bash
 cat <<EOF | newusers
 tests:x:::Dummy User for pjdfstest:/:/usr/bin/nologin
-pjdfstest:x:::::Dummy User for pjdfstest:/nonexistent:/sbin/nologin:
+pjdfstest:x:::Dummy User for pjdfstest:/:/usr/bin/nologin
 EOF
 ```

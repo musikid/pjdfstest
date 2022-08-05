@@ -19,7 +19,7 @@ posix_fallocate = {}
 naptime = 0.001
 
 # This section allows to modify the mecanism for switching users, which is required by some tests.
-[dummy_auth]
+# [dummy_auth]
 # An entry is the name of a user and its associated group.
 # For now, the array requires exactly 2 entries.
 # Please see the book for more details.
