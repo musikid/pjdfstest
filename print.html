@@ -380,8 +380,8 @@ For example:</p>
 mod lchmod;
 </code></pre>
 <h2 id="serialized-test-cases"><a class="header" href="#serialized-test-cases">Serialized test cases</a></h2>
-<p>Some test cases need functions only available when they are run serialized.
-An example is changing user (<code>SerializedTestContext::as_user</code>), which affects the whole process.
+<p>Some test cases need functions only available when they are run serialized, especially when they affect the whole process.
+An example is changing user (<code>SerializedTestContext::as_user</code>).
 To have access to these functions, the test should be declared with a <code>SerializedTestContext</code>
 parameter in place of <code>TestContext</code> 
 and the <code>serialized</code> keyword should be prepended before features.</p>
