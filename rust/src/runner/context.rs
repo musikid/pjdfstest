@@ -88,7 +88,6 @@ pub struct TestContext {
 pub struct SerializedTestContext {
     ctx: TestContext,
     auth_entries: DummyAuthEntries,
-    original_umask: Mode,
 }
 
 impl Deref for SerializedTestContext {
@@ -114,7 +113,6 @@ impl SerializedTestContext {
         Self {
             ctx: TestContext::new(settings, base_dir),
             auth_entries: DummyAuthEntries::new(entries.to_vec()),
-            original_umask: umask(Mode::empty()),
         }
     }
 
@@ -167,6 +165,7 @@ impl SerializedTestContext {
         }
     }
 
+    /// Execute the function with another umask.
     pub fn with_umask<F>(&self, mask: mode_t, f: F)
     where
         F: FnOnce(),
@@ -185,7 +184,7 @@ impl SerializedTestContext {
 
 impl Drop for SerializedTestContext {
     fn drop(&mut self) {
-        umask(self.original_umask);
+        umask(Mode::empty());
     }
 }
 

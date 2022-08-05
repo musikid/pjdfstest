@@ -113,7 +113,6 @@ An example is changing user (`SerializedTestContext::as_user`).
 To have access to these functions, the test should be declared with a `SerializedTestContext`
 parameter in place of `TestContext` 
 and the `serialized` keyword should be prepended before features.
-umask is automatically set to 0 for serialized test cases.
 
 For example:
 

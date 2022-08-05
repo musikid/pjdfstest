@@ -12,7 +12,10 @@ use figment::{
     Figment,
 };
 use gumdrop::Options;
-use nix::unistd::{Group, Uid, User};
+use nix::{
+    sys::stat::{umask, Mode},
+    unistd::{Group, Uid, User},
+};
 use once_cell::sync::OnceCell;
 use strum::IntoEnumIterator;
 
@@ -106,6 +109,8 @@ fn main() -> anyhow::Result<()> {
                 })
         })
         .collect();
+
+    umask(Mode::empty());
 
     let (failed_count, skipped_count, success_count) =
         run_test_cases(&test_cases, args.verbose, &config, base_dir)?;
