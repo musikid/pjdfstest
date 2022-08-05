@@ -127,10 +127,9 @@ fn open_file_not_freed(ctx: &mut TestContext) {
     assert_eq!(fd_stat.st_nlink, 0);
 
     // I/O to open but deleted files should work, too
-    //TODO: Use standard Rust functions?
-    let s = "Hello, World!";
-    nix::unistd::write(file, s.as_bytes()).unwrap();
-    let mut buf = [0; 13];
+    const EXAMPLE_BYTES: &str = "Hello, World!";
+    nix::unistd::write(file, EXAMPLE_BYTES.as_bytes()).unwrap();
+    let mut buf = [0; EXAMPLE_BYTES.len()];
     nix::sys::uio::pread(file, &mut buf, 0).unwrap();
-    assert_eq!(buf, s.as_bytes());
+    assert_eq!(buf, EXAMPLE_BYTES.as_bytes());
 }
