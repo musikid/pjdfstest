@@ -107,7 +107,7 @@ impl DerefMut for SerializedTestContext {
 impl SerializedTestContext {
     pub fn new<P: AsRef<Path>>(
         settings: &SettingsConfig,
-        entries: &Vec<(User, Group)>,
+        entries: &[(User, Group)],
         base_dir: P,
     ) -> Self {
         Self {
