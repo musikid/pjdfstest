@@ -25,7 +25,7 @@ task:
     - sh rustup.sh -y --profile=minimal
     - |
       cat <<EOF | adduser -w none -f -
-      dummy::::::Dummy User for pjdfstest:/nonexistent:/sbin/nologin:
+      pjdfstest::::::Dummy User for pjdfstest:/nonexistent:/sbin/nologin:
       EOF
     - . $HOME/.cargo/env
   << : *BUILD
@@ -41,6 +41,6 @@ task:
     - |
       cat <<EOF | newusers -r
       tests:x:::Dummy User for pjdfstest:/:/usr/bin/nologin
-      dummy:x:::Dummy User for pjdfstest:/:/usr/bin/nologin
+      pjdfstest:x:::Dummy User for pjdfstest:/:/usr/bin/nologin
       EOF
   << : *BUILD

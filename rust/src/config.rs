@@ -63,7 +63,7 @@ impl Default for DummyAuthConfig {
                     },
                 ),
                 (String::from("tests"), String::from("tests")),
-                (String::from("dummy"), String::from("dummy")),
+                (String::from("pjdfstest"), String::from("pjdfstest")),
             ],
         }
     }

@@ -51,7 +51,7 @@ It is also possible to specify other users with the configuration file.
 
 ```bash
 cat <<EOF | adduser -w none -f -
-dummy::::::Dummy User for pjdfstest:/nonexistent:/sbin/nologin:
+pjdfstest::::::Dummy User for pjdfstest:/nonexistent:/sbin/nologin:
 EOF
 ```
 
@@ -60,6 +60,6 @@ EOF
 ```bash
 cat <<EOF | newusers
 tests:x:::Dummy User for pjdfstest:/:/usr/bin/nologin
-dummy:x:::::Dummy User for pjdfstest:/nonexistent:/sbin/nologin:
+pjdfstest:x:::::Dummy User for pjdfstest:/nonexistent:/sbin/nologin:
 EOF
 ```

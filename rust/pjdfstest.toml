@@ -28,5 +28,5 @@ naptime = 0.001
 #   nogroup instead for some Linux distros
 #   ["nobody", "nogroup"],
 #   ["tests", "tests"],
-#   ["dummy", "dummy"],
+#   ["pjdfstest", "pjdfstest"],
 # ]
