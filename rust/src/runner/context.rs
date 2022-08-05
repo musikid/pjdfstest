@@ -2,7 +2,7 @@ use nix::{
     fcntl::{open, OFlag},
     sys::{
         socket::{bind, socket, SockFlag, UnixAddr},
-        stat::{mknod, stat, Mode, SFlag},
+        stat::{mknod, mode_t, stat, umask, Mode, SFlag},
     },
     unistd::{
         close, getgroups, mkdir, mkfifo, pathconf, setegid, seteuid, setgroups, Gid, Group, Uid,
@@ -163,6 +163,28 @@ impl SerializedTestContext {
         if let Err(e) = res {
             resume_unwind(e)
         }
+    }
+
+    /// Execute the function with another umask.
+    pub fn with_umask<F>(&self, mask: mode_t, f: F)
+    where
+        F: FnOnce(),
+    {
+        let previous_mask = umask(Mode::from_bits_truncate(mask));
+
+        let res = catch_unwind(AssertUnwindSafe(f));
+
+        umask(previous_mask);
+
+        if let Err(e) = res {
+            resume_unwind(e)
+        }
+    }
+}
+
+impl Drop for SerializedTestContext {
+    fn drop(&mut self) {
+        umask(Mode::empty());
     }
 }
 
