@@ -20,12 +20,18 @@ pub fn lchmod<P: ?Sized + nix::NixPath>(path: &P, mode: nix::sys::stat::Mode) ->
 
 pub const ALLPERMS: nix::sys::stat::mode_t = 0o777;
 
-pub fn link<P: ?Sized + nix::NixPath>(old: &P, new: &P) -> nix::Result<()> {
+/// Wrapper for `renameat(None, path, None, path)`.
+pub fn rename<P: ?Sized + nix::NixPath>(from: &P, to: &P) -> nix::Result<()> {
+    nix::fcntl::renameat(None, from, None, to)
+}
+
+/// Wrapper for `linkat(None, path, None, path)`.
+pub fn link<P: ?Sized + nix::NixPath>(from: &P, to: &P) -> nix::Result<()> {
     nix::unistd::linkat(
         None,
-        old,
+        from,
         None,
-        new,
+        to,
         nix::unistd::LinkatFlags::NoSymlinkFollow,
     )
 }
