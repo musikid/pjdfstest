@@ -18,6 +18,7 @@ use crate::test::TestContext;
 pub mod chmod;
 pub mod ftruncate;
 pub mod link;
+pub mod mkdir;
 pub mod posix_fallocate;
 pub mod rename;
 pub mod rmdir;
