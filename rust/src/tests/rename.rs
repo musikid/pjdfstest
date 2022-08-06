@@ -162,6 +162,7 @@ fn write_access_required_subdir(ctx: &mut SerializedTestContext) {
             Ok(_) | Err(Errno::EACCES)
         ));
 
+        //TODO: Is it really useful?
         // Check that write permission on containing directory is not enough
         // to move subdirectory from that directory.
         // Actually POSIX says that write access to `dir` and `new_dir` may be enough
