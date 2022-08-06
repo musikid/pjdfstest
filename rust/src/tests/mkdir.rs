@@ -7,10 +7,9 @@ use nix::{
 
 use crate::{
     runner::context::{SerializedTestContext, TestContext},
+    tests::TimeAssertion,
     utils::{chmod, ALLPERMS},
 };
-
-use super::assert_time_changed;
 
 crate::test_case! {
     /// POSIX: The file permission bits of the new directory shall be initialized from
@@ -100,8 +99,15 @@ fn changed_time_fields_success(ctx: &mut TestContext) {
     let uid = Uid::effective();
     let gid = Gid::effective();
     chown(ctx.base_path(), Some(uid), Some(gid)).unwrap();
+
     let path = ctx.gen_path();
-    assert_time_changed(ctx, ctx.base_path(), &path, true, true, false, || {
+
+    TimeAssertion::new(&ctx.base_path(), false, || {
         mkdir(&path, Mode::from_bits_truncate(0o755)).unwrap();
-    });
+    })
+    .add_after(&path)
+    .atime()
+    .ctime()
+    .mtime()
+    .assert(ctx);
 }
