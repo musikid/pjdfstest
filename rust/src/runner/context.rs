@@ -155,7 +155,7 @@ impl SerializedTestContext {
             .to_vec();
         setgroups(&groups).unwrap();
 
-        setegid(user.gid).unwrap();
+        setegid(groups[0]).unwrap();
         seteuid(user.uid).unwrap();
 
         let res = catch_unwind(AssertUnwindSafe(f));
