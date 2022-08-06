@@ -16,6 +16,7 @@ use crate::test::TestContext;
 
 pub mod chmod;
 pub mod ftruncate;
+pub mod link;
 pub mod posix_fallocate;
 pub mod unlink;
 pub mod utimensat;
@@ -42,6 +43,42 @@ trait MetadataExt: StdMetadataExt {
 }
 
 impl<T: StdMetadataExt> MetadataExt for T {}
+
+/// Metadata which isn't related to time.
+#[derive(Debug, PartialEq)]
+struct InvariantTimeMetadata {
+    st_dev: nix::libc::dev_t,
+    st_ino: nix::libc::ino_t,
+    st_mode: nix::libc::mode_t,
+    st_nlink: nix::libc::nlink_t,
+    st_uid: nix::libc::uid_t,
+    st_gid: nix::libc::gid_t,
+    st_rdev: nix::libc::dev_t,
+    st_size: nix::libc::off_t,
+    st_blksize: nix::libc::blksize_t,
+    st_blocks: nix::libc::blkcnt_t,
+}
+
+trait AsTimeInvariant {
+    fn as_time_invariant(&self) -> InvariantTimeMetadata;
+}
+
+impl AsTimeInvariant for nix::sys::stat::FileStat {
+    fn as_time_invariant(&self) -> InvariantTimeMetadata {
+        InvariantTimeMetadata {
+            st_dev: self.st_dev,
+            st_ino: self.st_ino,
+            st_mode: self.st_mode,
+            st_nlink: self.st_nlink,
+            st_uid: self.st_uid,
+            st_gid: self.st_gid,
+            st_rdev: self.st_rdev,
+            st_size: self.st_size,
+            st_blksize: self.st_blksize,
+            st_blocks: self.st_blocks,
+        }
+    }
+}
 
 #[cfg(any(
     target_os = "freebsd",
@@ -100,4 +137,19 @@ where
 
     let ctime_after = metadata(&path).unwrap().ctime_ts();
     assert!(ctime_after == ctime_before);
+}
+
+/// Assert that a certain operation does not change the ctime of a file.
+fn assert_mtime_unchanged<F>(ctx: &TestContext, path: &Path, f: F)
+where
+    F: FnOnce(),
+{
+    let mtime_before = metadata(&path).unwrap().mtime_ts();
+
+    ctx.nap();
+
+    f();
+
+    let mtime_after = metadata(&path).unwrap().mtime_ts();
+    assert!(mtime_after == mtime_before);
 }
