@@ -3,53 +3,16 @@ use std::fs::symlink_metadata;
 use nix::{
     errno::Errno,
     sys::stat::{lstat, stat},
-    unistd::geteuid,
 };
 
 use crate::{
     runner::context::{FileType, SerializedTestContext, TestContext},
     test::FileSystemFeature,
-    tests::{assert_symlink_ctime_unchanged, MetadataExt},
-    utils::{link, rename, ALLPERMS},
+    tests::{assert_symlink_ctime_unchanged, AsTimeInvariant, MetadataExt},
+    utils::{link, rename},
 };
 
 use super::assert_ctime_changed;
-
-/// Metadata which shouldn't be modified by rename(2).
-#[derive(Debug, PartialEq)]
-struct InvariantMetadata {
-    st_dev: nix::libc::dev_t,
-    st_ino: nix::libc::ino_t,
-    st_mode: nix::libc::mode_t,
-    st_nlink: nix::libc::nlink_t,
-    st_uid: nix::libc::uid_t,
-    st_gid: nix::libc::gid_t,
-    st_rdev: nix::libc::dev_t,
-    st_size: nix::libc::off_t,
-    st_blksize: nix::libc::blksize_t,
-    st_blocks: nix::libc::blkcnt_t,
-}
-
-trait ToInvariant {
-    fn to_invariant(&self) -> InvariantMetadata;
-}
-
-impl ToInvariant for nix::sys::stat::FileStat {
-    fn to_invariant(&self) -> InvariantMetadata {
-        InvariantMetadata {
-            st_dev: self.st_dev,
-            st_ino: self.st_ino,
-            st_mode: self.st_mode,
-            st_nlink: self.st_nlink,
-            st_uid: self.st_uid,
-            st_gid: self.st_gid,
-            st_rdev: self.st_rdev,
-            st_size: self.st_size,
-            st_blksize: self.st_blksize,
-            st_blocks: self.st_blocks,
-        }
-    }
-}
 
 crate::test_case! {
     /// rename preserve file metadata
@@ -66,14 +29,20 @@ fn preserve_metadata(ctx: &mut TestContext, ft: FileType) {
     assert_eq!(lstat(&old_path).unwrap_err(), Errno::ENOENT);
 
     let new_path_stat = lstat(&new_path).unwrap();
-    assert_eq!(old_path_stat.to_invariant(), new_path_stat.to_invariant());
+    assert_eq!(
+        old_path_stat.as_time_invariant(),
+        new_path_stat.as_time_invariant()
+    );
 
     let link_path = ctx.base_path().join("link");
     link(&new_path, &link_path).unwrap();
 
     let link_stat = lstat(&link_path).unwrap();
     let new_path_stat = lstat(&new_path).unwrap();
-    assert_eq!(new_path_stat.to_invariant(), link_stat.to_invariant());
+    assert_eq!(
+        new_path_stat.as_time_invariant(),
+        link_stat.as_time_invariant()
+    );
     assert_eq!(link_stat.st_nlink, 2);
 
     let another_path = ctx.base_path().join("another");
@@ -81,7 +50,10 @@ fn preserve_metadata(ctx: &mut TestContext, ft: FileType) {
     assert_eq!(lstat(&new_path).unwrap_err(), Errno::ENOENT);
 
     let another_path_stat = lstat(&another_path).unwrap();
-    assert_eq!(link_stat.to_invariant(), another_path_stat.to_invariant());
+    assert_eq!(
+        link_stat.as_time_invariant(),
+        another_path_stat.as_time_invariant()
+    );
 }
 
 crate::test_case! {
@@ -99,7 +71,10 @@ fn preserve_metadata_dir(ctx: &mut TestContext) {
     assert_eq!(lstat(&old_path).unwrap_err(), Errno::ENOENT);
 
     let new_path_stat = lstat(&new_path).unwrap();
-    assert_eq!(old_path_stat.to_invariant(), new_path_stat.to_invariant());
+    assert_eq!(
+        old_path_stat.as_time_invariant(),
+        new_path_stat.as_time_invariant()
+    );
 }
 
 crate::test_case! {
@@ -115,8 +90,14 @@ fn preserve_metadata_symlink(ctx: &mut TestContext) {
     let symlink_stat = lstat(&symlink_old_path).unwrap();
     let sym_target_stat = stat(&symlink_old_path).unwrap();
 
-    assert_ne!(symlink_stat.to_invariant(), sym_target_stat.to_invariant());
-    assert_eq!(sym_target_stat.to_invariant(), target_stat.to_invariant());
+    assert_ne!(
+        symlink_stat.as_time_invariant(),
+        sym_target_stat.as_time_invariant()
+    );
+    assert_eq!(
+        sym_target_stat.as_time_invariant(),
+        target_stat.as_time_invariant()
+    );
 
     let sym_new_path = ctx.base_path().join("sym_new_path");
     rename(&symlink_old_path, &sym_new_path).unwrap();
@@ -126,7 +107,10 @@ fn preserve_metadata_symlink(ctx: &mut TestContext) {
     assert_eq!(lstat(&symlink_old_path).unwrap_err(), Errno::ENOENT);
 
     let sym_new_stat = lstat(&sym_new_path).unwrap();
-    assert_eq!(symlink_stat.to_invariant(), sym_new_stat.to_invariant());
+    assert_eq!(
+        symlink_stat.as_time_invariant(),
+        sym_new_stat.as_time_invariant()
+    );
 }
 
 crate::test_case! {
