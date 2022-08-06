@@ -99,19 +99,80 @@ fn birthtime_ts(path: &Path) -> TimeSpec {
     TimeSpec::new(sb.st_birthtime, sb.st_birthtime_nsec)
 }
 
-/// Assert that a certain operation changes the ctime of a file.
-fn assert_ctime_changed<F>(ctx: &TestContext, path: &Path, f: F)
+/// Execute the function and returns the selected time metadata for the provided path.
+fn do_op_get_time<F>(
+    ctx: &TestContext,
+    before_path: &Path,
+    after_path: &Path,
+    f: F,
+    ctime: bool,
+    mtime: bool,
+    atime: bool,
+) -> (
+    (Option<TimeSpec>, Option<TimeSpec>, Option<TimeSpec>),
+    (Option<TimeSpec>, Option<TimeSpec>, Option<TimeSpec>),
+)
 where
     F: FnOnce(),
 {
-    let ctime_before = metadata(&path).unwrap().ctime_ts();
+    let meta = metadata(&before_path).unwrap();
+    let ctime_before = ctime.then(|| meta.ctime_ts());
+    let mtime_before = mtime.then(|| meta.mtime_ts());
+    let atime_before = atime.then(|| meta.atime_ts());
 
     ctx.nap();
 
     f();
 
-    let ctime_after = metadata(&path).unwrap().ctime_ts();
-    assert!(ctime_after > ctime_before);
+    let meta = metadata(&after_path).unwrap();
+    let ctime_after = ctime.then(|| meta.ctime_ts());
+    let mtime_after = mtime.then(|| meta.mtime_ts());
+    let atime_after = atime.then(|| meta.atime_ts());
+
+    (
+        (ctime_before, mtime_before, atime_before),
+        (ctime_after, mtime_after, atime_after),
+    )
+}
+
+/// Assert that a certain operation changes the time by comparing selected metadata between the two paths.
+fn assert_time_changed<F>(
+    ctx: &TestContext,
+    before_path: &Path,
+    after_path: &Path,
+    ctime: bool,
+    mtime: bool,
+    atime: bool,
+    f: F,
+) where
+    F: FnOnce(),
+{
+    let (before, after) = do_op_get_time(ctx, before_path, after_path, f, ctime, mtime, atime);
+    assert!(after > before);
+}
+
+/// Assert that a certain operation does not change the time by comparing selected metadata between the two paths.
+fn assert_time_unchanged<F>(
+    ctx: &TestContext,
+    before_path: &Path,
+    after_path: &Path,
+    ctime: bool,
+    mtime: bool,
+    atime: bool,
+    f: F,
+) where
+    F: FnOnce(),
+{
+    let (before, after) = do_op_get_time(ctx, before_path, after_path, f, ctime, mtime, atime);
+    assert_eq!(after, before);
+}
+
+/// Assert that a certain operation changes the ctime of a file.
+fn assert_ctime_changed<F>(ctx: &TestContext, path: &Path, f: F)
+where
+    F: FnOnce(),
+{
+    assert_time_changed(ctx, path, path, true, false, false, f)
 }
 
 /// Assert that a certain operation changes the mtime of a file.
@@ -119,14 +180,7 @@ fn assert_mtime_changed<F>(ctx: &TestContext, path: &Path, f: F)
 where
     F: FnOnce(),
 {
-    let mtime_before = metadata(&path).unwrap().mtime_ts();
-
-    ctx.nap();
-
-    f();
-
-    let mtime_after = metadata(&path).unwrap().mtime_ts();
-    assert!(mtime_after > mtime_before);
+    assert_time_changed(ctx, path, path, false, true, false, f)
 }
 
 /// Assert that a certain operation changes the ctime of a file without following symlinks.
@@ -149,14 +203,7 @@ fn assert_ctime_unchanged<F>(ctx: &TestContext, path: &Path, f: F)
 where
     F: FnOnce(),
 {
-    let ctime_before = metadata(&path).unwrap().ctime_ts();
-
-    ctx.nap();
-
-    f();
-
-    let ctime_after = metadata(&path).unwrap().ctime_ts();
-    assert!(ctime_after == ctime_before);
+    assert_time_unchanged(ctx, path, path, true, false, false, f)
 }
 
 /// Assert that a certain operation does not change the mtime of a file.
@@ -164,14 +211,7 @@ fn assert_mtime_unchanged<F>(ctx: &TestContext, path: &Path, f: F)
 where
     F: FnOnce(),
 {
-    let mtime_before = metadata(&path).unwrap().mtime_ts();
-
-    ctx.nap();
-
-    f();
-
-    let mtime_after = metadata(&path).unwrap().mtime_ts();
-    assert!(mtime_after == mtime_before);
+    assert_time_unchanged(ctx, path, path, false, true, false, f)
 }
 
 /// Assert that a certain operation does not change the ctime without following symlinks.
