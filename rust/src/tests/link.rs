@@ -136,7 +136,10 @@ fn unchanged_ctime_fails(ctx: &mut SerializedTestContext, ft: FileType) {
         assert_ctime_unchanged(ctx, ctx.base_path(), || {
             assert_mtime_unchanged(ctx, ctx.base_path(), || {
                 ctx.as_user(&user, None, || {
-                    assert_eq!(link(&file, &new_path).unwrap_err(), Errno::EPERM);
+                    assert!(matches!(
+                        link(&file, &new_path),
+                        Err(Errno::EPERM | Errno::EACCES)
+                    ));
                 })
             });
         });
