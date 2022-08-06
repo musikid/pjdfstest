@@ -24,7 +24,7 @@ task:
     - fetch https://sh.rustup.rs -o rustup.sh
     - sh rustup.sh -y --profile=minimal
     - |
-      cat <<EOF | adduser -w none -f -
+      cat <<EOF | adduser -w none -S -f -
       pjdfstest::::::Dummy User for pjdfstest:/nonexistent:/sbin/nologin:
       EOF
     - . $HOME/.cargo/env

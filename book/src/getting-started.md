@@ -50,7 +50,7 @@ It is also possible to specify other users with the configuration file.
 #### FreeBSD
 
 ```bash
-cat <<EOF | adduser -w none -f -
+cat <<EOF | adduser -w none -S -f -
 pjdfstest::::::Dummy User for pjdfstest:/nonexistent:/sbin/nologin:
 EOF
 ```
