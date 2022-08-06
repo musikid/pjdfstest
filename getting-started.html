@@ -172,7 +172,7 @@ By default, the users (with the same name for the group associated to each of th
 <p>It is also possible to specify other users with the configuration file.</p>
 <h3 id="create-users"><a class="header" href="#create-users">Create users</a></h3>
 <h4 id="freebsd"><a class="header" href="#freebsd">FreeBSD</a></h4>
-<pre><code class="language-bash">cat &lt;&lt;EOF | adduser -w none -f -
+<pre><code class="language-bash">cat &lt;&lt;EOF | adduser -w none -S -f -
 pjdfstest::::::Dummy User for pjdfstest:/nonexistent:/sbin/nologin:
 EOF
 </code></pre>
