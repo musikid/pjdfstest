@@ -227,7 +227,7 @@ where
     TimeAssertion::new(&path, false, f).ctime().assert(ctx)
 }
 
-/// Assert that a certain operation changes the ctime of a file.
+/// Assert that a certain operation changes the mtime of a file.
 fn assert_mtime_changed<F>(ctx: &TestContext, path: &Path, f: F)
 where
     F: FnOnce(),
@@ -243,7 +243,7 @@ where
     TimeAssertion::new(&path, true, f).ctime().assert(ctx)
 }
 
-/// Assert that a certain operation does not change the ctime of a file.
+/// Assert that a certain operation does not change the mtime of a file.
 fn assert_mtime_unchanged<F>(ctx: &TestContext, path: &Path, f: F)
 where
     F: FnOnce(),
