@@ -18,6 +18,9 @@ pub mod chmod;
 pub mod ftruncate;
 pub mod link;
 pub mod mkdir;
+pub mod mkfifo;
+pub mod mknod;
+mod mksyscalls;
 pub mod posix_fallocate;
 pub mod rename;
 pub mod rmdir;
@@ -115,7 +118,7 @@ fn birthtime_ts(path: &Path) -> TimeSpec {
 
 #[derive(Debug)]
 #[must_use]
-/// Builder to create a time metadata assertion, which compares metadata of one file before to many files after.
+/// Builder to create a time metadata assertion, which compares metadata of one file `before` to many files `after`.
 struct TimeAssertion<'a, F> {
     before_path: &'a Path,
     after_paths: Vec<&'a Path>,
@@ -130,7 +133,7 @@ impl<'a, F> TimeAssertion<'a, F>
 where
     F: FnOnce(),
 {
-    /// Return a new builder with the provided path being the before and after compared paths.
+    /// Return a new builder with the provided path being the `before` compared path and added to the `after` compared paths.
     /// Comparision will be an equality check if `equal` is true, or an ordering one if it is false.
     pub fn new<P: AsRef<Path>>(path: &'a P, equal: bool, fun: F) -> Self {
         Self {
@@ -144,7 +147,7 @@ where
         }
     }
 
-    /// Return a new builder with the provided path being the before compared path.
+    /// Return a new builder with the provided path being the `before` compared path.
     /// Comparision will be an equality check if `equal` is true, or an ordering one if it is false.
     pub fn new_with_paths<P: AsRef<Path>>(before_path: &'a P, equal: bool, fun: F) -> Self {
         Self {
@@ -158,7 +161,7 @@ where
         }
     }
 
-    /// Add a path for which metadata should be compared after.
+    /// Add a path to the `after` compared paths.
     pub fn add_after<P: AsRef<Path>>(mut self, path: &'a P) -> Self {
         self.after_paths.push(path.as_ref());
         self
@@ -182,7 +185,7 @@ where
         self
     }
 
-    /// Build the assertion and asserts that "before" metadata is either equal or before the "after" metadata.
+    /// Build the assertion and asserts that `before` metadata is either equal or before the `after` metadata.
     pub fn assert(self, ctx: &TestContext) {
         if !(self.atime || self.ctime || self.mtime) || self.after_paths.is_empty() {
             unimplemented!()
