@@ -1,3 +1,4 @@
+use std::fs::symlink_metadata;
 use std::os::unix::fs::MetadataExt as StdMetadataExt;
 
 use std::{fs::metadata, path::Path};
@@ -126,6 +127,7 @@ struct TimeAssertion<'a, F> {
     ctime: bool,
     mtime: bool,
     equal: bool,
+    follow_symlink: bool,
     fun: F,
 }
 
@@ -142,6 +144,7 @@ where
             atime: false,
             ctime: false,
             mtime: false,
+            follow_symlink: false,
             equal,
             fun,
         }
@@ -156,6 +159,7 @@ where
             atime: false,
             ctime: false,
             mtime: false,
+            follow_symlink: false,
             equal,
             fun,
         }
@@ -185,13 +189,24 @@ where
         self
     }
 
+    pub fn follow_symlink(mut self) -> Self {
+        self.follow_symlink = true;
+        self
+    }
+
     /// Build the assertion and asserts that `before` metadata is either equal or before the `after` metadata.
     pub fn assert(self, ctx: &TestContext) {
         if !(self.atime || self.ctime || self.mtime) || self.after_paths.is_empty() {
             unimplemented!()
         }
 
-        let meta_before = metadata(&self.before_path)
+        let get_metadata = if self.follow_symlink {
+            symlink_metadata
+        } else {
+            metadata
+        };
+
+        let meta_before = get_metadata(self.before_path)
             .unwrap()
             .time_meta(self.atime, self.ctime, self.mtime);
 
@@ -203,7 +218,7 @@ where
             .after_paths
             .into_iter()
             .map(|p| {
-                metadata(p)
+                get_metadata(p)
                     .unwrap()
                     .time_meta(self.atime, self.ctime, self.mtime)
             })
@@ -241,6 +256,17 @@ where
     F: FnOnce(),
 {
     TimeAssertion::new(&path, true, f).ctime().assert(ctx)
+}
+
+/// Assert that a certain operation does not change the ctime of a file without following symlinks.
+fn assert_symlink_ctime_unchanged<F>(ctx: &TestContext, path: &Path, f: F)
+where
+    F: FnOnce(),
+{
+    TimeAssertion::new(&path, true, f)
+        .ctime()
+        .follow_symlink()
+        .assert(ctx)
 }
 
 /// Assert that a certain operation does not change the mtime of a file.
