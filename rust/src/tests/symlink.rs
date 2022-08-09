@@ -3,7 +3,7 @@ use std::{
     os::unix::{fs::symlink, prelude::FileTypeExt},
 };
 
-use nix::{errno::Errno, sys::stat::stat, unistd::unlink};
+use nix::{errno::Errno, sys::stat::stat};
 
 use crate::runner::context::{FileType, TestContext};
 
@@ -37,7 +37,28 @@ fn create_symlink(ctx: &mut TestContext, ft: FileType) {
         _ => remove_file(&file),
     }
     .unwrap();
-    assert_eq!(stat(&file).unwrap_err(), Errno::ENOENT);
+    assert_eq!(stat(&link).unwrap_err(), Errno::ENOENT);
+}
+
+crate::test_case! {
+    /// symlink create a symbolic link to a symbolic link
+    // symlink/00.t
+    create_symlink_to_symlink
+}
+fn create_symlink_to_symlink(ctx: &mut TestContext) {
+    let target = ctx.create(FileType::Regular).unwrap();
+    let file = ctx.create(FileType::Symlink(Some(target.clone()))).unwrap();
+    let link = ctx.gen_path();
+    symlink(&file, &link).unwrap();
+
+    let link_stat = symlink_metadata(&link).unwrap();
+    let follow_link_stat = metadata(&link).unwrap();
+    let follow_link_type = follow_link_stat.file_type();
+    assert!(link_stat.is_symlink());
+    assert!(follow_link_type.is_file());
+
+    remove_file(&file).unwrap();
+    assert_eq!(stat(&link).unwrap_err(), Errno::ENOENT);
 }
 
 crate::test_case! {
