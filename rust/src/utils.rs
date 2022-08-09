@@ -30,6 +30,11 @@ pub fn symlink<P: ?Sized + nix::NixPath>(path1: &P, path2: &P) -> nix::Result<()
     nix::unistd::symlinkat(path1, None, path2)
 }
 
+pub fn rmdir<P: ?Sized + nix::NixPath>(path: &P) -> nix::Result<()> {
+    let res = path.with_nix_path(|cstr| unsafe { nix::libc::rmdir(cstr.as_ptr()) })?;
+    nix::errno::Errno::result(res).map(std::mem::drop)
+}
+
 /// Wrapper for `linkat(None, old_path, None, new_path)`.
 pub fn link<P: ?Sized + nix::NixPath>(old_path: &P, new_path: &P) -> nix::Result<()> {
     nix::unistd::linkat(
