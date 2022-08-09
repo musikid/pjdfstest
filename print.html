@@ -341,7 +341,8 @@ Multiple features can be specified, each separated by a comma <code>,</code> sep
 crate::test_case! {eperm_immutable_flag, FileSystemFeature::Chflags, FileSystemFeature::PosixFallocate ...}
 </code></pre>
 <h4 id="adding-features"><a class="header" href="#adding-features">Adding features</a></h4>
-<p>New features can be added to the <code>FileSystemFeature</code> enum.</p>
+<p>New features can be added to the <code>FileSystemFeature</code> enum.
+A description of the feature should be provided as documentation.</p>
 <h4 id="file-flags"><a class="header" href="#file-flags">File flags</a></h4>
 <p><strong>NOTE: This feature is not supported by all POSIX systems, 
 therefore its use needs a <code>#[cfg(target_os = ...)]</code> attribute specifying the relevant system(s).</strong></p>
