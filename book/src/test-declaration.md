@@ -49,6 +49,7 @@ crate::test_case! {eperm_immutable_flag, FileSystemFeature::Chflags, FileSystemF
 #### Adding features
 
 New features can be added to the `FileSystemFeature` enum.
+A description of the feature should be provided as documentation.
 
 #### File flags
 

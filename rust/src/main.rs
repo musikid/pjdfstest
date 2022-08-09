@@ -17,7 +17,7 @@ use nix::{
     unistd::{Group, Uid, User},
 };
 use once_cell::sync::OnceCell;
-use strum::IntoEnumIterator;
+use strum::{EnumMessage, IntoEnumIterator};
 
 use tempfile::{tempdir_in, TempDir};
 
@@ -63,7 +63,7 @@ fn main() -> anyhow::Result<()> {
 
     if args.list_features {
         for feature in FileSystemFeature::iter() {
-            println!("{}", feature);
+            println!("{feature}: {}", feature.get_documentation().unwrap());
         }
         return Ok(());
     }
