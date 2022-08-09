@@ -19,14 +19,13 @@ use nix::{sys::stat::FileFlag, unistd::chflags};
 use std::{
     fmt::Debug,
     fs::File,
-    panic::AssertUnwindSafe,
     path::{Path, PathBuf},
     process::Command,
 };
 
 use crate::{
     runner::context::{FileType, SerializedTestContext, TestContext},
-    utils::{chmod, lchmod, lchown, link, rename, rmdir, symlink},
+    utils::{chmod, lchown, link, rename, rmdir, symlink},
 };
 
 fn create_loop_symlinks(ctx: &mut TestContext) -> (PathBuf, PathBuf) {
@@ -399,56 +398,54 @@ fn enoent(ctx: &mut TestContext) {
 
 crate::test_case! {eacces, serialized, root}
 fn eacces(ctx: &mut SerializedTestContext) {
+    let user = ctx.get_new_user();
     /// Asserts that it returns EACCES when search permission is denied for a component of the path prefix
-    fn assert_eacces_search_perm<F, T: Debug>(ctx: &mut SerializedTestContext, f: F)
+    fn assert_eacces_search_perm<F, T: Debug>(ctx: &mut SerializedTestContext, user: &User, f: F)
     where
         F: Fn(&Path) -> nix::Result<T>,
     {
         let dir = ctx.create(FileType::Dir).unwrap();
-        let user = User::from_name("nobody").unwrap().unwrap();
         let mode = Mode::from_bits_truncate(0o644);
 
         let path = dir.join("test");
         chmod(&dir, mode).unwrap();
 
-        let f = AssertUnwindSafe(f);
-        ctx.as_user(Some(user.uid), Some(user.gid), || {
+        ctx.as_user(user, None, || {
             assert_eq!(f(&path).unwrap_err(), Errno::EACCES);
         });
     }
 
     /// Asserts that it returns EACCES when write permission is denied on the parent directory of the directory to be created
-    fn assert_eacces_write_perm<F, T: Debug>(ctx: &mut SerializedTestContext, f: F)
+    fn assert_eacces_write_perm<F, T: Debug>(ctx: &mut SerializedTestContext, user: &User, f: F)
     where
         F: Fn(&Path) -> nix::Result<T>,
     {
         let dir = ctx.create(FileType::Dir).unwrap();
-        let user = User::from_name("nobody").unwrap().unwrap();
         let mode = Mode::from_bits_truncate(0o555);
 
         let path = dir.join("test");
         chmod(&dir, mode).unwrap();
 
-        let f = AssertUnwindSafe(f);
-        ctx.as_user(Some(user.uid), Some(user.gid), || {
+        ctx.as_user(user, None, || {
             assert_eq!(f(&path).unwrap_err(), Errno::EACCES);
         });
     }
 
     /// Asserts that it returns EACCES if the named file is not writable by the user
-    fn assert_eacces_write_perm_file<F, T: Debug>(ctx: &mut SerializedTestContext, f: F)
-    where
+    fn assert_eacces_write_perm_file<F, T: Debug>(
+        ctx: &mut SerializedTestContext,
+        user: &User,
+        f: F,
+    ) where
         F: Fn(&Path) -> nix::Result<T>,
     {
         let dir = ctx.create(FileType::Dir).unwrap();
-        let user = User::from_name("nobody").unwrap().unwrap();
         let mode = Mode::from_bits_truncate(0o444);
 
         let path = dir.join("test");
         chmod(&dir, mode).unwrap();
 
-        let f = AssertUnwindSafe(f);
-        ctx.as_user(Some(user.uid), Some(user.gid), || {
+        ctx.as_user(user, None, || {
             assert_eq!(f(&path).unwrap_err(), Errno::EACCES);
         });
     }
@@ -463,26 +460,26 @@ fn eacces(ctx: &mut SerializedTestContext) {
     ))]
     {
         // chflags/05.t
-        assert_eacces_search_perm(ctx, |p| chflags(p, FileFlag::empty()));
+        assert_eacces_search_perm(ctx, &user, |p| chflags(p, FileFlag::empty()));
     }
 
     // chmod/05.t
-    assert_eacces_search_perm(ctx, |p| chmod(p, Mode::empty()));
+    assert_eacces_search_perm(ctx, &user, |p| chmod(p, Mode::empty()));
     #[cfg(any(target_os = "netbsd", target_os = "freebsd", target_os = "dragonfly"))]
     {
-        assert_eacces_search_perm(ctx, |p| lchmod(p, Mode::empty()));
+        assert_eacces_search_perm(ctx, &user, |p| lchmod(p, Mode::empty()));
     }
 
     // chown/05.t
     // TODO: Blocked by #63
-    // assert_eacces(ctx, |p| {
+    // assert_eacces(ctx,&user, |p| {
     //     chown(
     //         p,
     //         Some(User::from_name("nobody").unwrap().unwrap().uid),
     //         None,
     //     )
     // });
-    // assert_eacces(ctx, |p| {
+    // assert_eacces(ctx,&user, |p| {
     //     lchown(
     //         p,
     //         Some(User::from_name("nobody").unwrap().unwrap().uid),
@@ -491,39 +488,39 @@ fn eacces(ctx: &mut SerializedTestContext) {
     // });
     // TODO: link specialization
     // mkdir/05.t
-    assert_eacces_search_perm(ctx, |p| mkdir(p, Mode::empty()));
+    assert_eacces_search_perm(ctx, &user, |p| mkdir(p, Mode::empty()));
     // mkdir/06.t
-    assert_eacces_write_perm(ctx, |p| mkdir(p, Mode::empty()));
+    assert_eacces_write_perm(ctx, &user, |p| mkdir(p, Mode::empty()));
     // mkfifo/05.t
-    assert_eacces_search_perm(ctx, |p| mkfifo(p, Mode::empty()));
+    assert_eacces_search_perm(ctx, &user, |p| mkfifo(p, Mode::empty()));
     // mkfifo/06.t
-    assert_eacces_write_perm(ctx, |p| mkfifo(p, Mode::empty()));
+    assert_eacces_write_perm(ctx, &user, |p| mkfifo(p, Mode::empty()));
     // mknod/05.t
-    assert_eacces_search_perm(ctx, |p| mknod(p, SFlag::S_IFIFO, Mode::empty(), 0));
+    assert_eacces_search_perm(ctx, &user, |p| mknod(p, SFlag::S_IFIFO, Mode::empty(), 0));
     // mknod/06.t
-    assert_eacces_write_perm(ctx, |p| mknod(p, SFlag::S_IFIFO, Mode::empty(), 0));
+    assert_eacces_write_perm(ctx, &user, |p| mknod(p, SFlag::S_IFIFO, Mode::empty(), 0));
     //TODO: open
-    assert_eacces_search_perm(ctx, |p| open(p, OFlag::O_RDONLY, Mode::empty()));
-    assert_eacces_write_perm(ctx, |p| {
+    assert_eacces_search_perm(ctx, &user, |p| open(p, OFlag::O_RDONLY, Mode::empty()));
+    assert_eacces_write_perm(ctx, &user, |p| {
         open(p, OFlag::O_CREAT | OFlag::O_RDONLY, Mode::empty())
     });
     //TODO: rename
     // rmdir/07.t
-    assert_eacces_search_perm(ctx, rmdir);
+    assert_eacces_search_perm(ctx, &user, rmdir);
     // rmdir/08.t
-    // assert_eacces_write_perm(ctx, rmdir);
+    // assert_eacces_write_perm(ctx,&user, rmdir);
     // symlink/05.t
-    assert_eacces_search_perm(ctx, |p| symlink(Path::new("test"), p));
+    assert_eacces_search_perm(ctx, &user, |p| symlink(Path::new("test"), p));
     // symlink/06.t
-    assert_eacces_write_perm(ctx, |p| symlink(Path::new("test"), p));
+    assert_eacces_write_perm(ctx, &user, |p| symlink(Path::new("test"), p));
     // (f)truncate/05.t
-    assert_eacces_write_perm_file(ctx, |p| truncate(p, 0));
+    assert_eacces_write_perm_file(ctx, &user, |p| truncate(p, 0));
     // (f)truncate/06.t
-    assert_eacces_search_perm(ctx, |p| truncate(p, 0));
+    assert_eacces_search_perm(ctx, &user, |p| truncate(p, 0));
     // unlink/05.t
-    assert_eacces_search_perm(ctx, |p| unlink(p));
+    assert_eacces_search_perm(ctx, &user, |p| unlink(p));
     // unlink/06.t
-    assert_eacces_search_perm(ctx, |p| unlink(p));
+    assert_eacces_search_perm(ctx, &user, |p| unlink(p));
 }
 
 /// Asserts that it returns EEXIST if the named file exists
