@@ -156,6 +156,19 @@ fn ctime(ctx: &amp;mut TestContext, f_type: FileType) {
     assert!(ctime_after &gt; ctime_before);
 }
 </code></pre>
+<h2 id="description"><a class="header" href="#description">Description</a></h2>
+<p>To provide better explanation on the test, 
+it is possible to provide doc comments which will be used as documentation for developers
+but also describe more in detail the meaning of the test for end users.
+The doc comments should be written in the <code>test_case!</code> declaration, before anything.
+For example:</p>
+<pre><code class="language-rust ignore">crate::test_case! {
+    /// The file mode of a newly created file should not affect whether
+    /// posix_fallocate will work, only the create args
+    /// https://bugs.freebsd.org/bugzilla/show_bug.cgi?id=154873
+    affected_only_create_flags, serialized, root, FileSystemFeature::PosixFallocate
+}
+</code></pre>
 <h2 id="parameterization"><a class="header" href="#parameterization">Parameterization</a></h2>
 <p>It is possible to give additional parameters to the test case macro,
 to modify the execution of the tests or add requirements.</p>
@@ -229,7 +242,7 @@ fn affected_only_create_flags(ctx: &amp;mut SerializedTestContext) {
         let file = open(&amp;path, OFlag::O_CREAT | OFlag::O_RDWR, Mode::empty()).unwrap();
         assert!(posix_fallocate(file, 0, 1).is_ok());
     });
-} 
+}
 </code></pre>
 
                     </main>
