@@ -26,7 +26,7 @@ use std::{
 
 use crate::{
     runner::context::{FileType, SerializedTestContext, TestContext},
-    utils::{chmod, lchmod, lchown, link, rename, symlink},
+    utils::{chmod, lchmod, lchown, link, rename, rmdir, symlink},
 };
 
 fn create_loop_symlinks(ctx: &mut TestContext) -> (PathBuf, PathBuf) {
@@ -137,6 +137,8 @@ fn eloop(ctx: &mut TestContext) {
     //TODO: open/16.t
     // reanme/11.t
     assert_eloop_link(ctx, |p1, p2| rename(p1, p2));
+    // rmdir/05.t
+    assert_eloop_final(ctx, rmdir);
     // symlink/07.t
     assert_eloop_final(ctx, |p| symlink(Path::new("test"), p));
     // truncate/07.t
@@ -185,8 +187,6 @@ fn enotdir(ctx: &mut TestContext, ft: FileType) {
         assert_eq!(f(&dir, &path).unwrap_err(), Errno::ENOTDIR);
     }
 
-    // TODO: Add rmdir upstream
-    // assert_enotdir(&path, |p| rmdir(p, Mode::empty()));
     #[cfg(any(
         target_os = "openbsd",
         target_os = "netbsd",
@@ -238,6 +238,8 @@ fn enotdir(ctx: &mut TestContext, ft: FileType) {
     assert_enotdir_two_params(ctx, &ft, |p1, p2| rename(p1, p2));
     // rename/13.t
     assert_enotdir_from_to(ctx, &ft, |from, to| rename(from, to));
+    // rmdir/01.t
+    assert_enotdir(ctx, &ft, rmdir);
     // symlink/01.t
     assert_enotdir(ctx, &ft, |p| symlink(Path::new("test"), p));
     // (f)truncate/01.t
@@ -385,6 +387,8 @@ fn enoent(ctx: &mut TestContext) {
     assert_enoent(ctx, |p| open(p, OFlag::O_RDONLY, Mode::empty()));
     // rename/03.t
     assert_enoent_two_params(ctx, |p1, p2| rename(p1, p2));
+    // rmdir/04.t
+    assert_enoent(ctx, rmdir);
     // symlink/04.t
     assert_enoent_final_comp(ctx, |p| symlink(Path::new("test"), p));
     // (f)truncate/04.t
@@ -504,6 +508,10 @@ fn eacces(ctx: &mut SerializedTestContext) {
         open(p, OFlag::O_CREAT | OFlag::O_RDONLY, Mode::empty())
     });
     //TODO: rename
+    // rmdir/07.t
+    assert_eacces_search_perm(ctx, rmdir);
+    // rmdir/08.t
+    // assert_eacces_write_perm(ctx, rmdir);
     // symlink/05.t
     assert_eacces_search_perm(ctx, |p| symlink(Path::new("test"), p));
     // symlink/06.t
@@ -548,7 +556,6 @@ fn eexist(ctx: &mut TestContext, ft: FileType) {
 
     // mkdir/10.t
     assert_eexist(ctx, &ft, |p| mkdir(p, Mode::empty()));
-    assert_eexist_enotempty(ctx, &ft, |from, to| rename(from, to));
     // mknod/08.t
     assert_eexist(ctx, &ft, |p| mknod(p, SFlag::S_IFIFO, Mode::empty(), 0));
     // mkfifo/09.t
@@ -563,7 +570,10 @@ fn eexist(ctx: &mut TestContext, ft: FileType) {
         open(p, OFlag::O_CREAT | OFlag::O_EXCL, default_mode)
     });
 
-    // TODO:rmdir
+    // rename/20.t
+    assert_eexist_enotempty(ctx, &ft, |from, to| rename(from, to));
+
+    // TODO: rmdir
     // assert_eexist_enotempty(ctx, &ft, |from, to| rmdir(from, to));
     // symlink/08.t
     assert_eexist(ctx, &ft, |p| symlink(&*PathBuf::from("test"), p));
@@ -800,6 +810,11 @@ fn enametoolong(ctx: &mut TestContext) {
     assert_enametoolong_comp_two_params(ctx, |p1, p2| rename(p1, p2));
     // rename/02.t
     assert_enametoolong_path_two_params(ctx, |p1, p2| rename(p1, p2));
+
+    // rmdir/02.t
+    assert_enametoolong_comp(ctx, rmdir);
+    // rmdir/03.t
+    assert_enametoolong_path(ctx, rmdir);
 
     // (f)truncate/02.t
     assert_enametoolong_comp(ctx, |p| truncate(p, 0));
