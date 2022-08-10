@@ -29,6 +29,7 @@ use crate::{
 };
 
 mod eloop;
+mod enoent;
 
 crate::test_case! {enotdir => [Regular, Fifo, Block, Char, Socket]}
 fn enotdir(ctx: &mut TestContext, ft: FileType) {
@@ -145,139 +146,6 @@ fn enotdir_privileged(ctx: &mut TestContext, ft: FileType) {
         mknod(&path, SFlag::S_IFBLK, Mode::empty(), 0).unwrap_err(),
         Errno::ENOTDIR
     );
-}
-
-crate::test_case! {enoent}
-fn enoent(ctx: &mut TestContext) {
-    fn create_fake_path(ctx: &mut TestContext) -> PathBuf {
-        let dir = ctx.create(FileType::Dir).unwrap();
-        dir.join("not_existent")
-    }
-
-    /// Asserts that it returns ENOENT if the named file does not exist
-    fn assert_enoent<F, T: Debug>(ctx: &mut TestContext, f: F)
-    where
-        F: Fn(&Path) -> nix::Result<T>,
-    {
-        let fake_path = create_fake_path(ctx);
-        assert_eq!(f(&fake_path).unwrap_err(), Errno::ENOENT);
-    }
-
-    /// Asserts that it returns ENOENT if the symlink target named file does not exist
-    fn assert_enoent_link<F, T: Debug>(ctx: &mut TestContext, f: F)
-    where
-        F: Fn(&Path) -> nix::Result<T>,
-    {
-        let fake_path = create_fake_path(ctx);
-        let link_to_fake_path = ctx
-            .create(FileType::Symlink(Some(fake_path.to_path_buf())))
-            .unwrap();
-        assert_eq!(f(&link_to_fake_path).unwrap_err(), Errno::ENOENT);
-    }
-
-    /// Asserts that it returns ENOENT if a component of either path prefix does not exist
-    fn assert_enoent_two_params<F, T: Debug>(ctx: &mut TestContext, f: F)
-    where
-        F: Fn(&Path, &Path) -> nix::Result<T>,
-    {
-        let fake_path = create_fake_path(ctx);
-        let real_path = ctx.create(FileType::Regular).unwrap();
-
-        assert_eq!(
-            f(&fake_path.join("test"), &real_path).unwrap_err(),
-            Errno::ENOENT
-        );
-        assert_eq!(
-            f(&real_path, &fake_path.join("test")).unwrap_err(),
-            Errno::ENOENT
-        );
-    }
-
-    /// Asserts that it returns ENOENT if a component of the path prefix does not exist
-    fn assert_enoent_final_comp<F, T: Debug>(ctx: &mut TestContext, f: F)
-    where
-        F: Fn(&Path) -> nix::Result<T>,
-    {
-        let fake_path = create_fake_path(ctx);
-        assert_eq!(f(&fake_path.join("test")).unwrap_err(), Errno::ENOENT);
-    }
-
-    #[cfg(any(
-        target_os = "openbsd",
-        target_os = "netbsd",
-        target_os = "freebsd",
-        target_os = "dragonfly",
-        target_os = "macos",
-        target_os = "ios"
-    ))]
-    {
-        // chflags/04.t
-        assert_enoent(ctx, |p| chflags(p, FileFlag::empty()));
-    }
-    // chmod/04.t
-    assert_enoent(ctx, |p| chmod(p, Mode::empty()));
-    assert_enoent_final_comp(ctx, |p| chmod(p, Mode::empty()));
-    assert_enoent_link(ctx, |p| chmod(p, Mode::empty()));
-
-    #[cfg(any(target_os = "netbsd", target_os = "freebsd", target_os = "dragonfly"))]
-    {
-        // chmod/04.t
-        assert_enoent(ctx, |p| lchmod(p, Mode::empty()));
-    }
-
-    // chown/04.t
-    assert_enoent(ctx, |p| {
-        chown(
-            p,
-            Some(User::from_name("nobody").unwrap().unwrap().uid),
-            None,
-        )
-    });
-    assert_enoent_final_comp(ctx, |p| {
-        chown(
-            p,
-            Some(User::from_name("nobody").unwrap().unwrap().uid),
-            None,
-        )
-    });
-    assert_enoent_link(ctx, |p| {
-        chown(
-            p,
-            Some(User::from_name("nobody").unwrap().unwrap().uid),
-            None,
-        )
-    });
-    assert_enoent(ctx, |p| {
-        lchown(
-            p,
-            Some(User::from_name("nobody").unwrap().unwrap().uid),
-            None,
-        )
-    });
-
-    // link/04.t
-    assert_enoent_two_params(ctx, |p1, p2| link(p1, p2));
-    //TODO: DO link/09.t?
-    // mkdir/04.t
-    assert_enoent_final_comp(ctx, |p| mkdir(p, Mode::empty()));
-    // mknod/04.t
-    assert_enoent_final_comp(ctx, |p| mknod(p, SFlag::S_IFIFO, Mode::empty(), 0));
-    // mkfifo/04.t
-    assert_enoent_final_comp(ctx, |p| mkfifo(p, Mode::empty()));
-    // open/04.t
-    assert_enoent(ctx, |p| open(p, OFlag::O_RDONLY, Mode::empty()));
-    assert_enoent_final_comp(ctx, |p| open(p, OFlag::O_CREAT, Mode::S_IRWXU));
-    assert_enoent(ctx, |p| open(p, OFlag::O_RDONLY, Mode::empty()));
-    // rename/03.t
-    assert_enoent_two_params(ctx, |p1, p2| rename(p1, p2));
-    // rmdir/04.t
-    assert_enoent(ctx, rmdir);
-    // symlink/04.t
-    assert_enoent_final_comp(ctx, |p| symlink(Path::new("test"), p));
-    // (f)truncate/04.t
-    assert_enoent(ctx, |p| truncate(p, 0));
-    // unlink/04.t
-    assert_enoent(ctx, |p| unlink(p));
 }
 
 crate::test_case! {eacces, serialized, root}
