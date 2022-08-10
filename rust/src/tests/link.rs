@@ -17,7 +17,7 @@ use super::{
 crate::test_case! {
     /// link creates hardlinks which share the same metadata
     // link/00.t#23-41
-    share_metadata => [Regular, Fifo, Block, Char, Socket]
+    share_metadata, root => [Regular, Fifo, Block, Char, Socket]
 }
 fn share_metadata(ctx: &mut TestContext, ft: FileType) {
     let file = ctx.create(ft).unwrap();
