@@ -87,11 +87,11 @@ impl DummyAuthEntries {
 pub struct TestContext {
     naptime: Duration,
     temp_dir: TempDir,
+    auth_entries: DummyAuthEntries,
 }
 
 pub struct SerializedTestContext {
     ctx: TestContext,
-    auth_entries: DummyAuthEntries,
 }
 
 impl Deref for SerializedTestContext {
@@ -115,26 +115,8 @@ impl SerializedTestContext {
         base_dir: P,
     ) -> Self {
         Self {
-            ctx: TestContext::new(settings, base_dir),
-            auth_entries: DummyAuthEntries::new(entries.to_vec()),
+            ctx: TestContext::new(settings, entries, base_dir),
         }
-    }
-
-    /// Returns a new entry.
-    pub fn get_new_entry(&mut self) -> (User, Group) {
-        self.auth_entries.get_new_entry()
-    }
-
-    /// Returns a new user.
-    /// Alias of `get_new_entry`.
-    pub fn get_new_user(&mut self) -> User {
-        self.get_new_entry().0
-    }
-
-    /// Returns a new group.
-    /// Alias of `get_new_entry`.
-    pub fn get_new_group(&mut self) -> Group {
-        self.get_new_entry().1
     }
 
     //TODO: Maybe better as a macro? unwrap?
@@ -194,12 +176,20 @@ impl Drop for SerializedTestContext {
 
 impl TestContext {
     /// Create a new test context.
-    pub fn new<P: AsRef<Path>>(settings: &SettingsConfig, base_dir: P) -> Self {
+    pub fn new<P: AsRef<Path>>(
+        settings: &SettingsConfig,
+        entries: &[(User, Group)],
+        base_dir: P,
+    ) -> Self {
         let naptime = Duration::from_secs_f64(settings.naptime);
         let temp_dir = tempdir_in(base_dir).unwrap();
         // FIX: some tests need a 0o755 base dir
         chmod(temp_dir.path(), Mode::from_bits_truncate(0o755)).unwrap();
-        TestContext { naptime, temp_dir }
+        TestContext {
+            naptime,
+            temp_dir,
+            auth_entries: DummyAuthEntries::new(entries.to_vec()),
+        }
     }
 
     /// Return the base path for this context.
@@ -305,6 +295,23 @@ impl TestContext {
         self.new_file(f_type).name(&path).create()?;
 
         Ok(path)
+    }
+
+    /// Returns a new entry.
+    pub fn get_new_entry(&mut self) -> (User, Group) {
+        self.auth_entries.get_new_entry()
+    }
+
+    /// Returns a new user.
+    /// Alias of `get_new_entry`.
+    pub fn get_new_user(&mut self) -> User {
+        self.get_new_entry().0
+    }
+
+    /// Returns a new group.
+    /// Alias of `get_new_entry`.
+    pub fn get_new_group(&mut self) -> Group {
+        self.get_new_entry().1
     }
 
     /// A short sleep, long enough for file system timestamps to change.
@@ -482,7 +489,7 @@ mod tests {
         ] {
             let settings = SettingsConfig { naptime: 0. };
             let tempdir = TempDir::new().unwrap();
-            let ctx = TestContext::new(&settings, tempdir.path());
+            let ctx = TestContext::new(&settings, &Vec::new(), tempdir.path());
 
             assert!(ctx.temp_dir.path().starts_with(tempdir.path()));
 
@@ -541,7 +548,7 @@ mod tests {
     fn name_max() {
         let tmpdir = TempDir::new().unwrap();
         let settings = SettingsConfig { naptime: 0. };
-        let ctx = TestContext::new(&settings, &tmpdir.path());
+        let ctx = TestContext::new(&settings, &Vec::new(), tmpdir.path());
         let file = ctx.create_name_max(FileType::Regular).unwrap();
         let name_len = file.file_name().unwrap().to_string_lossy().len();
 
@@ -562,7 +569,7 @@ mod tests {
     fn path_max() {
         let tmpdir = TempDir::new().unwrap();
         let settings = SettingsConfig { naptime: 0. };
-        let ctx = TestContext::new(&settings, &tmpdir.path());
+        let ctx = TestContext::new(&settings, &Vec::new(), &tmpdir.path());
         let file = ctx.create_path_max(FileType::Regular).unwrap();
         let path_len = file.to_string_lossy().len();
 
@@ -595,7 +602,7 @@ mod tests {
         ] {
             let tmpdir = TempDir::new().unwrap();
             let settings = SettingsConfig { naptime: 0. };
-            let ctx = TestContext::new(&settings, &tmpdir.path());
+            let ctx = TestContext::new(&settings, &Vec::new(), &tmpdir.path());
             let name = "testing";
             let expected_mode = 0o725;
             let (path, _file) = ctx
@@ -617,7 +624,7 @@ mod tests {
     fn regular_unique_syscall() {
         let tmpdir = TempDir::new().unwrap();
         let settings = SettingsConfig { naptime: 0. };
-        let ctx = TestContext::new(&settings, &tmpdir.path());
+        let ctx = TestContext::new(&settings, &Vec::new(), &tmpdir.path());
 
         assert!(ctx
             .new_file(FileType::Regular)
