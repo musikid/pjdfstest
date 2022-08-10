@@ -17,10 +17,9 @@ use super::{
 crate::test_case! {
     /// link creates hardlinks which share the same metadata
     // link/00.t#23-41
-    //TODO: Move user getters functions for non serialized?
-    share_metadata, serialized, root => [Regular, Fifo, Block, Char, Socket]
+    share_metadata => [Regular, Fifo, Block, Char, Socket]
 }
-fn share_metadata(ctx: &mut SerializedTestContext, ft: FileType) {
+fn share_metadata(ctx: &mut TestContext, ft: FileType) {
     let file = ctx.create(ft).unwrap();
     let file_stat = lstat(&file).unwrap();
     assert_eq!(file_stat.st_nlink, 1);
@@ -114,6 +113,7 @@ fn changed_ctime_success(ctx: &mut TestContext, ft: FileType) {
     let file = ctx.create(ft).unwrap();
     let new_path = ctx.gen_path();
 
+    //TODO: Migrate to new time assertion api when merged
     assert_ctime_changed(ctx, &file, || {
         assert_ctime_changed(ctx, ctx.base_path(), || {
             assert_mtime_changed(ctx, ctx.base_path(), || {
@@ -132,6 +132,7 @@ fn unchanged_ctime_fails(ctx: &mut SerializedTestContext, ft: FileType) {
     let new_path = ctx.gen_path();
 
     let user = ctx.get_new_user();
+    //TODO: Migrate to new time assertion api when merged
     assert_ctime_unchanged(ctx, &file, || {
         assert_ctime_unchanged(ctx, ctx.base_path(), || {
             assert_mtime_unchanged(ctx, ctx.base_path(), || {
