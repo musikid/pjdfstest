@@ -33,6 +33,7 @@ mod eexist;
 mod eloop;
 mod enoent;
 mod enotdir;
+mod etxtbsy;
 
 crate::test_case! {efault}
 fn efault(_ctx: &mut TestContext) {}
@@ -292,39 +293,4 @@ fn enametoolong_privileged(ctx: &mut TestContext) {
     // mknod/03.t
     assert_enametoolong_path(ctx, |p| mknod(p, SFlag::S_IFBLK, Mode::empty(), 0));
     assert_enametoolong_path(ctx, |p| mknod(p, SFlag::S_IFCHR, Mode::empty(), 0));
-}
-
-crate::test_case! {etxtbsy}
-fn etxtbsy(ctx: &mut TestContext) {
-    /// Asserts that it returns ETXTBSY when the file is a pure procedure (shared text) file that is being executed.
-    // TODO: Refactor this
-    fn assert_etxtbsy<F, T: Debug>(ctx: &mut TestContext, f: F)
-    where
-        F: Fn(&Path) -> nix::Result<T>,
-    {
-        let sleep_path =
-            String::from_utf8(Command::new("which").arg("sleep").output().unwrap().stdout).unwrap();
-        let sleep_path = sleep_path.trim();
-
-        let exec_path = ctx.base_path().join("sleep");
-        let mut exec_file = File::create(&exec_path).unwrap();
-        std::io::copy(&mut File::open(sleep_path).unwrap(), &mut exec_file).unwrap();
-
-        chmod(&exec_path, Mode::from_bits_truncate(0o755)).unwrap();
-        std::mem::drop(exec_file);
-
-        let mut sleep_process = Command::new(&exec_path).arg("5").spawn().unwrap();
-        assert_eq!(f(&exec_path).unwrap_err(), Errno::ETXTBSY);
-
-        sleep_process.kill().unwrap();
-    }
-
-    // open/20.t
-    assert_etxtbsy(ctx, |p| open(p, OFlag::O_WRONLY, Mode::empty()));
-    assert_etxtbsy(ctx, |p| open(p, OFlag::O_RDWR, Mode::empty()));
-    assert_etxtbsy(ctx, |p| {
-        open(p, OFlag::O_RDONLY | OFlag::O_TRUNC, Mode::empty())
-    });
-    // (f)truncate/11.t
-    assert_etxtbsy(ctx, |p| truncate(p, 123));
 }
