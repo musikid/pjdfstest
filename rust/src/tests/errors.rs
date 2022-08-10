@@ -29,68 +29,10 @@ use crate::{
 };
 
 mod eacces;
+mod eexist;
 mod eloop;
 mod enoent;
 mod enotdir;
-
-/// Asserts that it returns EEXIST if the named file exists
-fn assert_eexist<F, T: Debug>(ctx: &mut TestContext, ft: &FileType, f: F)
-where
-    F: Fn(&Path) -> nix::Result<T>,
-{
-    let path = ctx.create(ft.clone()).unwrap();
-    assert_eq!(f(&path).unwrap_err(), Errno::EEXIST);
-}
-
-crate::test_case! {eexist => [Regular, Dir, Fifo, Block, Char, Socket, Symlink(None)]}
-fn eexist(ctx: &mut TestContext, ft: FileType) {
-    /// Asserts that it returns EEXIST or ENOTEMPTY if the 'to' argument is a directory and is not empty
-    //TODO: Add rmdir/{06,12}.t
-    fn assert_eexist_enotempty<F, T: Debug>(ctx: &mut TestContext, ft: &FileType, f: F)
-    where
-        F: Fn(&Path, &Path) -> nix::Result<T>,
-    {
-        let from_dir = ctx.create(FileType::Dir).unwrap();
-        let to_dir = ctx.create(FileType::Dir).unwrap();
-        ctx.create_named(ft.clone(), to_dir.join("test")).unwrap();
-        assert!(matches!(
-            f(&from_dir, &to_dir).unwrap_err(),
-            Errno::EEXIST | Errno::ENOTEMPTY
-        ));
-    }
-
-    let default_mode = Mode::from_bits_truncate(0o644);
-
-    // mkdir/10.t
-    assert_eexist(ctx, &ft, |p| mkdir(p, Mode::empty()));
-    // mknod/08.t
-    assert_eexist(ctx, &ft, |p| mknod(p, SFlag::S_IFIFO, Mode::empty(), 0));
-    // mkfifo/09.t
-    assert_eexist(ctx, &ft, |p| mkfifo(p, default_mode));
-
-    // link/10.t
-    let regular_file = ctx.create(FileType::Regular).unwrap();
-    assert_eexist(ctx, &ft, |p| link(&*regular_file, p));
-
-    // open/22.t
-    assert_eexist(ctx, &ft, |p| {
-        open(p, OFlag::O_CREAT | OFlag::O_EXCL, default_mode)
-    });
-
-    // rename/20.t
-    assert_eexist_enotempty(ctx, &ft, |from, to| rename(from, to));
-
-    // TODO: rmdir
-    // assert_eexist_enotempty(ctx, &ft, |from, to| rmdir(from, to));
-    // symlink/08.t
-    assert_eexist(ctx, &ft, |p| symlink(&*PathBuf::from("test"), p));
-}
-
-crate::test_case! {eexist_privileged, root => [Regular, Dir, Fifo, Block, Char, Socket, Symlink(None)]}
-fn eexist_privileged(ctx: &mut TestContext, ft: FileType) {
-    assert_eexist(ctx, &ft, |p| mknod(p, SFlag::S_IFBLK, Mode::empty(), 0));
-    assert_eexist(ctx, &ft, |p| mknod(p, SFlag::S_IFCHR, Mode::empty(), 0));
-}
 
 crate::test_case! {efault}
 fn efault(_ctx: &mut TestContext) {}
