@@ -20,6 +20,7 @@ pub mod ftruncate;
 pub mod link;
 pub mod posix_fallocate;
 pub mod rename;
+pub mod rmdir;
 pub mod symlink;
 pub mod unlink;
 pub mod utimensat;

@@ -40,8 +40,9 @@ This should be handled automatically when installing it via a package,
 but they need to be created otherwise.
 By default, the users (with the same name for the group associated to each of them) to create are:
 
-- nobody (already created on most systems)
+- nobody
 - tests
+- pjdfstest
 
 It is also possible to specify other users with the configuration file.
 
