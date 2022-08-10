@@ -127,7 +127,7 @@ struct TimeAssertion<'a, F> {
     ctime: bool,
     mtime: bool,
     equal: bool,
-    follow_symlink: bool,
+    no_follow_symlink: bool,
     fun: F,
 }
 
@@ -144,7 +144,7 @@ where
             atime: false,
             ctime: false,
             mtime: false,
-            follow_symlink: false,
+            no_follow_symlink: false,
             equal,
             fun,
         }
@@ -159,7 +159,7 @@ where
             atime: false,
             ctime: false,
             mtime: false,
-            follow_symlink: false,
+            no_follow_symlink: false,
             equal,
             fun,
         }
@@ -189,8 +189,9 @@ where
         self
     }
 
-    pub fn follow_symlink(mut self) -> Self {
-        self.follow_symlink = true;
+    /// Get metadata without following symlinks.
+    pub fn no_follow_symlink(mut self) -> Self {
+        self.no_follow_symlink = true;
         self
     }
 
@@ -200,7 +201,7 @@ where
             unimplemented!()
         }
 
-        let get_metadata = if self.follow_symlink {
+        let get_metadata = if self.no_follow_symlink {
             symlink_metadata
         } else {
             metadata
@@ -265,7 +266,7 @@ where
 {
     TimeAssertion::new(&path, true, f)
         .ctime()
-        .follow_symlink()
+        .no_follow_symlink()
         .assert(ctx)
 }
 
