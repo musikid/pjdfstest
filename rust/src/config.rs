@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-use std::collections::HashSet;
 use std::path::PathBuf;
 
 use crate::test::FileFlags;
@@ -71,7 +70,7 @@ impl Default for DummyAuthConfig {
 #[derive(Debug, Default, Serialize, Deserialize)]
 pub struct SyscallsFlagsConfig {
     pub parent: Option<Vec<FileFlags>>,
-    pub file: Vec<FileFlags>,
+    pub file: Option<Vec<FileFlags>>,
 }
 
 #[derive(Debug, Default, Serialize, Deserialize)]
@@ -91,18 +90,9 @@ pub struct ExdevConfig {
 }
 
 #[derive(Debug, Default, Serialize, Deserialize)]
-pub struct TestsConfig {
-    pub erofs: ErofsConfig,
-    pub exdev: ExdevConfig,
-    pub override_space_check: bool,
-}
-
-#[derive(Debug, Default, Serialize, Deserialize)]
 pub struct Config {
     /// File-system features.
     pub features: FeaturesConfig,
     pub settings: SettingsConfig,
     pub dummy_auth: DummyAuthConfig,
-    #[serde(default)]
-    pub tests: TestsConfig,
 }

@@ -9,15 +9,31 @@
 # Here is an example with the `posix_fallocate` syscall.
 posix_fallocate = {}
 
-[features.eperm.syscalls_flags.unlink]
-file = ["SF_IMMUTABLE", "SF_NOUNLINK"] 
-parent = ["SF_IMMUTABLE"]
-
 [features.eperm.syscalls_flags.chmod]
 file = ["SF_IMMUTABLE"] 
 
 [features.eperm.syscalls_flags.ftruncate]
 file = ["SF_IMMUTABLE"] 
+
+[features.eperm.syscalls_flags.link]
+file = ["SF_IMMUTABLE"] 
+parent = ["SF_IMMUTABLE"]
+
+[features.eperm.syscalls_flags.mkdir]
+parent = ["SF_IMMUTABLE"]
+
+[features.eperm.syscalls_flags.mkfifo]
+parent = ["SF_IMMUTABLE"]
+
+[features.eperm.syscalls_flags.mknod]
+parent = ["SF_IMMUTABLE"]
+
+[features.eperm.syscalls_flags.symlink]
+parent = ["SF_IMMUTABLE"]
+
+[features.eperm.syscalls_flags.unlink]
+file = ["SF_IMMUTABLE", "SF_NOUNLINK"]
+parent = ["SF_IMMUTABLE"]
 
 # Might use the key notation as well.
 [features.chflags]
