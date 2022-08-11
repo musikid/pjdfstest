@@ -136,9 +136,9 @@
                     <main>
                         <h1 id="getting-started"><a class="header" href="#getting-started">Getting started</a></h1>
 <p>The test suite is as file system agnostic as possible
-and tries to comply with the POSIX specification.</p>
-<p>Its behavior can be modified with a configuration file.
-By default, only tests for syscalls which must be available on every POSIX system are ran.
+and tries to comply with the POSIX specification.
+Typically, tests which make use of non-POSIX features
+are opt-in and only tests for syscalls which must be available on every POSIX system are ran.
 It can be configured with the configuration file, by specifying additional features
 supported by the file system/operating system.</p>
 <h2 id="command-line-interface"><a class="header" href="#command-line-interface">Command-line interface</a></h2>
@@ -157,9 +157,10 @@ supported by the file system/operating system.</p>
 <p>It is possible to filter which tests should be ran, by specifying which parts should match.
 Tests are usually identified by syscall and optionally the file type on which it operates.</p>
 <h2 id="rootless-running"><a class="header" href="#rootless-running">Rootless running</a></h2>
-<p>The test suite can be run without privileges.
+<p>The test suite can be ran without privileges.
 However, not all tests can be completed without privileges,
-therefore the coverage will be incomplete.</p>
+therefore the coverage will be incomplete.
+For example, tests which need to switch users will not be run.</p>
 <h2 id="dummy-usersgroups"><a class="header" href="#dummy-usersgroups">Dummy users/groups</a></h2>
 <p>The test suite needs dummy users and groups to be set up. 
 This should be handled automatically when installing it via a package,

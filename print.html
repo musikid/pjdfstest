@@ -151,9 +151,9 @@ cargo build &amp;&amp; sudo ./target/debug/pjdfstest
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="getting-started"><a class="header" href="#getting-started">Getting started</a></h1>
 <p>The test suite is as file system agnostic as possible
-and tries to comply with the POSIX specification.</p>
-<p>Its behavior can be modified with a configuration file.
-By default, only tests for syscalls which must be available on every POSIX system are ran.
+and tries to comply with the POSIX specification.
+Typically, tests which make use of non-POSIX features
+are opt-in and only tests for syscalls which must be available on every POSIX system are ran.
 It can be configured with the configuration file, by specifying additional features
 supported by the file system/operating system.</p>
 <h2 id="command-line-interface"><a class="header" href="#command-line-interface">Command-line interface</a></h2>
@@ -172,9 +172,10 @@ supported by the file system/operating system.</p>
 <p>It is possible to filter which tests should be ran, by specifying which parts should match.
 Tests are usually identified by syscall and optionally the file type on which it operates.</p>
 <h2 id="rootless-running"><a class="header" href="#rootless-running">Rootless running</a></h2>
-<p>The test suite can be run without privileges.
+<p>The test suite can be ran without privileges.
 However, not all tests can be completed without privileges,
-therefore the coverage will be incomplete.</p>
+therefore the coverage will be incomplete.
+For example, tests which need to switch users will not be run.</p>
 <h2 id="dummy-usersgroups"><a class="header" href="#dummy-usersgroups">Dummy users/groups</a></h2>
 <p>The test suite needs dummy users and groups to be set up. 
 This should be handled automatically when installing it via a package,
@@ -228,6 +229,21 @@ specified in the configuration with the <code>file_flags</code> array.</p>
 posix_fallocate = {}
 file_flags = [&quot;UF_IMMUTABLE&quot;]
 </code></pre>
+<h3 id="dummy_auth"><a class="header" href="#dummy_auth">[dummy_auth]</a></h3>
+<p>This section allows to modify the mecanism for switching users, which is required by some tests.</p>
+<pre><code class="language-toml">[dummy_auth]
+entries = [
+  [&quot;nobody&quot;, &quot;nobody&quot;],
+  # nogroup instead for some Linux distros
+  # [&quot;nobody&quot;, &quot;nogroup&quot;],
+  [&quot;tests&quot;, &quot;tests&quot;],
+  [&quot;pjdfstest&quot;, &quot;pjdfstest&quot;],
+]
+</code></pre>
+<ul>
+<li><code>entries</code> - An entry is composed of a username and its associated group. 
+Exactly 3 entries need to be specified if the runner default ones cannot be used.</li>
+</ul>
 <h3 id="settings"><a class="header" href="#settings">[settings]</a></h3>
 <pre><code class="language-toml">[settings]
 naptime = 0.001

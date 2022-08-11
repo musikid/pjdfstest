@@ -164,6 +164,21 @@ specified in the configuration with the <code>file_flags</code> array.</p>
 posix_fallocate = {}
 file_flags = [&quot;UF_IMMUTABLE&quot;]
 </code></pre>
+<h3 id="dummy_auth"><a class="header" href="#dummy_auth">[dummy_auth]</a></h3>
+<p>This section allows to modify the mecanism for switching users, which is required by some tests.</p>
+<pre><code class="language-toml">[dummy_auth]
+entries = [
+  [&quot;nobody&quot;, &quot;nobody&quot;],
+  # nogroup instead for some Linux distros
+  # [&quot;nobody&quot;, &quot;nogroup&quot;],
+  [&quot;tests&quot;, &quot;tests&quot;],
+  [&quot;pjdfstest&quot;, &quot;pjdfstest&quot;],
+]
+</code></pre>
+<ul>
+<li><code>entries</code> - An entry is composed of a username and its associated group. 
+Exactly 3 entries need to be specified if the runner default ones cannot be used.</li>
+</ul>
 <h3 id="settings"><a class="header" href="#settings">[settings]</a></h3>
 <pre><code class="language-toml">[settings]
 naptime = 0.001
