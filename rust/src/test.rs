@@ -3,7 +3,7 @@ use std::fmt::Debug;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
-pub use crate::flags::FileFlags;
+pub use crate::flags::*;
 pub use crate::runner::context::{SerializedTestContext, TestContext};
 
 /// Error returned by a test function.

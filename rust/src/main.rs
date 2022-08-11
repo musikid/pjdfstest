@@ -57,6 +57,9 @@ struct ArgOptions {
 
     #[options(free, help = "Filter test names")]
     test_patterns: Vec<String>,
+
+    #[options(help = "Path to a secondary file system")]
+    secondary_file_system: Option<PathBuf>,
 }
 
 fn main() -> anyhow::Result<()> {

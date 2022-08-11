@@ -3,7 +3,7 @@ use nix::{
     fcntl::{open, OFlag},
     libc::off_t,
     sys::stat::{mknod, Mode, SFlag},
-    unistd::{chown, ftruncate, mkdir, mkfifo, truncate, unlink, User},
+    unistd::{chown, ftruncate, mkdir, mkfifo, pathconf, truncate, unlink, User},
 };
 
 #[cfg(any(
@@ -25,7 +25,7 @@ use std::{
 
 use crate::{
     runner::context::{FileType, TestContext},
-    utils::{chmod, lchown, link, rename, rmdir, symlink},
+    utils::{chmod, lchmod, lchown, link, rename, rmdir, symlink},
 };
 
 mod eacces;
@@ -33,6 +33,7 @@ mod eexist;
 mod eloop;
 mod enoent;
 mod enotdir;
+mod eperm;
 mod etxtbsy;
 
 crate::test_case! {efault}

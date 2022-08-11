@@ -5,6 +5,8 @@ use nix::{
     unistd::{chown, mkdir, mkfifo, truncate, unlink},
 };
 
+#[cfg(any(target_os = "netbsd", target_os = "freebsd", target_os = "dragonfly"))]
+use crate::utils::lchmod;
 #[cfg(any(
     target_os = "openbsd",
     target_os = "netbsd",

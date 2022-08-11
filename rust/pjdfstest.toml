@@ -6,12 +6,21 @@
 [features]
 # File flags can be specified for OS which supports them.
 # file_flags = ["UF_IMMUTABLE"]
-
 # Here is an example with the `posix_fallocate` syscall.
 posix_fallocate = {}
 
+[features.eperm.syscalls_flags.unlink]
+file = ["SF_IMMUTABLE", "SF_NOUNLINK"] 
+parent = ["SF_IMMUTABLE"]
+
+[features.eperm.syscalls_flags.chmod]
+file = ["SF_IMMUTABLE"] 
+
+[features.eperm.syscalls_flags.ftruncate]
+file = ["SF_IMMUTABLE"] 
+
 # Might use the key notation as well.
-[features.posix_fallocate]
+[features.chflags]
 
 [settings]
 # naptime is the duration of various short sleeps.  It should be greater than

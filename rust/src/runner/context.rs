@@ -76,6 +76,7 @@ impl DummyAuthEntries {
 
 pub struct TestContext<'a> {
     naptime: Duration,
+    config: &'a FeaturesConfig,
     temp_dir: TempDir,
     features_config: &'a FeaturesConfig,
     auth_entries: DummyAuthEntries,
@@ -196,7 +197,6 @@ impl<'a> TestContext<'a> {
         )
     }
 
-    //TODO: Generify create functions
     /// Create a file with a custom name.
     pub fn create_named<P: AsRef<Path>>(
         &self,
