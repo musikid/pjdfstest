@@ -42,6 +42,24 @@ posix_fallocate = {}
 file_flags = ["UF_IMMUTABLE"]
 ```
 
+### [dummy_auth]
+
+This section allows to modify the mecanism for switching users, which is required by some tests.
+
+```toml
+[dummy_auth]
+entries = [
+  ["nobody", "nobody"],
+  # nogroup instead for some Linux distros
+  # ["nobody", "nogroup"],
+  ["tests", "tests"],
+  ["pjdfstest", "pjdfstest"],
+]
+```
+
+* `entries` - An entry is composed of a username and its associated group. 
+  Exactly 3 entries need to be specified if the runner default ones cannot be used.
+
 ### [settings]
 
 ```toml

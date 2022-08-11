@@ -2,9 +2,8 @@
 
 The test suite is as file system agnostic as possible
 and tries to comply with the POSIX specification.
-
-Its behavior can be modified with a configuration file.
-By default, only tests for syscalls which must be available on every POSIX system are ran.
+Typically, tests which make use of non-POSIX features
+are opt-in and only tests for syscalls which must be available on every POSIX system are ran.
 It can be configured with the configuration file, by specifying additional features
 supported by the file system/operating system.
 
@@ -29,9 +28,10 @@ Tests are usually identified by syscall and optionally the file type on which it
 
 ## Rootless running
 
-The test suite can be run without privileges.
+The test suite can be ran without privileges.
 However, not all tests can be completed without privileges,
 therefore the coverage will be incomplete.
+For example, tests which need to switch users will not be run.
 
 ## Dummy users/groups
 
