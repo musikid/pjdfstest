@@ -119,7 +119,8 @@ fn birthtime_ts(path: &Path) -> TimeSpec {
 
 #[derive(Debug)]
 #[must_use]
-/// Builder to create a time metadata assertion, which compares metadata of one file `before` to many files `after`.
+/// Builder to create a time metadata assertion,
+/// which compares metadata of one file `before` to many files `after`.
 struct TimeAssertion<'a, F> {
     before_path: &'a Path,
     after_paths: Vec<&'a Path>,
@@ -135,7 +136,8 @@ impl<'a, F> TimeAssertion<'a, F>
 where
     F: FnOnce(),
 {
-    /// Return a new builder with the provided path being the `before` compared path and added to the `after` compared paths.
+    /// Return a new builder with the provided path being the `before` compared path
+    /// and added to the `after` compared paths.
     /// Comparision will be an equality check if `equal` is true, or an ordering one if it is false.
     pub fn new<P: AsRef<Path>>(path: &'a P, equal: bool, fun: F) -> Self {
         Self {
@@ -195,7 +197,8 @@ where
         self
     }
 
-    /// Build the assertion and asserts that `before` metadata is either equal or before the `after` metadata.
+    /// Build the assertion and asserts that `before` metadata
+    /// is either equal or before the `after` metadata.
     pub fn assert(self, ctx: &TestContext) {
         if !(self.atime || self.ctime || self.mtime) || self.after_paths.is_empty() {
             unimplemented!()
