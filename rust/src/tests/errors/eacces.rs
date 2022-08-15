@@ -24,6 +24,8 @@ use crate::{
     utils::{chmod, rmdir, symlink},
 };
 
+mod open;
+
 crate::test_case! {
     /// Return EACCES when search permission is denied for a component of the path prefix
     search_perm, serialized, root
