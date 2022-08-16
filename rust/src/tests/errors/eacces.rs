@@ -25,6 +25,7 @@ use crate::{
 };
 
 mod open;
+mod sticky;
 
 crate::test_case! {
     /// Return EACCES when search permission is denied for a component of the path prefix
