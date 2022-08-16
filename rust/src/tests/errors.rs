@@ -30,14 +30,12 @@ use crate::{
 
 mod eacces;
 mod eexist;
+mod efault;
 mod eloop;
 mod enoent;
 mod enotdir;
 mod eperm;
 mod etxtbsy;
-
-crate::test_case! {efault}
-fn efault(_ctx: &mut TestContext) {}
 
 crate::test_case! {eisdir}
 fn eisdir(ctx: &mut TestContext) {
