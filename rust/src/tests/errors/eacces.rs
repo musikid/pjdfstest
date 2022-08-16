@@ -2,7 +2,7 @@ use nix::{
     errno::Errno,
     fcntl::{open, OFlag},
     sys::stat::{mknod, Mode, SFlag},
-    unistd::{mkdir, mkfifo, truncate, unlink, User},
+    unistd::{chown, mkdir, mkfifo, truncate, unlink, User},
 };
 
 #[cfg(any(target_os = "netbsd", target_os = "freebsd", target_os = "dragonfly"))]
@@ -21,7 +21,7 @@ use std::{fmt::Debug, path::Path};
 
 use crate::{
     runner::context::{FileType, SerializedTestContext},
-    utils::{chmod, rmdir, symlink},
+    utils::{chmod, lchown, link, rename, rmdir, symlink},
 };
 
 mod open;
@@ -36,11 +36,8 @@ fn search_perm(ctx: &mut SerializedTestContext) {
     where
         F: Fn(&Path) -> nix::Result<T>,
     {
-        let dir = ctx.create(FileType::Dir).unwrap();
-        let mode = Mode::from_bits_truncate(0o644);
-
+        let dir = ctx.new_file(FileType::Dir).mode(0o644).create().unwrap();
         let path = dir.join("test");
-        chmod(&dir, mode).unwrap();
 
         ctx.as_user(user, None, || {
             assert_eq!(f(&path).unwrap_err(), Errno::EACCES);
@@ -69,6 +66,10 @@ fn search_perm(ctx: &mut SerializedTestContext) {
         assert_eacces_search_perm(ctx, &user, |p| lchmod(p, Mode::empty()));
     }
 
+    // chown/05.t
+    assert_eacces_search_perm(ctx, &user, |p| chown(p, Some(user.uid), None));
+    assert_eacces_search_perm(ctx, &user, |p| lchown(p, Some(user.uid), None));
+
     // mkdir/05.t
     assert_eacces_search_perm(ctx, &user, |p| mkdir(p, Mode::empty()));
 
@@ -78,7 +79,7 @@ fn search_perm(ctx: &mut SerializedTestContext) {
     // mknod/05.t
     assert_eacces_search_perm(ctx, &user, |p| mknod(p, SFlag::S_IFIFO, Mode::empty(), 0));
 
-    //TODO: open
+    // open/05.t
     assert_eacces_search_perm(ctx, &user, |p| open(p, OFlag::O_RDONLY, Mode::empty()));
 
     // rmdir/07.t
@@ -109,11 +110,8 @@ fn named_file(ctx: &mut SerializedTestContext) {
     ) where
         F: Fn(&Path) -> nix::Result<T>,
     {
-        let dir = ctx.create(FileType::Dir).unwrap();
-        let mode = Mode::from_bits_truncate(0o444);
-
+        let dir = ctx.new_file(FileType::Dir).mode(0o444).create().unwrap();
         let path = dir.join("test");
-        chmod(&dir, mode).unwrap();
 
         ctx.as_user(user, None, || {
             assert_eq!(f(&path).unwrap_err(), Errno::EACCES);
@@ -142,34 +140,13 @@ fn write_perm_parent(ctx: &mut SerializedTestContext) {
     where
         F: Fn(&Path) -> nix::Result<T>,
     {
-        let dir = ctx.create(FileType::Dir).unwrap();
-        let mode = Mode::from_bits_truncate(0o555);
-
+        let dir = ctx.new_file(FileType::Dir).mode(0o555).create().unwrap();
         let path = dir.join("test");
-        chmod(&dir, mode).unwrap();
 
         ctx.as_user(user, None, || {
             assert_eq!(f(&path).unwrap_err(), Errno::EACCES);
         });
     }
-
-    // chown/05.t
-    // TODO: Blocked by #63
-    // assert_eacces(ctx,&user, |p| {
-    //     chown(
-    //         p,
-    //         Some(User::from_name("nobody").unwrap().unwrap().uid),
-    //         None,
-    //     )
-    // });
-    // assert_eacces(ctx,&user, |p| {
-    //     lchown(
-    //         p,
-    //         Some(User::from_name("nobody").unwrap().unwrap().uid),
-    //         None,
-    //     )
-    // });
-    // TODO: link specialization
 
     // mkdir/06.t
     assert_eacces_write_perm(ctx, &user, |p| mkdir(p, Mode::empty()));
@@ -180,13 +157,53 @@ fn write_perm_parent(ctx: &mut SerializedTestContext) {
     // mknod/06.t
     assert_eacces_write_perm(ctx, &user, |p| mknod(p, SFlag::S_IFIFO, Mode::empty(), 0));
 
-    // TODO: open
+    // open/08.t
     assert_eacces_write_perm(ctx, &user, |p| {
         open(p, OFlag::O_CREAT | OFlag::O_RDONLY, Mode::empty())
     });
 
-    //TODO: rename
-
     // symlink/06.t
     assert_eacces_write_perm(ctx, &user, |p| symlink(Path::new("test"), p));
+}
+
+crate::test_case! {
+    /// Return EACCES when the requested link requires writing in a directory with a mode that denies write permission
+    write_dir_write_perm, serialized, root
+}
+fn write_dir_write_perm(ctx: &mut SerializedTestContext) {
+    fn assert_write_perm<F, T: Debug>(ctx: &mut SerializedTestContext, user: &User, f: F)
+    where
+        F: Fn(&Path, &Path) -> nix::Result<T>,
+    {
+        let from_dir = ctx.create(FileType::Dir).unwrap();
+        chown(&from_dir, Some(user.uid), Some(user.gid)).unwrap();
+
+        let from_path = ctx
+            .create_named(FileType::Regular, from_dir.join("file"))
+            .unwrap();
+        chown(&from_path, Some(user.uid), Some(user.gid)).unwrap();
+        let to_same_dir = from_dir.join("file1");
+
+        let to_dir = ctx.create(FileType::Dir).unwrap();
+        chown(&to_dir, Some(user.uid), Some(user.gid)).unwrap();
+
+        let to_path = to_dir.join("file");
+
+        //TODO: Test that it succeed first? it's already done in the other tests?
+
+        chmod(&to_dir, Mode::from_bits_truncate(0o555)).unwrap();
+        ctx.as_user(user, None, || {
+            assert_eq!(f(&from_path, &to_path).unwrap_err(), Errno::EACCES);
+        });
+
+        chmod(&from_dir, Mode::from_bits_truncate(0o555)).unwrap();
+        ctx.as_user(user, None, || {
+            assert_eq!(f(&from_path, &to_same_dir).unwrap_err(), Errno::EACCES);
+        });
+    }
+
+    let user = ctx.get_new_user();
+
+    assert_write_perm(ctx, &user, link);
+    assert_write_perm(ctx, &user, rename);
 }
