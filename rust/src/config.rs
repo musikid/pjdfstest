@@ -1,8 +1,10 @@
 use std::collections::HashMap;
+use std::collections::HashSet;
 use std::path::PathBuf;
 
 use crate::test::FileFlags;
 use crate::test::FileSystemFeature;
+use figment::value::Value;
 use nix::unistd::Group;
 use nix::unistd::User;
 use serde::Deserialize;
@@ -68,15 +70,8 @@ impl Default for DummyAuthConfig {
 }
 
 #[derive(Debug, Default, Serialize, Deserialize)]
-pub struct SyscallsFlagsConfig {
-    pub parent: Option<Vec<FileFlags>>,
-    pub file: Option<Vec<FileFlags>>,
-}
-
-#[derive(Debug, Default, Serialize, Deserialize)]
 pub struct EpermConfig {
-    #[serde(default)]
-    pub syscalls_flags: HashMap<String, SyscallsFlagsConfig>,
+    pub syscalls_flags: HashMap<String, Value>,
 }
 
 #[derive(Debug, Default, Serialize, Deserialize)]
