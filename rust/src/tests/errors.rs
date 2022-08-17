@@ -31,6 +31,7 @@ mod enametoolong;
 mod enoent;
 mod enotdir;
 mod eperm;
+mod erofs;
 mod etxtbsy;
 
 crate::test_case! {eisdir}
