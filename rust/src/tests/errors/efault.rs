@@ -69,48 +69,49 @@ crate::test_case! {
     either_path
 }
 fn either_path(ctx: &mut TestContext) {
-    use std::os::unix::ffi::OsStrExt;
+    use nix::NixPath;
     /// Asserts that it returns EFAULT if the path argument points outside the process's allocated address space
     macro_rules! assert_ptr_invalid {
         ($fn: ident) => {
             let file = ctx
                 .create(crate::runner::context::FileType::Regular)
                 .unwrap();
-            let path = file.as_os_str().as_bytes();
-            let path = std::ffi::CString::new(path).unwrap();
-            let ptr = path.as_ptr();
 
-            let null_ptr = std::ptr::null();
+            file.with_nix_path(|cstr| {
+                let ptr = cstr.as_ptr();
+                let null_ptr = std::ptr::null();
 
-            let invalid_ptr = std::ptr::NonNull::dangling();
-            let invalid_ptr = invalid_ptr.as_ptr();
+                let invalid_ptr = std::ptr::NonNull::dangling();
+                let invalid_ptr = invalid_ptr.as_ptr();
 
-            assert_eq!(
-                nix::errno::Errno::result(unsafe { $fn(null_ptr, ptr) }),
-                Err(nix::errno::Errno::EFAULT)
-            );
-            assert_eq!(
-                nix::errno::Errno::result(unsafe { $fn(invalid_ptr, ptr) }),
-                Err(nix::errno::Errno::EFAULT)
-            );
+                assert_eq!(
+                    nix::errno::Errno::result(unsafe { $fn(null_ptr, ptr) }),
+                    Err(nix::errno::Errno::EFAULT)
+                );
+                assert_eq!(
+                    nix::errno::Errno::result(unsafe { $fn(invalid_ptr, ptr) }),
+                    Err(nix::errno::Errno::EFAULT)
+                );
 
-            assert_eq!(
-                nix::errno::Errno::result(unsafe { $fn(ptr, null_ptr) }),
-                Err(nix::errno::Errno::EFAULT)
-            );
-            assert_eq!(
-                nix::errno::Errno::result(unsafe { $fn(ptr, invalid_ptr) }),
-                Err(nix::errno::Errno::EFAULT)
-            );
+                assert_eq!(
+                    nix::errno::Errno::result(unsafe { $fn(ptr, null_ptr) }),
+                    Err(nix::errno::Errno::EFAULT)
+                );
+                assert_eq!(
+                    nix::errno::Errno::result(unsafe { $fn(ptr, invalid_ptr) }),
+                    Err(nix::errno::Errno::EFAULT)
+                );
 
-            assert_eq!(
-                nix::errno::Errno::result(unsafe { $fn(invalid_ptr, null_ptr) }),
-                Err(nix::errno::Errno::EFAULT)
-            );
-            assert_eq!(
-                nix::errno::Errno::result(unsafe { $fn(null_ptr, invalid_ptr) }),
-                Err(nix::errno::Errno::EFAULT)
-            );
+                assert_eq!(
+                    nix::errno::Errno::result(unsafe { $fn(invalid_ptr, null_ptr) }),
+                    Err(nix::errno::Errno::EFAULT)
+                );
+                assert_eq!(
+                    nix::errno::Errno::result(unsafe { $fn(null_ptr, invalid_ptr) }),
+                    Err(nix::errno::Errno::EFAULT)
+                );
+            })
+            .unwrap();
         };
     }
 
