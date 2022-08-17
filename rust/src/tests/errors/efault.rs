@@ -1,8 +1,17 @@
+use crate::runner::context::TestContext;
+#[cfg(any(
+    target_os = "openbsd",
+    target_os = "netbsd",
+    target_os = "freebsd",
+    target_os = "dragonfly",
+    target_os = "macos",
+    target_os = "ios",
+    target_os = "watchos",
+))]
+use nix::libc::chflags;
 use nix::libc::{
     chmod, chown, link, mkdir, mkfifo, mknod, open, rename, rmdir, symlink, truncate, unlink,
 };
-
-use crate::runner::context::TestContext;
 
 crate::test_case! {
     /// Return EFAULT if the path argument points outside the process's allocated address space
