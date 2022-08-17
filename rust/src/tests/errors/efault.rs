@@ -9,29 +9,27 @@ crate::test_case! {
     path
 }
 fn path(_: &mut TestContext) {
-    #![allow(unused_unsafe)]
-    // TODO: Remove extra unsafe blocks
-
     /// Asserts that it returns EFAULT if the path argument points outside the process's allocated address space
     macro_rules! assert_ptr_invalid {
         (|$ptr: ident| $fn: expr) => {
             let f = |$ptr: *const _| unsafe { $fn };
-            assert_ptr_invalid!(f);
-        };
 
-        ($fn: ident) => {
             let null_ptr = std::ptr::null();
             let invalid_ptr = std::ptr::NonNull::dangling();
             let invalid_ptr = invalid_ptr.as_ptr();
 
             assert_eq!(
-                nix::errno::Errno::result(unsafe { $fn(null_ptr) }),
+                nix::errno::Errno::result(f(null_ptr)),
                 Err(nix::errno::Errno::EFAULT)
             );
             assert_eq!(
-                nix::errno::Errno::result(unsafe { $fn(invalid_ptr) }),
+                nix::errno::Errno::result(f(invalid_ptr)),
                 Err(nix::errno::Errno::EFAULT)
             );
+        };
+
+        ($fn: ident) => {
+            assert_ptr_invalid!(|ptr| $fn(ptr));
         };
     }
 
