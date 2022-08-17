@@ -3,7 +3,7 @@ use nix::{
     fcntl::{open, OFlag},
     libc::off_t,
     sys::stat::{mknod, Mode, SFlag},
-    unistd::{chown, ftruncate, mkdir, mkfifo, pathconf, truncate, unlink, User},
+    unistd::{chown, ftruncate, mkdir, mkfifo, truncate, unlink, User},
 };
 
 #[cfg(any(
@@ -16,12 +16,7 @@ use nix::{
 ))]
 use nix::{sys::stat::FileFlag, unistd::chflags};
 
-use std::{
-    fmt::Debug,
-    fs::File,
-    path::{Path, PathBuf},
-    process::Command,
-};
+use std::{fmt::Debug, path::Path};
 
 use crate::{
     runner::context::{FileType, TestContext},
@@ -32,6 +27,7 @@ mod eacces;
 mod eexist;
 mod efault;
 mod eloop;
+mod enametoolong;
 mod enoent;
 mod enotdir;
 mod eperm;
@@ -132,164 +128,4 @@ fn einval(ctx: &mut TestContext) {
     assert_einval(ctx, |p| truncate(p, off_t::MIN));
 
     //TODO: rmdir/12.t
-}
-
-/// Asserts that it returns ENAMETOOLONG if a component of a pathname exceeded {NAME_MAX} characters
-fn assert_enametoolong_comp<F, T: Debug + std::cmp::PartialEq>(ctx: &mut TestContext, f: F)
-where
-    F: Fn(&Path) -> nix::Result<T>,
-{
-    let mut invalid_path = ctx.create_name_max(FileType::Regular).unwrap();
-    invalid_path.set_extension("x");
-    assert_eq!(f(&invalid_path).unwrap_err(), Errno::ENAMETOOLONG);
-}
-
-/// Asserts that it returns ENAMETOOLONG if an entire path name exceeded {PATH_MAX} characters
-fn assert_enametoolong_path<F, T: Debug + std::cmp::PartialEq>(ctx: &mut TestContext, f: F)
-where
-    F: Fn(&Path) -> nix::Result<T>,
-{
-    let mut invalid_path = ctx.create_path_max(FileType::Regular).unwrap();
-    invalid_path.set_extension("x");
-    assert_eq!(f(&invalid_path).unwrap_err(), Errno::ENAMETOOLONG);
-}
-
-crate::test_case! {enametoolong}
-fn enametoolong(ctx: &mut TestContext) {
-    /// Asserts that it returns ENAMETOOLONG if a component of either pathname exceeded {NAME_MAX} characters
-    fn assert_enametoolong_comp_two_params<F, T: Debug + std::cmp::PartialEq>(
-        ctx: &mut TestContext,
-        f: F,
-    ) where
-        F: Fn(&Path, &Path) -> nix::Result<T>,
-    {
-        let mut invalid_path = ctx.create_name_max(FileType::Regular).unwrap();
-        invalid_path.set_extension("x");
-        let valid_path = ctx.create_path_max(FileType::Regular).unwrap();
-        assert_eq!(
-            f(&invalid_path, &valid_path).unwrap_err(),
-            Errno::ENAMETOOLONG
-        );
-        assert_eq!(
-            f(&invalid_path, &valid_path).unwrap_err(),
-            Errno::ENAMETOOLONG
-        );
-    }
-
-    /// Asserts that it returns ENAMETOOLONG if an entire of either path name exceeded {PATH_MAX} characters
-    fn assert_enametoolong_path_two_params<F, T: Debug + std::cmp::PartialEq>(
-        ctx: &mut TestContext,
-        f: F,
-    ) where
-        F: Fn(&Path, &Path) -> nix::Result<T>,
-    {
-        let mut invalid_path = ctx.create_path_max(FileType::Regular).unwrap();
-        invalid_path.set_extension("x");
-        let valid_path = ctx.create_path_max(FileType::Regular).unwrap();
-        assert_eq!(
-            f(&invalid_path, &valid_path).unwrap_err(),
-            Errno::ENAMETOOLONG
-        );
-        assert_eq!(
-            f(&invalid_path, &valid_path).unwrap_err(),
-            Errno::ENAMETOOLONG
-        );
-    }
-
-    //TODO: lchflags too?
-    #[cfg(any(
-        target_os = "openbsd",
-        target_os = "netbsd",
-        target_os = "freebsd",
-        target_os = "dragonfly",
-        target_os = "macos",
-        target_os = "ios"
-    ))]
-    {
-        // chflags/02.t
-        assert_enametoolong_comp(ctx, |p| chflags(p, FileFlag::empty()));
-        // chflags/03.t
-        assert_enametoolong_path(ctx, |p| chflags(p, FileFlag::empty()));
-    }
-
-    // chmod/02.t
-    assert_enametoolong_comp(ctx, |p| chmod(p, Mode::empty()));
-    // chmod/03.t
-    assert_enametoolong_path(ctx, |p| chmod(p, Mode::empty()));
-    #[cfg(any(target_os = "netbsd", target_os = "freebsd", target_os = "dragonfly"))]
-    {
-        assert_enametoolong_comp(ctx, |p| lchmod(p, Mode::empty()));
-        assert_enametoolong_path(ctx, |p| lchmod(p, Mode::empty()));
-    }
-
-    // chown/02.t
-    // chown/03.t
-    let user = User::from_name("nobody").unwrap().unwrap();
-    assert_enametoolong_comp(ctx, |p| chown(p, Some(user.uid), Some(user.gid)));
-    assert_enametoolong_path(ctx, |p| chown(p, Some(user.uid), Some(user.gid)));
-    assert_enametoolong_comp(ctx, |p| lchown(p, Some(user.uid), Some(user.gid)));
-    assert_enametoolong_path(ctx, |p| lchown(p, Some(user.uid), Some(user.gid)));
-
-    // link/02.t
-    assert_enametoolong_comp_two_params(ctx, |p1, p2| link(p1, p2));
-    // link/03.t
-    assert_enametoolong_path_two_params(ctx, |p1, p2| link(p1, p2));
-
-    // mkfifo/02.t
-    assert_enametoolong_comp(ctx, |p| mkfifo(p, Mode::empty()));
-    // mkfifo/03.t
-    assert_enametoolong_path(ctx, |p| mkfifo(p, Mode::empty()));
-
-    // mkdir/02.t
-    assert_enametoolong_comp(ctx, |p| mkdir(p, Mode::empty()));
-    // mkdir/03.t
-    assert_enametoolong_path(ctx, |p| mkdir(p, Mode::empty()));
-
-    // mknod/02.t
-    assert_enametoolong_comp(ctx, |p| mknod(p, SFlag::S_IFIFO, Mode::empty(), 0));
-    // mknod/03.t
-    assert_enametoolong_path(ctx, |p| mknod(p, SFlag::S_IFIFO, Mode::empty(), 0));
-
-    // open/02.t
-    assert_enametoolong_comp(ctx, |p| open(p, OFlag::O_CREAT, Mode::empty()));
-    // open/03.t
-    assert_enametoolong_path(ctx, |p| open(p, OFlag::O_CREAT, Mode::empty()));
-
-    // rename/01.t
-    assert_enametoolong_comp_two_params(ctx, |p1, p2| rename(p1, p2));
-    // rename/02.t
-    assert_enametoolong_path_two_params(ctx, |p1, p2| rename(p1, p2));
-
-    // rmdir/02.t
-    assert_enametoolong_comp(ctx, rmdir);
-    // rmdir/03.t
-    assert_enametoolong_path(ctx, rmdir);
-
-    // (f)truncate/02.t
-    assert_enametoolong_comp(ctx, |p| truncate(p, 0));
-    // (f)truncate/03.t
-    assert_enametoolong_path(ctx, |p| truncate(p, 0));
-
-    // symlink/02.t
-    let valid_path = ctx.create(FileType::Regular).unwrap();
-    assert_enametoolong_comp(ctx, |p| symlink(&*valid_path, p));
-    // symlink/03.t
-    assert_enametoolong_path_two_params(ctx, |p1, p2| symlink(p1, p2));
-
-    // unlink/02.t
-    assert_enametoolong_comp(ctx, |p| unlink(p));
-    // unlink/03.t
-    assert_enametoolong_path(ctx, |p| unlink(p));
-
-    //TODO: rmdir
-}
-
-crate::test_case! {enametoolong_privileged, root}
-fn enametoolong_privileged(ctx: &mut TestContext) {
-    // mknod/02.t
-    assert_enametoolong_comp(ctx, |p| mknod(p, SFlag::S_IFBLK, Mode::empty(), 0));
-    assert_enametoolong_comp(ctx, |p| mknod(p, SFlag::S_IFCHR, Mode::empty(), 0));
-    // mknod/03.t
-    assert_enametoolong_path(ctx, |p| mknod(p, SFlag::S_IFBLK, Mode::empty(), 0));
-    assert_enametoolong_path(ctx, |p| mknod(p, SFlag::S_IFCHR, Mode::empty(), 0));
 }
