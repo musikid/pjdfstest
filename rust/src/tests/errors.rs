@@ -29,6 +29,7 @@ mod efault;
 mod eloop;
 mod enametoolong;
 mod enoent;
+mod enospc;
 mod enotdir;
 mod eperm;
 mod erofs;
