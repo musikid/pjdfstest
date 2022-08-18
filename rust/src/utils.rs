@@ -1,9 +1,9 @@
-use nix::unistd::{Gid, Uid};
 use nix::{
     fcntl::renameat,
     sys::stat::{fchmodat, FchmodatFlags},
-    unistd::{linkat, symlinkat, LinkatFlags},
+    unistd::{fchownat, linkat, symlinkat, FchownatFlags, Gid, LinkatFlags, Uid},
 };
+use std::path::Path;
 
 /// Wrapper for `fchmodat(None, path, mode, FchmodatFlags::FollowSymlink)`.
 pub fn chmod<P: ?Sized + nix::NixPath>(path: &P, mode: nix::sys::stat::Mode) -> nix::Result<()> {
@@ -56,11 +56,27 @@ pub fn lchown<P: ?Sized + nix::NixPath>(
     owner: Option<Uid>,
     group: Option<Gid>,
 ) -> nix::Result<()> {
-    nix::unistd::fchownat(
-        None,
-        path,
-        owner,
-        group,
-        nix::unistd::FchownatFlags::NoFollowSymlink,
-    )
+    fchownat(None, path, owner, group, FchownatFlags::NoFollowSymlink)
+}
+
+pub fn get_mountpoint(base_path: &Path) -> Result<&Path, anyhow::Error> {
+    let base_dev = nix::sys::stat::lstat(base_path)?.st_dev;
+
+    let mut mountpoint = base_path;
+    loop {
+        let current = match mountpoint.parent() {
+            Some(p) => p,
+            // Root
+            _ => return Ok(mountpoint),
+        };
+        let current_dev = nix::sys::stat::lstat(current)?.st_dev;
+
+        if current_dev != base_dev {
+            break;
+        }
+
+        mountpoint = current;
+    }
+
+    Ok(mountpoint)
 }

@@ -6,7 +6,7 @@ use std::{
 
 use crate::{
     runner::context::{FileType, SerializedTestContext},
-    utils::{chmod, lchmod, lchown, link, rename, rmdir, symlink},
+    utils::{chmod, get_mountpoint, lchmod, lchown, link, rename, rmdir, symlink},
 };
 use nix::{
     errno::Errno,
@@ -24,28 +24,6 @@ use nix::{
     target_os = "watchos",
 ))]
 use nix::{sys::stat::FileFlag, unistd::chflags};
-
-fn get_mountpoint(base_path: &Path) -> Result<&Path, anyhow::Error> {
-    let base_dev = lstat(base_path)?.st_dev;
-
-    let mut mountpoint = base_path;
-    loop {
-        let current = match mountpoint.parent() {
-            Some(p) => p,
-            // Root
-            _ => return Ok(mountpoint),
-        };
-        let current_dev = lstat(current)?.st_dev;
-
-        if current_dev != base_dev {
-            break;
-        }
-
-        mountpoint = current;
-    }
-
-    Ok(mountpoint)
-}
 
 enum RemountOptions {
     ReadOnly,

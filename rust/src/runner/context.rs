@@ -76,9 +76,8 @@ impl DummyAuthEntries {
 
 pub struct TestContext<'a> {
     naptime: Duration,
-    config: &'a FeaturesConfig,
-    temp_dir: TempDir,
     features_config: &'a FeaturesConfig,
+    temp_dir: TempDir,
     auth_entries: DummyAuthEntries,
 }
 
