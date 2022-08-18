@@ -74,7 +74,7 @@ where
 
 crate::test_case! {
     /// Return ENOSPC if there are no free inodes on the file system on which the symbolic link is being created
-    no_inode, serialized, FileSystemFeature::PosixFallocate; is_small
+    no_inode, serialized; is_small
 }
 fn no_inode(ctx: &mut SerializedTestContext) {
     saturate_inodes(ctx).unwrap();
