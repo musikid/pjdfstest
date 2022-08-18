@@ -2,8 +2,8 @@ use std::collections::HashMap;
 use std::collections::HashSet;
 use std::path::PathBuf;
 
-use crate::test::FileFlags;
-use crate::test::FileSystemFeature;
+use crate::features::FileSystemFeature;
+use crate::flags::FileFlags;
 use figment::value::Value;
 use nix::unistd::Group;
 use nix::unistd::User;
