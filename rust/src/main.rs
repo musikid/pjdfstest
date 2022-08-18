@@ -22,6 +22,7 @@ use strum::{EnumMessage, IntoEnumIterator};
 use tempfile::{tempdir_in, TempDir};
 
 mod config;
+mod features;
 mod flags;
 mod macros;
 mod runner;
@@ -149,7 +150,6 @@ fn run_test_cases(
     let is_root = Uid::current().is_root();
 
     let enabled_features: HashSet<_> = config.features.fs_features.keys().into_iter().collect();
-    let enabled_flags: HashSet<_> = config.features.file_flags.iter().collect();
 
     let entries: Vec<(User, Group)> = config
         .dummy_auth
@@ -200,23 +200,13 @@ fn run_test_cases(
             skip_message += "\n";
         }
 
-        let required_flags: HashSet<_> = test_case.required_file_flags.iter().collect();
-        let missing_flags: Vec<_> = required_flags.difference(&enabled_flags).collect();
-        if !missing_flags.is_empty() {
+        if let Err(e) = test_case
+            .guards
+            .iter()
+            .try_for_each(|g| g(config, base_dir.path()))
+        {
             should_skip = true;
-
-            let flags = missing_flags
-                .iter()
-                .map(|f| {
-                    let f = f.to_string();
-
-                    ["\"", &f, "\""].join("")
-                })
-                .collect::<Vec<_>>()
-                .join(", ");
-
-            skip_message += "requires flags: ";
-            skip_message += &flags;
+            skip_message += &e.to_string();
             skip_message += "\n";
         }
 
@@ -236,12 +226,12 @@ fn run_test_cases(
 
         let result = catch_unwind(|| match test_case.fun {
             TestFn::NonSerialized(fun) => {
-                let mut context = TestContext::new(&config, &entries, base_dir.path());
+                let mut context = TestContext::new(config, &entries, base_dir.path());
 
                 (fun)(&mut context)
             }
             TestFn::Serialized(fun) => {
-                let mut context = SerializedTestContext::new(&config, &entries, base_dir.path());
+                let mut context = SerializedTestContext::new(config, &entries, base_dir.path());
 
                 (fun)(&mut context)
             }
