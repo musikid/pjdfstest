@@ -27,6 +27,7 @@ mod eacces;
 mod eexist;
 mod efault;
 mod eloop;
+mod emlink;
 mod enametoolong;
 mod enoent;
 mod enospc;
