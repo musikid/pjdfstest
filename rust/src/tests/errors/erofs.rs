@@ -30,6 +30,15 @@ enum RemountOptions {
     ReadWrite,
 }
 
+/// Guard to allow execution of this test only if it's allowed to run.
+fn can_run(conf: &crate::config::Config, _: &Path) -> anyhow::Result<()> {
+    if !conf.settings.erofs {
+        anyhow::bail!("EROFS is not enabled in the configuration file")
+    }
+
+    Ok(())
+}
+
 fn remount<P: AsRef<Path>>(mountpoint: P, options: RemountOptions) -> Result<(), anyhow::Error> {
     if mountpoint.as_ref().parent().is_none() {
         anyhow::bail!("Cannot remount root file system")
@@ -40,11 +49,8 @@ fn remount<P: AsRef<Path>>(mountpoint: P, options: RemountOptions) -> Result<(),
         RemountOptions::ReadWrite => "rw",
     };
 
-    #[cfg(any(target_os = "linux"))]
+    #[cfg(target_os = "linux")]
     let opt = format!("remount,{opt}");
-
-    #[cfg(not(any(target_os = "linux")))]
-    let opt = String::from(opt);
 
     let mut cmd = Command::new("mount");
 
@@ -60,8 +66,10 @@ fn remount<P: AsRef<Path>>(mountpoint: P, options: RemountOptions) -> Result<(),
     let mount_result = cmd.arg("-o").arg(opt).arg(mountpoint.as_ref()).output()?;
 
     if !mount_result.status.success() {
-        let error = String::from_utf8_lossy(&mount_result.stderr);
-        anyhow::bail!("Failed to remount: {error}")
+        anyhow::bail!(
+            "Failed to remount: {}",
+            String::from_utf8_lossy(&mount_result.stderr)
+        )
     }
 
     Ok(())
@@ -89,7 +97,7 @@ where
 crate::test_case! {
     /// Return EROFS if the named file resides on a read-only file system
     // TODO: Assert that it works in a write context? We already guarentee it with the other tests?
-    read_only, serialized, root
+    read_only, serialized, root; can_run
 }
 fn read_only(ctx: &mut SerializedTestContext) {
     let path = ctx.base_path().to_owned();

@@ -45,6 +45,8 @@ parent = ["SF_IMMUTABLE"]
 # naptime is the duration of various short sleeps.  It should be greater than
 # the timestamp granularity of the file system under test.
 naptime = 0.001
+# Enable the EROFS tests, which temporarily remount the file system as read-only.
+# erofs = true
 
 # This section allows to modify the mecanism for switching users, which is required by some tests.
 # [dummy_auth]

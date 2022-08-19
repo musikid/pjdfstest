@@ -30,12 +30,15 @@ pub struct FeaturesConfig {
 pub struct SettingsConfig {
     #[serde(default = "default_naptime")]
     pub naptime: f64,
+    #[serde(default)]
+    pub erofs: bool,
 }
 
 impl Default for SettingsConfig {
     fn default() -> Self {
         SettingsConfig {
             naptime: default_naptime(),
+            erofs: false,
         }
     }
 }
@@ -72,11 +75,6 @@ impl Default for DummyAuthConfig {
 #[derive(Debug, Default, Serialize, Deserialize)]
 pub struct EpermConfig {
     pub syscalls_flags: HashMap<String, Value>,
-}
-
-#[derive(Debug, Default, Serialize, Deserialize)]
-pub struct ErofsConfig {
-    pub enabled: bool,
 }
 
 #[derive(Debug, Default, Serialize, Deserialize)]
