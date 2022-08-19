@@ -4,36 +4,14 @@ use anyhow::Result;
 use nix::{
     errno::Errno,
     fcntl::{open, OFlag},
-    sys::{stat::Mode, statfs::statfs, statvfs::statvfs},
+    sys::{stat::Mode, statvfs::statvfs},
     unistd::{chown, mkdir, mkfifo, Uid},
 };
 
 use crate::{
-    config::Config,
     runner::context::{FileType, SerializedTestContext},
-    test::FileSystemFeature,
-    utils::symlink,
+    utils::{is_small, symlink},
 };
-
-const REMAINING_SPACE_LIMIT: i64 = 128 * 1024i64.pow(2);
-
-/// Guard to check that the file system is small.
-// TODO: Add a guard for mountpoint?
-fn is_small(_: &Config, base_path: &Path) -> anyhow::Result<()> {
-    let stat = statfs(base_path)?;
-    let available_blocks: i64 = stat.blocks_available().try_into()?;
-    let frag_size: i64 = match stat.block_size().try_into()? {
-        0 => anyhow::bail!("Cannot get file system fragment size"),
-        num => num,
-    };
-    let remaining_space: i64 = available_blocks * frag_size;
-
-    if remaining_space >= REMAINING_SPACE_LIMIT {
-        anyhow::bail!("File system free space is too high")
-    }
-
-    Ok(())
-}
 
 /// Saturate the free inodes and leave one available.
 fn saturate_inodes(ctx: &SerializedTestContext) -> Result<()> {

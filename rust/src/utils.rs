@@ -1,9 +1,14 @@
 use nix::{
     fcntl::renameat,
-    sys::stat::{fchmodat, FchmodatFlags},
+    sys::{
+        stat::{fchmodat, FchmodatFlags},
+        statfs::statfs,
+    },
     unistd::{fchownat, linkat, symlinkat, FchownatFlags, Gid, LinkatFlags, Uid},
 };
 use std::path::Path;
+
+use crate::config::Config;
 
 /// Wrapper for `fchmodat(None, path, mode, FchmodatFlags::FollowSymlink)`.
 pub fn chmod<P: ?Sized + nix::NixPath>(path: &P, mode: nix::sys::stat::Mode) -> nix::Result<()> {
@@ -79,4 +84,25 @@ pub fn get_mountpoint(base_path: &Path) -> Result<&Path, anyhow::Error> {
     }
 
     Ok(mountpoint)
+}
+
+const REMAINING_SPACE_LIMIT: i64 = 128 * 1024i64.pow(2);
+
+/// Guard to check that the file system is smaller than the fixde limit.
+// TODO: Add a guard for mountpoint?
+pub fn is_small(_: &Config, base_path: &Path) -> anyhow::Result<()> {
+    // TODO: Switch to portable one? seems to give errrneous values on FreeBSD
+    let stat = statfs(base_path)?;
+    let available_blocks: i64 = stat.blocks_available().try_into()?;
+    let frag_size: i64 = match stat.block_size().try_into()? {
+        0 => anyhow::bail!("Cannot get file system fragment size"),
+        num => num,
+    };
+    let remaining_space: i64 = available_blocks * frag_size;
+
+    if remaining_space >= REMAINING_SPACE_LIMIT {
+        anyhow::bail!("File system free space is too high")
+    }
+
+    Ok(())
 }
