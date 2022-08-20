@@ -16,8 +16,10 @@ use crate::{
     utils::{chmod, ALLPERMS},
 };
 
-use super::TimeAssertion;
+use super::{assert_times_changed, TimestampField};
 
+/// Assert that the created entry gets its permission bits from the mode provided to the function
+/// negated by the process file creation mask (umask), and its file type equal the expected one.
 pub(super) fn permission_bits_from_mode_builder<F, T, C>(
     ctx: &mut SerializedTestContext,
     f: F,
@@ -46,6 +48,7 @@ pub(super) fn permission_bits_from_mode_builder<F, T, C>(
         );
     }
 
+    /// Assert that the created entry permission bits equal `mode AND (NOT umask)`.
     fn assert_perm_umask<F, T, C>(
         ctx: &SerializedTestContext,
         mode: mode_t,
@@ -61,6 +64,7 @@ pub(super) fn permission_bits_from_mode_builder<F, T, C>(
         })
     }
 
+    /// Assert that the created entry permission bits equal mode.
     fn assert_perm_mode<F, T, C>(ctx: &SerializedTestContext, mode: mode_t, f: F, check: C)
     where
         F: Fn(&Path, Mode) -> nix::Result<T>,
@@ -76,6 +80,9 @@ pub(super) fn permission_bits_from_mode_builder<F, T, C>(
     assert_perm_umask(ctx, 0o501, 0o345, f, f_type_check);
 }
 
+/// Assert that the entry's user ID is set to the process' effective user ID.
+/// The entry's group ID should be set to the group ID of the parent directory
+/// or the effective group ID of the process.
 pub(super) fn uid_gid_eq_euid_or_parent_uid_egid_builder<F, T>(
     ctx: &mut SerializedTestContext,
     f: F,
@@ -88,7 +95,6 @@ pub(super) fn uid_gid_eq_euid_or_parent_uid_egid_builder<F, T>(
     {
         let path = ctx.gen_path();
         ctx.as_user(user, gid.map(|g| vec![g]).as_deref(), || {
-            //TODO: Original tests use 755 but we shouldn't we test 644 for non-dir files?
             f(&path, Mode::from_bits_truncate(0o755)).unwrap();
         });
 
@@ -122,23 +128,25 @@ pub(super) fn uid_gid_eq_euid_or_parent_uid_egid_builder<F, T>(
     assert_uid_gid(ctx, &other_user, Some(group.gid), f);
 }
 
+/// Assert that the st_atime, st_ctime, and st_mtime fields of the new entry should be marked for update,
+/// along with the st_ctime and st_mtime fields of its parent directory.
 pub(super) fn changed_time_fields_success_builder<F, T>(ctx: &mut TestContext, f: F)
 where
     F: Fn(&Path, Mode) -> nix::Result<T>,
 {
-    let uid = Uid::effective();
-    let gid = Gid::effective();
-    chown(ctx.base_path(), Some(uid), Some(gid)).unwrap();
-
     let path = ctx.gen_path();
 
-    TimeAssertion::new(&ctx.base_path(), false, || {
-        //TODO: Original tests use 755 but we shouldn't we test 644 for non-dir files?
-        f(&path, Mode::from_bits_truncate(0o755)).unwrap();
-    })
-    .add_after(&path)
-    .atime()
-    .ctime()
-    .mtime()
-    .assert(ctx);
+    assert_times_changed()
+        .path(
+            ctx.base_path(),
+            TimestampField::CTIME | TimestampField::MTIME,
+        )
+        .paths(
+            ctx.base_path(),
+            &path,
+            TimestampField::ATIME | TimestampField::CTIME | TimestampField::MTIME,
+        )
+        .execute(ctx, false, || {
+            f(&path, Mode::from_bits_truncate(0o755)).unwrap();
+        });
 }
