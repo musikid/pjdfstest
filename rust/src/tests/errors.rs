@@ -2,8 +2,8 @@ use nix::{
     errno::Errno,
     fcntl::{open, OFlag},
     libc::off_t,
-    sys::stat::{mknod, Mode, SFlag},
-    unistd::{chown, ftruncate, mkdir, mkfifo, truncate, unlink, User},
+    sys::stat::{stat, Mode},
+    unistd::{ftruncate, truncate},
 };
 
 #[cfg(any(
@@ -20,7 +20,7 @@ use std::{fmt::Debug, path::Path};
 
 use crate::{
     runner::context::{FileType, TestContext},
-    utils::{chmod, lchmod, lchown, link, rename, rmdir, symlink},
+    utils::rename,
 };
 
 mod eacces;
@@ -71,6 +71,27 @@ fn eisdir_rename(ctx: &mut TestContext, ft: FileType) {
     let dir = ctx.create(FileType::Dir).unwrap();
     let not_dir_file = ctx.create(ft).unwrap();
     assert_eq!(rename(&not_dir_file, &dir).unwrap_err(), Errno::EISDIR);
+}
+
+crate::test_case! {
+    /// truncate must not change the file size if it fails with EFBIG or EINVAL
+    /// because the length argument was greater than the maximum file size
+    // (f)truncate/12.t
+    truncate_efbig
+}
+fn truncate_efbig(ctx: &mut TestContext) {
+    let file = ctx.create(FileType::Regular).unwrap();
+    let size = 999999999999999;
+    let res = truncate(&file, size);
+
+    let expected_size = match res {
+        Ok(_) => size,
+        Err(Errno::EFBIG | Errno::EINVAL) => 0,
+        Err(e) => panic!("truncate failed with {e}"),
+    };
+
+    let stat = stat(&file).unwrap();
+    assert_eq!(stat.st_size, expected_size);
 }
 
 crate::test_case! {einval}
