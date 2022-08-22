@@ -88,7 +88,7 @@ pub fn get_mountpoint(base_path: &Path) -> Result<&Path, anyhow::Error> {
 
 const REMAINING_SPACE_LIMIT: i64 = 128 * 1024i64.pow(2);
 
-/// Guard to check that the file system is smaller than the fixde limit.
+/// Guard to check that the file system is smaller than the fixed limit.
 // TODO: Add a guard for mountpoint?
 pub fn is_small(_: &Config, base_path: &Path) -> anyhow::Result<()> {
     // TODO: Switch to portable one? seems to give errrneous values on FreeBSD
