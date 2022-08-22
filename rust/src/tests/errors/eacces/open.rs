@@ -89,7 +89,7 @@ fn required_perms_denied_flags(ctx: &mut SerializedTestContext, ft: FileType) {
 
     // Read/write permissions
 
-    // BUG: Using a bit or trigger and inlining the value trigger a lifetime error
+    // BUG: Using a bit or and inlining the value trigger a lifetime error
     const RDONLY_NONBLOCK: OFlag = OFlag::O_RDONLY.union(OFlag::O_NONBLOCK);
 
     let flags: &[OFlag] = match ft {
@@ -108,7 +108,7 @@ fn required_perms_denied_flags(ctx: &mut SerializedTestContext, ft: FileType) {
 
     // Read-only
 
-    // BUG: Using a bit or trigger and inlining the value a lifetime error
+    // BUG: Using a bit or and inlining the value trigger a lifetime error
     const WRONLY_NONBLOCK: OFlag = OFlag::O_WRONLY.union(OFlag::O_NONBLOCK);
 
     let flags_err: &[OFlag] = match ft {
