@@ -1,12 +1,12 @@
 use crate::{
-    runner::context::{FileType, SerializedTestContext, TestContext},
-    utils::link,
+    runner::context::{FileType, SerializedTestContext},
+    utils::{lchown, link},
 };
 
-use nix::{
-    errno::Errno,
-    unistd::{chown, unlink},
-};
+#[cfg(not(target_os = "linux"))]
+use {crate::runner::context::TestContext, nix::unistd::unlink};
+
+use nix::{errno::Errno, unistd::chown};
 
 #[cfg(any(
     target_os = "openbsd",
@@ -67,4 +67,108 @@ fn link_source_dir(ctx: &mut SerializedTestContext) {
     ctx.as_user(&user, None, || {
         assert_eq!(link(&src, &ctx.gen_path()), Err(Errno::EPERM));
     })
+}
+
+crate::test_case! {
+    /// chown returns EPERM if the operation would change the ownership, but the effective user ID is not the super-user and the process is not an owner of the file
+    chown_euid_not_root_not_owner, serialized, root => [Regular, Dir, Fifo, Block, Char, Socket]
+}
+fn chown_euid_not_root_not_owner(ctx: &mut SerializedTestContext, ft: FileType) {
+    let user = ctx.get_new_user();
+    chown(ctx.base_path(), Some(user.uid), Some(user.gid)).unwrap();
+
+    let file = ctx.create(ft).unwrap();
+    chown(&file, Some(user.uid), Some(user.gid)).unwrap();
+
+    let another_user = ctx.get_new_user();
+
+    ctx.as_user(&user, None, || {
+        assert_eq!(
+            chown(&file, Some(another_user.uid), Some(another_user.gid)),
+            Err(Errno::EPERM)
+        );
+    });
+    ctx.as_user(&another_user, None, || {
+        assert_eq!(
+            chown(&file, Some(user.uid), Some(user.gid)),
+            Err(Errno::EPERM)
+        );
+    });
+    ctx.as_user(&another_user, None, || {
+        assert_eq!(
+            chown(&file, Some(another_user.uid), Some(another_user.gid)),
+            Err(Errno::EPERM)
+        );
+    });
+    ctx.as_user(&user, None, || {
+        assert_eq!(
+            chown(&file, None, Some(another_user.gid)),
+            Err(Errno::EPERM)
+        );
+    });
+
+    let link = ctx.create(FileType::Symlink(Some(file))).unwrap();
+
+    ctx.as_user(&user, None, || {
+        assert_eq!(
+            chown(&link, Some(another_user.uid), Some(another_user.gid)),
+            Err(Errno::EPERM)
+        );
+    });
+    ctx.as_user(&another_user, None, || {
+        assert_eq!(
+            chown(&link, Some(user.uid), Some(user.gid)),
+            Err(Errno::EPERM)
+        );
+    });
+    ctx.as_user(&another_user, None, || {
+        assert_eq!(
+            chown(&link, Some(another_user.uid), Some(another_user.gid)),
+            Err(Errno::EPERM)
+        );
+    });
+    ctx.as_user(&user, None, || {
+        assert_eq!(
+            chown(&link, None, Some(another_user.gid)),
+            Err(Errno::EPERM)
+        );
+    });
+}
+
+crate::test_case! {
+    /// chown returns EPERM if the operation would change the ownership, but the effective user ID is not the super-user and the process is not an owner of the file
+    chown_euid_not_root_not_owner_symlink, serialized, root
+}
+fn chown_euid_not_root_not_owner_symlink(ctx: &mut SerializedTestContext) {
+    let user = ctx.get_new_user();
+    chown(ctx.base_path(), Some(user.uid), Some(user.gid)).unwrap();
+
+    let file = ctx.create(FileType::Symlink(None)).unwrap();
+
+    let another_user = ctx.get_new_user();
+
+    ctx.as_user(&user, None, || {
+        assert_eq!(
+            lchown(&file, Some(another_user.uid), Some(another_user.gid)),
+            Err(Errno::EPERM)
+        );
+    });
+    ctx.as_user(&another_user, None, || {
+        assert_eq!(
+            lchown(&file, Some(user.uid), Some(user.gid)),
+            Err(Errno::EPERM)
+        );
+    });
+    ctx.as_user(&another_user, None, || {
+        assert_eq!(
+            lchown(&file, Some(another_user.uid), Some(another_user.gid)),
+            Err(Errno::EPERM)
+        );
+    });
+    ctx.as_user(&user, None, || {
+        assert_eq!(
+            lchown(&file, None, Some(another_user.gid)),
+            Err(Errno::EPERM)
+        );
+    });
 }
