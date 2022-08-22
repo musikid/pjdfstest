@@ -22,6 +22,7 @@ pub mod posix_fallocate;
 pub mod rename;
 pub mod rmdir;
 pub mod symlink;
+pub mod truncate;
 pub mod unlink;
 pub mod utimensat;
 
