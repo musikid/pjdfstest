@@ -19,7 +19,7 @@ use std::{fmt::Debug, path::Path};
 
 use crate::{
     runner::context::{FileType, TestContext},
-    utils::{link, rename, symlink},
+    utils::{link, rename, rmdir, symlink},
 };
 
 /// Asserts that it returns EEXIST if the named file exists
@@ -58,10 +58,32 @@ fn named_file(ctx: &mut TestContext, ft: FileType) {
         open(p, OFlag::O_CREAT | OFlag::O_EXCL, default_mode)
     });
 
-    // TODO: rmdir
-    // assert_eexist_enotempty(ctx, &ft, |from, to| rmdir(from, to));
     // symlink/08.t
     assert_eexist(ctx, &ft, |p| symlink(Path::new("test"), p));
+}
+
+crate::test_case! {
+    /// rmdir returns EEXIST or ENOTEMPTY if the named directory contains files other than '.' and '..' in it
+    /// or if the last component of the path is '..'
+    rmdir_enotempty => [Regular, Dir, Fifo, Block, Char, Socket, Symlink(None)]
+}
+fn rmdir_enotempty(ctx: &mut TestContext, ft: FileType) {
+    // rmdir/06.t
+    ctx.create(ft).unwrap();
+    assert!(matches!(
+        rmdir(ctx.base_path()),
+        Err(Errno::ENOTEMPTY | Errno::EEXIST)
+    ));
+    // rmdir/12.t
+    // TODO: Not conforming to POSIX on FreeBSD
+    #[cfg(not(target_os = "freebsd"))]
+    {
+        let dir = ctx.create(FileType::Dir).unwrap();
+        assert!(matches!(
+            rmdir(&dir.join("..")),
+            Err(Errno::ENOTEMPTY | Errno::EEXIST)
+        ));
+    }
 }
 
 crate::test_case! {
