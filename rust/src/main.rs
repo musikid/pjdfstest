@@ -22,6 +22,7 @@ use strum::{EnumMessage, IntoEnumIterator};
 use tempfile::{tempdir_in, TempDir};
 
 mod config;
+mod flags;
 mod macros;
 mod runner;
 mod test;
@@ -232,13 +233,12 @@ fn run_test_cases(
 
         let result = catch_unwind(|| match test_case.fun {
             TestFn::NonSerialized(fun) => {
-                let mut context = TestContext::new(&config.settings, &entries, base_dir.path());
+                let mut context = TestContext::new(&config, &entries, base_dir.path());
 
                 (fun)(&mut context)
             }
             TestFn::Serialized(fun) => {
-                let mut context =
-                    SerializedTestContext::new(&config.settings, &entries, base_dir.path());
+                let mut context = SerializedTestContext::new(&config, &entries, base_dir.path());
 
                 (fun)(&mut context)
             }
