@@ -62,7 +62,7 @@ fn path(_: &mut TestContext) {
     // mkfifo/12.t
     assert_ptr_invalid!(|ptr| mkfifo(ptr, 0o644));
     // mknod/10.t
-    assert_ptr_invalid!(|ptr| mknod(ptr, 0o644, 0));
+    assert_ptr_invalid!(|ptr| mknod(ptr, nix::libc::S_IFIFO | 0o644, 0));
     // open/21.t
     assert_ptr_invalid!(|ptr| open(ptr, nix::libc::O_RDONLY));
     // rmdir/15.t
@@ -86,12 +86,13 @@ fn either_path(ctx: &mut TestContext) {
                 .create(crate::runner::context::FileType::Regular)
                 .unwrap();
 
+            let null_ptr = std::ptr::null();
+
+            let invalid_ptr = std::ptr::NonNull::dangling();
+            let invalid_ptr = invalid_ptr.as_ptr();
+
             file.with_nix_path(|cstr| {
                 let ptr = cstr.as_ptr();
-                let null_ptr = std::ptr::null();
-
-                let invalid_ptr = std::ptr::NonNull::dangling();
-                let invalid_ptr = invalid_ptr.as_ptr();
 
                 assert_eq!(
                     nix::errno::Errno::result(unsafe { $fn(null_ptr, ptr) }),
@@ -110,17 +111,17 @@ fn either_path(ctx: &mut TestContext) {
                     nix::errno::Errno::result(unsafe { $fn(ptr, invalid_ptr) }),
                     Err(nix::errno::Errno::EFAULT)
                 );
-
-                assert_eq!(
-                    nix::errno::Errno::result(unsafe { $fn(invalid_ptr, null_ptr) }),
-                    Err(nix::errno::Errno::EFAULT)
-                );
-                assert_eq!(
-                    nix::errno::Errno::result(unsafe { $fn(null_ptr, invalid_ptr) }),
-                    Err(nix::errno::Errno::EFAULT)
-                );
             })
             .unwrap();
+
+            assert_eq!(
+                nix::errno::Errno::result(unsafe { $fn(invalid_ptr, null_ptr) }),
+                Err(nix::errno::Errno::EFAULT)
+            );
+            assert_eq!(
+                nix::errno::Errno::result(unsafe { $fn(null_ptr, invalid_ptr) }),
+                Err(nix::errno::Errno::EFAULT)
+            );
         };
     }
 
