@@ -8,10 +8,11 @@ use nix::{
 };
 use once_cell::sync::Lazy;
 
+#[cfg(any(target_os = "netbsd", target_os = "freebsd", target_os = "dragonfly"))]
+use crate::utils::lchflags;
 use crate::{
     runner::context::{FileType, SerializedTestContext, TestContext},
     test::{FileFlags, FileSystemFeature},
-    utils::lchflags,
 };
 
 use super::{assert_ctime_changed, assert_ctime_unchanged};
@@ -91,6 +92,7 @@ fn set_flags(ctx: &mut TestContext, ft: FileType) {
     let file_flags = stat(&file).unwrap().st_flags;
     assert_eq!(file_flags, FileFlag::empty().bits() as fflags_t);
 
+    #[cfg(any(target_os = "netbsd", target_os = "freebsd", target_os = "dragonfly"))]
     for flags_set in [flags, user_flags, system_flags, FileFlag::empty()] {
         assert!(lchflags(&file, flags_set).is_ok());
         let file_flags = stat(&file).unwrap().st_flags;
@@ -122,10 +124,12 @@ fn set_flags_symlink(ctx: &mut TestContext) {
     }
 }
 
+#[cfg(any(target_os = "netbsd", target_os = "freebsd", target_os = "dragonfly"))]
 crate::test_case! {
     /// lchflags changes flags without following symlinks
     lchflags_set_flags_no_follow_symlink, FileSystemFeature::Chflags
 }
+#[cfg(any(target_os = "netbsd", target_os = "freebsd", target_os = "dragonfly"))]
 fn lchflags_set_flags_no_follow_symlink(ctx: &mut TestContext) {
     let (flags, user_flags, system_flags) = get_flags(ctx);
 
@@ -169,6 +173,7 @@ fn changed_ctime_success(ctx: &mut TestContext, ft: FileType) {
 
     let file = ctx.create(ft).unwrap();
 
+    #[cfg(any(target_os = "netbsd", target_os = "freebsd", target_os = "dragonfly"))]
     for flag in allflags.into_iter().chain(once(FileFlag::empty())) {
         assert_ctime_changed(ctx, &file, || {
             assert!(lchflags(&file, flag).is_ok());
@@ -202,6 +207,7 @@ fn unchanged_ctime_failed(ctx: &mut SerializedTestContext, ft: FileType) {
 
     let file = ctx.create(ft).unwrap();
 
+    #[cfg(any(target_os = "netbsd", target_os = "freebsd", target_os = "dragonfly"))]
     for flag in allflags.into_iter().chain(once(FileFlag::empty())) {
         assert_ctime_unchanged(ctx, &file, || {
             ctx.as_user(&user, None, || {

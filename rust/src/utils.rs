@@ -1,5 +1,3 @@
-use nix::{errno::Errno, sys::stat::FileFlag};
-
 /// Wrapper for `fchmodat(None, path, mode, FchmodatFlags::FollowSymlink)`.
 pub fn chmod<P: ?Sized + nix::NixPath>(path: &P, mode: nix::sys::stat::Mode) -> nix::Result<()> {
     nix::sys::stat::fchmodat(
@@ -44,7 +42,12 @@ pub fn link<P: ?Sized + nix::NixPath>(from: &P, to: &P) -> nix::Result<()> {
 }
 
 /// Safe wrapper for `lchflags`.
-pub fn lchflags<P: ?Sized + nix::NixPath>(path: &P, flags: FileFlag) -> nix::Result<()> {
+#[cfg(any(target_os = "netbsd", target_os = "freebsd", target_os = "dragonfly"))]
+pub fn lchflags<P: ?Sized + nix::NixPath>(
+    path: &P,
+    flags: nix::sys::stat::FileFlag,
+) -> nix::Result<()> {
+    use nix::errno::Errno;
     let res =
         path.with_nix_path(|cstr| unsafe { nix::libc::lchflags(cstr.as_ptr(), flags.bits()) })?;
 
