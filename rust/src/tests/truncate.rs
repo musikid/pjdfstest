@@ -18,13 +18,13 @@ crate::test_case! {
 fn shrink_sparse(ctx: &mut TestContext) {
     let file = ctx.create(FileType::Regular).unwrap();
     let size = 1234567;
-    truncate(&file, size).unwrap();
+    assert!(truncate(&file, size).is_ok());
 
     let actual_size = lstat(&file).unwrap().st_size;
     assert_eq!(actual_size, size);
 
     let size = 567;
-    truncate(&file, size).unwrap();
+    assert!(truncate(&file, size).is_ok());
 
     let actual_size = lstat(&file).unwrap().st_size;
     assert_eq!(actual_size, size);
@@ -43,12 +43,12 @@ fn shrink_not_empty(ctx: &mut TestContext) {
         .write_all(&random_data)
         .unwrap();
 
-    truncate(&file, size).unwrap();
+    assert!(truncate(&file, size).is_ok());
     let actual_size = lstat(&file).unwrap().st_size;
     assert_eq!(actual_size, size);
 
     let size = 1;
-    truncate(&file, size).unwrap();
+    assert!(truncate(&file, size).is_ok());
     let actual_size = lstat(&file).unwrap().st_size;
     assert_eq!(actual_size, size);
 }
@@ -61,7 +61,7 @@ fn update_ctime_success(ctx: &mut TestContext) {
     let file = ctx.create(FileType::Regular).unwrap();
 
     assert_ctime_changed(ctx, &file, || {
-        truncate(&file, 123).unwrap();
+        assert!(truncate(&file, 123).is_ok());
     });
 }
 
