@@ -12,10 +12,10 @@ use crate::{
 // tests/truncate/00.t
 
 crate::test_case! {
-    /// truncate should shrink a sparse file
-    shrink_sparse
+    /// truncate should extend a file, and shrink a sparse file
+    extend_file_shrink_sparse
 }
-fn shrink_sparse(ctx: &mut TestContext) {
+fn extend_file_shrink_sparse(ctx: &mut TestContext) {
     let file = ctx.create(FileType::Regular).unwrap();
     let size = 1234567;
     assert!(truncate(&file, size).is_ok());

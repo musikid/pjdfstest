@@ -18,10 +18,10 @@ use crate::{
 // tests/ftruncate/00.t
 
 crate::test_case! {
-    /// ftruncate extends if the file is empty
-    increase_empty
+    /// ftruncate should extend a file, and shrink a sparse file
+    extend_file_shrink_sparse
 }
-fn increase_empty(ctx: &mut TestContext) {
+fn extend_file_shrink_sparse(ctx: &mut TestContext) {
     let (path, file) = ctx.create_file(OFlag::O_RDWR, None).unwrap();
     let size = 1234567;
     ftruncate(file, size).unwrap();
@@ -39,9 +39,9 @@ fn increase_empty(ctx: &mut TestContext) {
 
 crate::test_case! {
     /// ftruncate should shrink the file if the specified size is less than the actual one
-    truncate_not_empty
+    shrink_not_empty
 }
-fn truncate_not_empty(ctx: &mut TestContext) {
+fn shrink_not_empty(ctx: &mut TestContext) {
     let (path, file) = ctx.create_file(OFlag::O_RDWR, None).unwrap();
     let size = 23456;
     let random_data: [u8; 12345] = random();
@@ -73,6 +73,7 @@ fn update_ctime_success(ctx: &mut TestContext) {
         ftruncate(file, 123).unwrap();
     });
 }
+
 crate::test_case! {
     /// ftruncate should not update ctime if it fails
     unchanged_ctime_failed
