@@ -24,7 +24,7 @@ use rand::{distributions::Alphanumeric, thread_rng, Rng};
 use std::{
     fs::create_dir_all,
     ops::{Deref, DerefMut},
-    os::unix::{fs::symlink, prelude::RawFd},
+    os::unix::prelude::RawFd,
     panic::{catch_unwind, resume_unwind, AssertUnwindSafe},
     path::{Path, PathBuf},
     thread,
@@ -37,7 +37,7 @@ use thiserror::Error;
 use crate::{
     config::SettingsConfig,
     test::TestError,
-    utils::{chmod, lchmod},
+    utils::{chmod, lchmod, symlink},
 };
 
 /// File type, mainly used with [TestContext::create].
@@ -373,7 +373,7 @@ pub struct FileBuilder {
     file_type: FileType,
     path: PathBuf,
     random_name: bool,
-    mode: Mode,
+    mode: Option<Mode>,
 }
 
 impl FileBuilder {
@@ -382,10 +382,7 @@ impl FileBuilder {
         Self {
             path: base_path.as_ref().to_path_buf(),
             random_name: true,
-            mode: match &file_type {
-                FileType::Dir => Mode::from_bits_truncate(0o755),
-                _ => Mode::from_bits_truncate(0o644),
-            },
+            mode: None,
             file_type,
         }
     }
@@ -407,7 +404,10 @@ impl FileBuilder {
 
     /// Create the file according to the provided information.
     pub fn create(mut self) -> nix::Result<PathBuf> {
-        let mode = self.mode;
+        let mode = self.mode.unwrap_or_else(|| match self.file_type {
+            FileType::Dir => Mode::from_bits_truncate(0o755),
+            _ => Mode::from_bits_truncate(0o644),
+        });
         let path = self.final_path();
 
         match self.file_type {
@@ -424,13 +424,24 @@ impl FileBuilder {
                     None,
                 )?;
                 let sockaddr = UnixAddr::new(&path)?;
+                if let Some(mode) = self.mode {
+                    chmod(&path, mode)?;
+                }
                 bind(fd, &sockaddr)
             }
-            FileType::Symlink(target) => symlink(
-                target.as_deref().unwrap_or_else(|| Path::new("test")),
-                &path,
-            )
-            .map_err(|e| nix::Error::try_from(e).unwrap_or(nix::errno::Errno::UnknownErrno)),
+            FileType::Symlink(target) => {
+                symlink(
+                    target.as_deref().unwrap_or_else(|| Path::new("test")),
+                    &path,
+                )?;
+
+                #[cfg(any(target_os = "netbsd", target_os = "freebsd", target_os = "dragonfly"))]
+                if let Some(mode) = self.mode {
+                    lchmod(&path, mode)?;
+                }
+
+                Ok(())
+            }
         }?;
 
         Ok(path)
@@ -442,7 +453,12 @@ impl FileBuilder {
         match self.file_type {
             FileType::Regular => {
                 let path = self.final_path();
-                open(&path, OFlag::O_CREAT | oflags, self.mode).map(|fd| (path, fd))
+                open(
+                    &path,
+                    OFlag::O_CREAT | oflags,
+                    self.mode.unwrap_or_else(|| Mode::from_bits_truncate(0o644)),
+                )
+                .map(|fd| (path, fd))
             }
             _ => self
                 .create()
@@ -452,7 +468,7 @@ impl FileBuilder {
 
     /// Change file mode.
     pub fn mode(mut self, mode: nix::sys::stat::mode_t) -> Self {
-        self.mode = Mode::from_bits_truncate(mode);
+        self.mode = Some(Mode::from_bits_truncate(mode));
         self
     }
 
@@ -596,6 +612,7 @@ mod tests {
         for ft in [
             FileType::Regular,
             FileType::Dir,
+            // TODO: Test other file types
             // FileType::Fifo,
             // FileType::Socket,
             // FileType::Symlink(None),
