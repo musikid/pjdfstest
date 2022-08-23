@@ -12,10 +12,10 @@ use crate::{
 // tests/truncate/00.t
 
 crate::test_case! {
-    /// truncate extends if the file is empty
-    increase_empty
+    /// truncate should shrink a sparse file
+    shrink_sparse
 }
-fn increase_empty(ctx: &mut TestContext) {
+fn shrink_sparse(ctx: &mut TestContext) {
     let file = ctx.create(FileType::Regular).unwrap();
     let size = 1234567;
     truncate(&file, size).unwrap();
@@ -32,9 +32,9 @@ fn increase_empty(ctx: &mut TestContext) {
 
 crate::test_case! {
     /// truncate should shrink the file if the specified size is less than the actual one
-    truncate_not_empty
+    shrink_not_empty
 }
-fn truncate_not_empty(ctx: &mut TestContext) {
+fn shrink_not_empty(ctx: &mut TestContext) {
     let file = ctx.create(FileType::Regular).unwrap();
     let size = 23456;
     let random_data: [u8; 12345] = random();
@@ -64,6 +64,7 @@ fn update_ctime_success(ctx: &mut TestContext) {
         truncate(&file, 123).unwrap();
     });
 }
+
 crate::test_case! {
     /// truncate should not update ctime if it fails
     unchanged_ctime_failed, serialized, root
