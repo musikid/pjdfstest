@@ -34,11 +34,9 @@ pub mod utimensat;
 #[derive(Debug, Clone, Copy)]
 struct TimestampField(u32);
 
-impl TimestampField {
-    pub const ATIME: TimestampField = TimestampField(0b001);
-    pub const CTIME: TimestampField = TimestampField(0b010);
-    pub const MTIME: TimestampField = TimestampField(0b100);
-}
+const ATIME: TimestampField = TimestampField(0b001);
+const CTIME: TimestampField = TimestampField(0b010);
+const MTIME: TimestampField = TimestampField(0b100);
 
 impl PartialEq<u32> for TimestampField {
     fn eq(&self, other: &u32) -> bool {
@@ -189,9 +187,9 @@ impl<'a> TimeAssertion<'a> {
             .map(|&(path, _, fields)| {
                 let meta = get_metadata(path).unwrap();
                 (
-                    (fields & TimestampField::ATIME != 0).then(|| meta.atime_ts()),
-                    (fields & TimestampField::CTIME != 0).then(|| meta.ctime_ts()),
-                    (fields & TimestampField::MTIME != 0).then(|| meta.mtime_ts()),
+                    (fields & ATIME != 0).then(|| meta.atime_ts()),
+                    (fields & CTIME != 0).then(|| meta.ctime_ts()),
+                    (fields & MTIME != 0).then(|| meta.mtime_ts()),
                 )
             })
             .collect();
@@ -206,9 +204,9 @@ impl<'a> TimeAssertion<'a> {
             .map(|(_, path, fields)| {
                 let meta = get_metadata(path).unwrap();
                 (
-                    (fields & TimestampField::ATIME != 0).then(|| meta.atime_ts()),
-                    (fields & TimestampField::CTIME != 0).then(|| meta.ctime_ts()),
-                    (fields & TimestampField::MTIME != 0).then(|| meta.mtime_ts()),
+                    (fields & ATIME != 0).then(|| meta.atime_ts()),
+                    (fields & CTIME != 0).then(|| meta.ctime_ts()),
+                    (fields & MTIME != 0).then(|| meta.mtime_ts()),
                 )
             })
             .collect();
@@ -242,7 +240,7 @@ where
     F: FnOnce(),
 {
     assert_times_changed()
-        .path(&path, TimestampField::CTIME)
+        .path(&path, CTIME)
         .execute(ctx, false, f)
 }
 
@@ -252,7 +250,7 @@ where
     F: FnOnce(),
 {
     assert_times_changed()
-        .path(&path, TimestampField::MTIME)
+        .path(&path, MTIME)
         .execute(ctx, false, f)
 }
 
@@ -262,7 +260,7 @@ where
     F: FnOnce(),
 {
     assert_times_unchanged()
-        .path(&path, TimestampField::CTIME)
+        .path(&path, CTIME)
         .execute(ctx, false, f)
 }
 
@@ -272,7 +270,7 @@ where
     F: FnOnce(),
 {
     assert_times_unchanged()
-        .path(&path, TimestampField::CTIME)
+        .path(&path, CTIME)
         .execute(ctx, true, f)
 }
 
@@ -282,6 +280,6 @@ where
     F: FnOnce(),
 {
     assert_times_unchanged()
-        .path(&path, TimestampField::MTIME)
+        .path(&path, MTIME)
         .execute(ctx, false, f)
 }

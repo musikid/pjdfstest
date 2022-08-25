@@ -1,11 +1,15 @@
 use std::fs::FileType;
 
-use nix::unistd::mkdir;
+use nix::{
+    sys::stat::Mode,
+    unistd::mkdir
+};
 
 use crate::runner::context::{SerializedTestContext, TestContext};
 
+use super::{assert_times_changed, ATIME, CTIME, MTIME};
 use super::mksyscalls::{
-    changed_time_fields_success_builder, permission_bits_from_mode_builder,
+    permission_bits_from_mode_builder,
     uid_gid_eq_euid_or_parent_uid_egid_builder,
 };
 
@@ -37,5 +41,12 @@ crate::test_case! {
     changed_time_fields_success
 }
 fn changed_time_fields_success(ctx: &mut TestContext) {
-    changed_time_fields_success_builder(ctx, mkdir);
+    let path = ctx.gen_path();
+
+    assert_times_changed()
+        .path(ctx.base_path(), CTIME | MTIME)
+        .paths(ctx.base_path(), &path, ATIME | CTIME | MTIME)
+        .execute(ctx, false, || {
+            mkdir(&path, Mode::from_bits_truncate(0o755)).unwrap();
+        });
 }

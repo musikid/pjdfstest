@@ -12,11 +12,9 @@ use nix::{
 };
 
 use crate::{
-    runner::context::{SerializedTestContext, TestContext},
+    runner::context::{SerializedTestContext},
     utils::{chmod, ALLPERMS},
 };
-
-use super::{assert_times_changed, TimestampField};
 
 /// Assert that the created entry gets its permission bits from the mode provided to the function
 /// negated by the process file creation mask (umask), and its file type equal the expected one.
@@ -126,27 +124,4 @@ pub(super) fn uid_gid_eq_euid_or_parent_uid_egid_builder<F, T>(
 
     let group = ctx.get_new_group();
     assert_uid_gid(ctx, &other_user, Some(group.gid), f);
-}
-
-/// Assert that the st_atime, st_ctime, and st_mtime fields of the new entry should be marked for update,
-/// along with the st_ctime and st_mtime fields of its parent directory.
-pub(super) fn changed_time_fields_success_builder<F, T>(ctx: &mut TestContext, f: F)
-where
-    F: Fn(&Path, Mode) -> nix::Result<T>,
-{
-    let path = ctx.gen_path();
-
-    assert_times_changed()
-        .path(
-            ctx.base_path(),
-            TimestampField::CTIME | TimestampField::MTIME,
-        )
-        .paths(
-            ctx.base_path(),
-            &path,
-            TimestampField::ATIME | TimestampField::CTIME | TimestampField::MTIME,
-        )
-        .execute(ctx, false, || {
-            f(&path, Mode::from_bits_truncate(0o755)).unwrap();
-        });
 }
