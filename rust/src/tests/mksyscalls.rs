@@ -78,16 +78,16 @@ pub(super) fn permission_bits_from_mode_builder<F, T, C>(
     assert_perm_umask(ctx, 0o501, 0o345, f, f_type_check);
 }
 
-/// Assert that the entry's user ID is set to the process' effective user ID.
-/// The entry's group ID should be set to the group ID of the parent directory
+/// Assert that the entry's user ID is set to the process' effective user ID and
+/// the entry's group ID should be set to the group ID of the parent directory
 /// or the effective group ID of the process.
-pub(super) fn uid_gid_eq_euid_or_parent_uid_egid_builder<F, T>(
+pub(super) fn assert_uid_gid<F, T>(
     ctx: &mut SerializedTestContext,
     f: F,
 ) where
     F: Fn(&Path, Mode) -> nix::Result<T>,
 {
-    fn assert_uid_gid<F, T>(ctx: &SerializedTestContext, user: &User, gid: Option<Gid>, f: F)
+    fn doit<F, T>(ctx: &SerializedTestContext, user: &User, gid: Option<Gid>, f: F)
     where
         F: Fn(&Path, Mode) -> nix::Result<T>,
     {
@@ -96,32 +96,26 @@ pub(super) fn uid_gid_eq_euid_or_parent_uid_egid_builder<F, T>(
             f(&path, Mode::from_bits_truncate(0o755)).unwrap();
         });
 
-        let nix::sys::stat::FileStat {
-            st_uid: file_uid,
-            st_gid: file_gid,
-            ..
-        } = lstat(&path).unwrap();
-        assert_eq!(file_uid, user.uid.as_raw());
+        let filestat = lstat(&path).unwrap();
+        assert_eq!(filestat.st_uid, user.uid.as_raw());
 
         let egid = gid.unwrap_or(user.gid).as_raw();
-        let nix::sys::stat::FileStat {
-            st_gid: parent_gid, ..
-        } = lstat(ctx.base_path()).unwrap();
-        assert!(file_gid == egid || file_gid == parent_gid);
+        let dirstat = lstat(ctx.base_path()).unwrap();
+        assert!(filestat.st_gid == egid || filestat.st_gid == dirstat.st_gid);
     }
 
     let user = User::from_uid(Uid::effective()).unwrap().unwrap();
-    assert_uid_gid(ctx, &user, None, &f);
+    doit(ctx, &user, None, &f);
 
     let user = ctx.get_new_user();
     // To check that the entry gid is either parent gid or egid
     chown(ctx.base_path(), Some(user.uid), Some(user.gid)).unwrap();
 
     let (other_user, group) = ctx.get_new_entry();
-    assert_uid_gid(ctx, &user, Some(group.gid), &f);
+    doit(ctx, &user, Some(group.gid), &f);
 
     chmod(ctx.base_path(), Mode::from_bits_truncate(ALLPERMS)).unwrap();
 
     let group = ctx.get_new_group();
-    assert_uid_gid(ctx, &other_user, Some(group.gid), f);
+    doit(ctx, &other_user, Some(group.gid), f);
 }

@@ -7,7 +7,7 @@ use crate::runner::context::{SerializedTestContext, TestContext};
 use super::{assert_times_changed, ATIME, CTIME, MTIME};
 use super::mksyscalls::{
     permission_bits_from_mode_builder,
-    uid_gid_eq_euid_or_parent_uid_egid_builder,
+    assert_uid_gid,
 };
 
 /// TODO: Shouldn't test it for other types?
@@ -32,7 +32,7 @@ crate::test_case! {
     uid_gid_eq_euid_egid, serialized, root
 }
 fn uid_gid_eq_euid_egid(ctx: &mut SerializedTestContext) {
-    uid_gid_eq_euid_or_parent_uid_egid_builder(ctx, mknod_wrapper);
+    assert_uid_gid(ctx, mknod_wrapper);
 }
 
 crate::test_case! {
