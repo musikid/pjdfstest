@@ -424,10 +424,11 @@ impl FileBuilder {
                     None,
                 )?;
                 let sockaddr = UnixAddr::new(&path)?;
+                bind(fd, &sockaddr)?;
                 if let Some(mode) = self.mode {
                     chmod(&path, mode)?;
                 }
-                bind(fd, &sockaddr)
+                Ok(())
             }
             FileType::Symlink(target) => {
                 symlink(
