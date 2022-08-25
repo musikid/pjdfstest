@@ -9,7 +9,7 @@ use crate::runner::context::{SerializedTestContext, TestContext};
 
 use super::{assert_times_changed, ATIME, CTIME, MTIME};
 use super::mksyscalls::{
-    permission_bits_from_mode_builder,
+    assert_perms_from_mode_and_umask,
     assert_uid_gid,
 };
 
@@ -20,7 +20,7 @@ crate::test_case! {
     permission_bits_from_mode, serialized
 }
 fn permission_bits_from_mode(ctx: &mut SerializedTestContext) {
-    permission_bits_from_mode_builder(ctx, mkfifo, FileType::is_fifo);
+    assert_perms_from_mode_and_umask(ctx, mkfifo, FileType::is_fifo);
 }
 
 crate::test_case! {

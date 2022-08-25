@@ -16,9 +16,10 @@ use crate::{
     utils::{chmod, ALLPERMS},
 };
 
-/// Assert that the created entry gets its permission bits from the mode provided to the function
-/// negated by the process file creation mask (umask), and its file type equal the expected one.
-pub(super) fn permission_bits_from_mode_builder<F, T, C>(
+/// Assert that the created entry gets its permission bits from the mode
+/// provided to the function negated by the process's file creation mask
+/// (umask), and its file type is equal to the expected one.
+pub(super) fn assert_perms_from_mode_and_umask<F, T, C>(
     ctx: &mut SerializedTestContext,
     f: F,
     f_type_check: C,
