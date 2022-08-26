@@ -26,6 +26,7 @@ use crate::{
 mod eacces;
 mod eexist;
 mod efault;
+mod eisdir;
 mod eloop;
 mod emlink;
 mod enametoolong;
@@ -35,43 +36,6 @@ mod enotdir;
 mod eperm;
 mod erofs;
 mod etxtbsy;
-
-crate::test_case! {eisdir}
-fn eisdir(ctx: &mut TestContext) {
-    fn assert_eisdir<F, T: Debug>(ctx: &mut TestContext, f: F)
-    where
-        F: Fn(&Path) -> nix::Result<T>,
-    {
-        let path = ctx.create(FileType::Dir).unwrap();
-        assert_eq!(f(&path).unwrap_err(), Errno::EISDIR);
-    }
-
-    // open/13.t
-    assert_eisdir(ctx, |p| open(p, OFlag::O_WRONLY, Mode::empty()));
-    assert_eisdir(ctx, |p| open(p, OFlag::O_RDWR, Mode::empty()));
-    assert_eisdir(ctx, |p| {
-        open(p, OFlag::O_RDONLY | OFlag::O_TRUNC, Mode::empty())
-    });
-    assert_eisdir(ctx, |p| {
-        open(p, OFlag::O_WRONLY | OFlag::O_TRUNC, Mode::empty())
-    });
-    assert_eisdir(ctx, |p| {
-        open(p, OFlag::O_RDWR | OFlag::O_TRUNC, Mode::empty())
-    });
-
-    // (f)truncate/09.t
-    assert_eisdir(ctx, |p| truncate(p, 0));
-}
-
-crate::test_case! {
-    // rename/14.t
-    eisdir_rename => [Regular, Fifo, Block, Char, Socket, Symlink(None)]
-}
-fn eisdir_rename(ctx: &mut TestContext, ft: FileType) {
-    let dir = ctx.create(FileType::Dir).unwrap();
-    let not_dir_file = ctx.create(ft).unwrap();
-    assert_eq!(rename(&not_dir_file, &dir).unwrap_err(), Errno::EISDIR);
-}
 
 crate::test_case! {
     /// truncate must not change the file size if it fails with EFBIG or EINVAL
