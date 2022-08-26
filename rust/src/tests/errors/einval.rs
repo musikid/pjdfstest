@@ -6,11 +6,9 @@ use nix::{
     unistd::{ftruncate, truncate},
 };
 
-use std::{fmt::Debug, path::Path};
-
 use crate::{
     runner::context::{FileType, TestContext},
-    utils::rename,
+    utils::{rename, rmdir},
 };
 
 crate::test_case! {einval}
@@ -63,4 +61,13 @@ fn open_einval(ctx: &mut TestContext) {
     assert_einval_open(ctx, OFlag::O_RDONLY | OFlag::O_RDWR);
     assert_einval_open(ctx, OFlag::O_WRONLY | OFlag::O_RDWR);
     assert_einval_open(ctx, OFlag::O_RDONLY | OFlag::O_WRONLY | OFlag::O_RDWR);
+}
+
+crate::test_case! {
+    /// rmdir returns EINVAL if the last component of the path is '.'
+    // rmdir/12.t
+    rmdir_einval
+}
+fn rmdir_einval(ctx: &mut TestContext) {
+    assert_eq!(rmdir(&ctx.base_path().join(".")), Err(Errno::EINVAL));
 }
