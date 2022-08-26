@@ -4,11 +4,8 @@ use nix::sys::stat::{mknod, Mode, SFlag};
 
 use crate::runner::context::{SerializedTestContext, TestContext};
 
+use super::mksyscalls::{assert_perms_from_mode_and_umask, assert_uid_gid};
 use super::{assert_times_changed, ATIME, CTIME, MTIME};
-use super::mksyscalls::{
-    assert_perms_from_mode_and_umask,
-    assert_uid_gid,
-};
 
 /// TODO: Shouldn't test it for other types?
 fn mknod_wrapper(path: &Path, mode: Mode) -> nix::Result<()> {

@@ -1,17 +1,11 @@
 use std::{fs::FileType, os::unix::fs::FileTypeExt};
 
-use nix::{
-    sys::stat::Mode,
-    unistd::mkfifo
-};
+use nix::{sys::stat::Mode, unistd::mkfifo};
 
 use crate::runner::context::{SerializedTestContext, TestContext};
 
+use super::mksyscalls::{assert_perms_from_mode_and_umask, assert_uid_gid};
 use super::{assert_times_changed, ATIME, CTIME, MTIME};
-use super::mksyscalls::{
-    assert_perms_from_mode_and_umask,
-    assert_uid_gid,
-};
 
 crate::test_case! {
     /// POSIX: The file permission bits of the new FIFO shall be initialized from

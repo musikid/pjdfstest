@@ -12,7 +12,7 @@ use nix::{
 };
 
 use crate::{
-    runner::context::{SerializedTestContext},
+    runner::context::SerializedTestContext,
     utils::{chmod, ALLPERMS},
 };
 
@@ -82,10 +82,8 @@ pub(super) fn assert_perms_from_mode_and_umask<F, T, C>(
 /// Assert that the entry's user ID is set to the process' effective user ID and
 /// the entry's group ID should be set to the group ID of the parent directory
 /// or the effective group ID of the process.
-pub(super) fn assert_uid_gid<F, T>(
-    ctx: &mut SerializedTestContext,
-    f: F,
-) where
+pub(super) fn assert_uid_gid<F, T>(ctx: &mut SerializedTestContext, f: F)
+where
     F: Fn(&Path, Mode) -> nix::Result<T>,
 {
     fn doit<F, T>(ctx: &SerializedTestContext, user: &User, gid: Option<Gid>, f: F)
