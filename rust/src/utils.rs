@@ -27,6 +27,8 @@ pub fn rmdir<P: ?Sized + nix::NixPath>(path: &P) -> nix::Result<()> {
 
 pub const ALLPERMS: nix::sys::stat::mode_t = 0o777;
 
+pub const ALLPERMS_STICKY: nix::sys::stat::mode_t = ALLPERMS | nix::sys::stat::Mode::S_ISVTX.bits();
+
 /// Wrapper for `renameat(None, old_path, None, new_path)`.
 pub fn rename<P: ?Sized + nix::NixPath>(old_path: &P, new_path: &P) -> nix::Result<()> {
     renameat(None, old_path, None, new_path)

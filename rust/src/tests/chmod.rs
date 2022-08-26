@@ -2,14 +2,12 @@ use crate::{
     runner::context::{FileType, SerializedTestContext},
     test::TestContext,
     tests::{assert_ctime_changed, assert_ctime_unchanged},
-    utils::{chmod, ALLPERMS},
+    utils::{chmod, ALLPERMS, ALLPERMS_STICKY},
 };
 use nix::{
     sys::stat::{lstat, stat, Mode},
     unistd::chown,
 };
-
-mod errno;
 
 // chmod/00.t:L24
 crate::test_case! {
@@ -100,4 +98,73 @@ fn clear_isgid_bit(ctx: &mut SerializedTestContext) {
     let actual_mode = stat(&path).unwrap().st_mode;
     assert_eq!(actual_mode & 0o7777, expected_mode.bits());
     //TODO: FreeBSD "S_ISGID should be removed and chmod(2) should success and FreeBSD returns EPERM."
+}
+
+crate::test_case! {
+    // chmod/11.t
+    verify_sticky, serialized, root => [Regular, Dir, Fifo, Block, Char, Socket]
+}
+fn verify_sticky(ctx: &mut SerializedTestContext, ft: FileType) {
+    let file = ctx.create(ft.clone()).unwrap();
+
+    let mode = Mode::from_bits_truncate(0o621) | Mode::S_ISVTX;
+    assert!(chmod(&file, mode).is_ok());
+
+    let file_stat = stat(&file).unwrap();
+    assert_eq!(file_stat.st_mode & ALLPERMS_STICKY, mode.bits());
+
+    let link = ctx.create(FileType::Symlink(Some(file.clone()))).unwrap();
+
+    let mode = Mode::from_bits_truncate(0o700) | Mode::S_ISVTX;
+    assert!(chmod(&link, mode).is_ok());
+
+    let file_stat = stat(&file).unwrap();
+    assert_eq!(file_stat.st_mode & ALLPERMS_STICKY, mode.bits());
+
+    #[cfg(any(target_os = "netbsd", target_os = "freebsd", target_os = "dragonfly"))]
+    {
+        use crate::utils::lchmod;
+
+        let mode = Mode::from_bits_truncate(0o621) | Mode::S_ISVTX;
+        assert!(lchmod(&file, mode).is_ok());
+
+        let file_stat = lstat(&file).unwrap();
+        assert_eq!(file_stat.st_mode & ALLPERMS_STICKY, mode.bits());
+    }
+
+    let user = ctx.get_new_user();
+    let mode = Mode::from_bits_truncate(0o755) | Mode::S_ISVTX;
+    let dir = ctx.create(FileType::Dir).unwrap();
+    chown(&dir, Some(user.uid), Some(user.gid)).unwrap();
+    ctx.as_user(&user, None, || {
+        assert!(chmod(&dir, mode).is_ok());
+    });
+
+    let dir_stat = stat(&dir).unwrap();
+    assert_eq!(dir_stat.st_mode & ALLPERMS_STICKY, mode.bits());
+
+    let link = ctx.create(FileType::Symlink(Some(dir.clone()))).unwrap();
+    let mode = Mode::from_bits_truncate(0o700) | Mode::S_ISVTX;
+    assert!(chmod(&link, mode).is_ok());
+
+    let dir_stat = stat(&dir).unwrap();
+    assert_eq!(dir_stat.st_mode & ALLPERMS_STICKY, mode.bits());
+}
+
+#[cfg(any(target_os = "netbsd", target_os = "freebsd", target_os = "dragonfly"))]
+crate::test_case! {
+    // chmod/11.t
+    verify_sticky_symlink
+}
+#[cfg(any(target_os = "netbsd", target_os = "freebsd", target_os = "dragonfly"))]
+fn verify_sticky_symlink(ctx: &mut TestContext) {
+    use crate::utils::lchmod;
+
+    let file = ctx.create(FileType::Symlink(None)).unwrap();
+
+    let mode = Mode::from_bits_truncate(0o621) | Mode::S_ISVTX;
+    assert!(lchmod(&file, mode).is_ok());
+
+    let file_stat = lstat(&file).unwrap();
+    assert_eq!(file_stat.st_mode & ALLPERMS_STICKY, mode.bits());
 }
