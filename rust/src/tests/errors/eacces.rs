@@ -197,7 +197,50 @@ fn write_dir_write_perm(ctx: &mut SerializedTestContext) {
             assert_eq!(f(&from_path, &to_path).unwrap_err(), Errno::EACCES);
         });
 
+        chmod(&to_dir, Mode::from_bits_truncate(0o755)).unwrap();
         chmod(&from_dir, Mode::from_bits_truncate(0o555)).unwrap();
+        ctx.as_user(user, None, || {
+            assert_eq!(f(&from_path, &to_same_dir).unwrap_err(), Errno::EACCES);
+        });
+    }
+
+    let user = ctx.get_new_user();
+
+    assert_write_perm(ctx, &user, link);
+    assert_write_perm(ctx, &user, rename);
+}
+crate::test_case! {
+    /// Return EACCES when search permission is denied for a component of either path prefix
+    search_perm_either, serialized, root
+}
+fn search_perm_either(ctx: &mut SerializedTestContext) {
+    fn assert_write_perm<F, T: Debug>(ctx: &mut SerializedTestContext, user: &User, f: F)
+    where
+        F: Fn(&Path, &Path) -> nix::Result<T>,
+    {
+        let from_dir = ctx.create(FileType::Dir).unwrap();
+        chown(&from_dir, Some(user.uid), Some(user.gid)).unwrap();
+
+        let from_path = ctx
+            .create_named(FileType::Regular, from_dir.join("file"))
+            .unwrap();
+        chown(&from_path, Some(user.uid), Some(user.gid)).unwrap();
+        let to_same_dir = from_dir.join("file1");
+
+        let to_dir = ctx.create(FileType::Dir).unwrap();
+        chown(&to_dir, Some(user.uid), Some(user.gid)).unwrap();
+
+        let to_path = to_dir.join("file");
+
+        //TODO: Test that it succeed first? it's already done in the other tests?
+
+        chmod(&to_dir, Mode::from_bits_truncate(0o644)).unwrap();
+        ctx.as_user(user, None, || {
+            assert_eq!(f(&from_path, &to_path).unwrap_err(), Errno::EACCES);
+        });
+
+        chmod(&to_dir, Mode::from_bits_truncate(0o755)).unwrap();
+        chmod(&from_dir, Mode::from_bits_truncate(0o644)).unwrap();
         ctx.as_user(user, None, || {
             assert_eq!(f(&from_path, &to_same_dir).unwrap_err(), Errno::EACCES);
         });
