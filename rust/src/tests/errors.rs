@@ -26,6 +26,7 @@ use crate::{
 mod eacces;
 mod eexist;
 mod efault;
+mod einval;
 mod eisdir;
 mod eloop;
 mod emlink;
@@ -56,70 +57,6 @@ fn truncate_efbig(ctx: &mut TestContext) {
 
     let stat = stat(&file).unwrap();
     assert_eq!(stat.st_size, expected_size);
-}
-
-crate::test_case! {einval}
-fn einval(ctx: &mut TestContext) {
-    fn assert_einval<F, T: Debug>(ctx: &mut TestContext, f: F)
-    where
-        F: Fn(&Path) -> nix::Result<T>,
-    {
-        let path = ctx.create(FileType::Regular).unwrap();
-        assert_eq!(f(&path).unwrap_err(), Errno::EINVAL);
-    }
-
-    // (f)truncate/13.t
-    assert_einval(ctx, |p| {
-        let file = open(p, OFlag::O_RDWR, Mode::empty()).unwrap();
-        ftruncate(file, -1)
-    });
-    assert_einval(ctx, |p| {
-        let file = open(p, OFlag::O_WRONLY, Mode::empty()).unwrap();
-        ftruncate(file, off_t::MIN)
-    });
-
-    // rename/19.t
-    let dir = ctx.create(FileType::Dir).unwrap();
-    let subdir = ctx.create_named(FileType::Dir, dir.join("subdir")).unwrap();
-    assert!(matches!(
-        rename(&subdir.join("."), &subdir.join("test")).unwrap_err(),
-        Errno::EINVAL | Errno::EBUSY
-    ));
-    assert!(matches!(
-        rename(&subdir.join(".."), &subdir.join("test")).unwrap_err(),
-        Errno::EINVAL | Errno::EBUSY
-    ));
-
-    // rename/18.t
-    let nested_subdir = ctx
-        .create_named(FileType::Dir, subdir.join("nested"))
-        .unwrap();
-    assert_eq!(rename(&dir, &subdir).unwrap_err(), Errno::EINVAL);
-    assert_eq!(rename(&dir, &nested_subdir).unwrap_err(), Errno::EINVAL);
-
-    // (f)truncate/13.t
-    assert_einval(ctx, |p| truncate(p, -1));
-    assert_einval(ctx, |p| truncate(p, off_t::MIN));
-}
-
-crate::test_case! {
-    /// open may return EINVAL when an attempt was made to open a descriptor
-    /// with an illegal combination of O_RDONLY, O_WRONLY, and O_RDWR
-    // open/23.t
-    open_einval
-}
-fn open_einval(ctx: &mut TestContext) {
-    fn assert_einval_open(ctx: &mut TestContext, flags: OFlag) {
-        let path = ctx.create(FileType::Regular).unwrap();
-        assert!(matches!(
-            open(&path, flags, Mode::empty()),
-            Ok(_) | Err(Errno::EINVAL)
-        ));
-    }
-
-    assert_einval_open(ctx, OFlag::O_RDONLY | OFlag::O_RDWR);
-    assert_einval_open(ctx, OFlag::O_WRONLY | OFlag::O_RDWR);
-    assert_einval_open(ctx, OFlag::O_RDONLY | OFlag::O_WRONLY | OFlag::O_RDWR);
 }
 
 crate::test_case! {
