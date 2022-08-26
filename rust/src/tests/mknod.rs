@@ -9,7 +9,6 @@ use super::errors::enotdir::enotdir_comp_test_case;
 use super::mksyscalls::{assert_perms_from_mode_and_umask, assert_uid_gid};
 use super::{assert_times_changed, ATIME, CTIME, MTIME};
 
-/// TODO: Shouldn't test it for other types?
 fn mknod_wrapper(path: &Path, mode: Mode) -> nix::Result<()> {
     mknod(path, SFlag::S_IFIFO, mode, 0)
 }
@@ -73,4 +72,115 @@ fn enotdir_comp_char_block(ctx: &mut TestContext, ft: FileType) {
         mknod(&path, SFlag::S_IFBLK, Mode::empty(), 0).unwrap_err(),
         Errno::ENOTDIR
     );
+}
+
+#[cfg(any(target_os = "linux", target_os = "freebsd", target_os = "solaris"))]
+crate::test_case! {
+    /// mknod create device files
+    // mknod/11.t
+    device_files, root => [Block, Char]
+}
+#[cfg(any(target_os = "linux", target_os = "freebsd", target_os = "solaris"))]
+fn device_files(ctx: &mut TestContext, ft: FileType) {
+    use std::{
+        fs::symlink_metadata,
+        os::unix::prelude::{MetadataExt, PermissionsExt},
+    };
+
+    use crate::utils::{
+        dev::{major, makedev, minor},
+        ALLPERMS,
+    };
+    use nix::sys::stat::mode_t;
+
+    let (argument, check): (SFlag, fn(&StdFileType) -> bool) = match ft {
+        FileType::Block => (SFlag::S_IFBLK, StdFileType::is_block_device),
+        FileType::Char => (SFlag::S_IFCHR, StdFileType::is_char_device),
+        _ => unreachable!(),
+    };
+
+    let file = ctx.gen_path();
+
+    let mode = 0o755;
+    let major_num = 1;
+    let minor_num = 2;
+
+    assert!(mknod(
+        &file,
+        argument,
+        Mode::from_bits_truncate(mode),
+        makedev(major_num, minor_num)
+    )
+    .is_ok());
+
+    let stat = symlink_metadata(&file).unwrap();
+    assert_eq!(stat.permissions().mode() as mode_t & ALLPERMS, mode);
+    assert_eq!(major(stat.rdev()), major_num as u64);
+    assert_eq!(minor(stat.rdev()), minor_num as u64);
+    assert!(check(&stat.file_type()));
+
+    assert_eq!(
+        mknod(
+            &file,
+            argument,
+            Mode::from_bits_truncate(mode),
+            makedev(3, 4)
+        ),
+        Err(Errno::EEXIST)
+    );
+
+    // TODO: EINVAL seems to be sent by makedev?
+    #[cfg(target_os = "solaris")]
+    {
+        let file = ctx.gen_path();
+        assert!(mknod(
+            &file,
+            argument,
+            Mode::from_bits_truncate(mode),
+            makedev(4095, 4095)
+        )
+        .is_ok());
+
+        let stat = symlink_metadata(&file).unwrap();
+        assert_eq!(stat.permissions().mode() as mode_t & ALLPERMS, mode);
+        assert_eq!(major(stat.rdev()), major_num);
+        assert_eq!(minor(stat.rdev()), minor_num);
+        assert!(check(&stat.file_type()));
+
+        assert_eq!(
+            mknod(
+                &file,
+                argument,
+                Mode::from_bits_truncate(mode),
+                makedev(4000, 4000)
+            ),
+            Err(Errno::EEXIST)
+        );
+
+        let file = ctx.gen_path();
+
+        assert_eq!(
+            mknod(
+                &file,
+                argument,
+                Mode::from_bits_truncate(mode),
+                makedev(4096, 262144)
+            ),
+            Err(Errno::EINVAL)
+        );
+    }
+
+    let file = ctx.gen_path();
+    assert_times_changed()
+        .path(ctx.base_path(), CTIME | MTIME)
+        .paths(ctx.base_path(), &file, ATIME | CTIME | MTIME)
+        .execute(ctx, false, || {
+            assert!(mknod(
+                &file,
+                argument,
+                Mode::from_bits_truncate(mode),
+                makedev(1, 2)
+            )
+            .is_ok());
+        })
 }

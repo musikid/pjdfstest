@@ -4,6 +4,8 @@ use nix::{
     unistd::{fchownat, linkat, symlinkat, FchownatFlags, Gid, LinkatFlags, Uid},
 };
 
+pub mod dev;
+
 /// Wrapper for `fchmodat(None, path, mode, FchmodatFlags::FollowSymlink)`.
 pub fn chmod<P: ?Sized + nix::NixPath>(path: &P, mode: nix::sys::stat::Mode) -> nix::Result<()> {
     fchmodat(None, path, mode, FchmodatFlags::FollowSymlink)
