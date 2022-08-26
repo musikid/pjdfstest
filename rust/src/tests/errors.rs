@@ -26,6 +26,7 @@ use crate::{
 mod eacces;
 mod eexist;
 mod efault;
+mod efbig;
 mod eftype;
 mod einval;
 mod eisdir;
@@ -38,33 +39,3 @@ mod enotdir;
 mod eperm;
 mod erofs;
 mod etxtbsy;
-
-crate::test_case! {
-    /// truncate must not change the file size if it fails with EFBIG or EINVAL
-    /// because the length argument was greater than the maximum file size
-    // (f)truncate/12.t
-    truncate_efbig
-}
-fn truncate_efbig(ctx: &mut TestContext) {
-    let file = ctx.create(FileType::Regular).unwrap();
-    let size = 999999999999999;
-    let res = truncate(&file, size);
-
-    let expected_size = match res {
-        Ok(_) => size,
-        Err(Errno::EFBIG | Errno::EINVAL) => 0,
-        Err(e) => panic!("truncate failed with {e}"),
-    };
-
-    let stat = stat(&file).unwrap();
-    assert_eq!(stat.st_size, expected_size);
-}
-
-crate::test_case! {
-    /// rmdir returns EINVAL if the last component of the path is '.'
-    // rmdir/12.t
-    rmdir_einval
-}
-fn rmdir_einval(ctx: &mut TestContext) {
-    assert_eq!(rmdir(&ctx.base_path().join(".")), Err(Errno::EINVAL));
-}
