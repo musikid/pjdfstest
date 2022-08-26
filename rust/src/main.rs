@@ -64,7 +64,7 @@ struct ArgOptions {
 }
 
 fn main() -> anyhow::Result<()> {
-    let args = ArgOptions::parse_args_default_or_exit();
+    let mut args = ArgOptions::parse_args_default_or_exit();
 
     if args.list_features {
         for feature in FileSystemFeature::iter() {
@@ -73,7 +73,7 @@ fn main() -> anyhow::Result<()> {
         return Ok(());
     }
 
-    let config: Config = {
+    let mut config: Config = {
         let mut config = Figment::from(Serialized::defaults(Config::default()));
         if let Some(path) = args.configuration_file.as_deref() {
             config = config.merge(Toml::file(path))
@@ -81,6 +81,10 @@ fn main() -> anyhow::Result<()> {
 
         config.extract()?
     };
+
+    if let Some(path) = args.secondary_file_system.take() {
+        config.settings.secondary_fs = Some(path);
+    }
 
     let path = args
         .path

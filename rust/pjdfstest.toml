@@ -17,6 +17,8 @@ file_flags = ["SF_IMMUTABLE", "SF_NOUNLINK", "SF_APPEND"]
 naptime = 0.001
 # Enable the EROFS tests, which temporarily remount the file system as read-only.
 # erofs = true
+# Path to a secondary file system for tests which require another than the mounted one (EXDEV for example).
+# secondary_fs = "/home/musikid/other_fs"
 
 # This section allows to modify the mecanism for switching users, which is required by some tests.
 # [dummy_auth]

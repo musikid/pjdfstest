@@ -32,6 +32,7 @@ pub struct SettingsConfig {
     pub naptime: f64,
     #[serde(default)]
     pub erofs: bool,
+    pub secondary_fs: Option<PathBuf>,
 }
 
 impl Default for SettingsConfig {
@@ -39,6 +40,7 @@ impl Default for SettingsConfig {
         SettingsConfig {
             naptime: default_naptime(),
             erofs: false,
+            secondary_fs: None,
         }
     }
 }
@@ -75,11 +77,6 @@ impl Default for DummyAuthConfig {
 #[derive(Debug, Default, Serialize, Deserialize)]
 pub struct EpermConfig {
     pub syscalls_flags: HashMap<String, Value>,
-}
-
-#[derive(Debug, Default, Serialize, Deserialize)]
-pub struct ExdevConfig {
-    pub secondary_fs: Option<PathBuf>,
 }
 
 #[derive(Debug, Default, Serialize, Deserialize)]
