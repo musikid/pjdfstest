@@ -17,7 +17,7 @@ use crate::{
 
 use super::{assert_ctime_changed, assert_ctime_unchanged};
 
-//TODO: Does the split user/system flags make sense? Besides, only FreeBSD ones are specified in the original test suite.
+//TODO: Split tests with unprivileged tests for user flags
 
 const USER_FLAGS: Lazy<HashSet<FileFlags>> = Lazy::new(|| {
     HashSet::from([
@@ -71,16 +71,16 @@ fn get_flags(ctx: &TestContext) -> (FileFlag, FileFlag, FileFlag) {
 
 crate::test_case! {
     /// chflags(2) set the flags provided for the file.
-    set_flags, FileSystemFeature::Chflags => [Regular, Dir, Fifo, Block, Char, Socket]
+    set_flags, root, FileSystemFeature::Chflags => [Regular, Dir, Fifo, Block, Char, Socket]
 }
 fn set_flags(ctx: &mut TestContext, ft: FileType) {
     let (flags, user_flags, system_flags) = get_flags(ctx);
 
     let file = ctx.create(ft.clone()).unwrap();
-    let file_flags = stat(&file).unwrap().st_flags;
-    assert_eq!(file_flags, FileFlag::empty().bits() as fflags_t);
+    assert!(chflags(&file, FileFlag::empty()).is_ok());
 
     for flags_set in [flags, user_flags, system_flags, FileFlag::empty()] {
+        assert!(chflags(&file, FileFlag::empty()).is_ok());
         assert!(chflags(&file, flags_set).is_ok());
         let file_flags = stat(&file).unwrap().st_flags;
         assert_eq!(file_flags, flags_set.bits() as fflags_t);
@@ -89,11 +89,11 @@ fn set_flags(ctx: &mut TestContext, ft: FileType) {
     // Check with lchflags
 
     let file = ctx.create(ft).unwrap();
-    let file_flags = stat(&file).unwrap().st_flags;
-    assert_eq!(file_flags, FileFlag::empty().bits() as fflags_t);
+    assert!(chflags(&file, FileFlag::empty()).is_ok());
 
     #[cfg(any(target_os = "netbsd", target_os = "freebsd", target_os = "dragonfly"))]
     for flags_set in [flags, user_flags, system_flags, FileFlag::empty()] {
+        assert!(lchflags(&file, FileFlag::empty()).is_ok());
         assert!(lchflags(&file, flags_set).is_ok());
         let file_flags = stat(&file).unwrap().st_flags;
         assert_eq!(file_flags, flags_set.bits() as fflags_t);
@@ -102,7 +102,7 @@ fn set_flags(ctx: &mut TestContext, ft: FileType) {
 
 crate::test_case! {
     /// chflags changes flags while following symlinks
-    set_flags_symlink, FileSystemFeature::Chflags
+    set_flags_symlink, root, FileSystemFeature::Chflags
 }
 fn set_flags_symlink(ctx: &mut TestContext) {
     let (flags, user_flags, system_flags) = get_flags(ctx);
@@ -110,24 +110,22 @@ fn set_flags_symlink(ctx: &mut TestContext) {
     let file = ctx.create(FileType::Regular).unwrap();
     let link = ctx.create(FileType::Symlink(Some(file.clone()))).unwrap();
 
-    let file_flags = stat(&file).unwrap().st_flags;
-    let link_flags = lstat(&link).unwrap().st_flags;
-    assert_eq!(file_flags, FileFlag::empty().bits() as fflags_t);
-    assert_eq!(link_flags, FileFlag::empty().bits() as fflags_t);
+    let original_link_flags = lstat(&link).unwrap().st_flags;
 
     for flags_set in [flags, user_flags, system_flags, FileFlag::empty()] {
-        assert!(chflags(&file, flags_set).is_ok());
+        assert!(chflags(&link, flags_set).is_ok());
         let file_flags = stat(&file).unwrap().st_flags;
         let link_flags = lstat(&link).unwrap().st_flags;
         assert_eq!(file_flags, flags_set.bits() as fflags_t);
-        assert_eq!(link_flags, FileFlag::empty().bits() as fflags_t);
+        assert_eq!(link_flags, original_link_flags);
+        assert!(chflags(&link, FileFlag::empty()).is_ok());
     }
 }
 
 #[cfg(any(target_os = "netbsd", target_os = "freebsd", target_os = "dragonfly"))]
 crate::test_case! {
     /// lchflags changes flags without following symlinks
-    lchflags_set_flags_no_follow_symlink, FileSystemFeature::Chflags
+    lchflags_set_flags_no_follow_symlink, root, FileSystemFeature::Chflags
 }
 #[cfg(any(target_os = "netbsd", target_os = "freebsd", target_os = "dragonfly"))]
 fn lchflags_set_flags_no_follow_symlink(ctx: &mut TestContext) {
@@ -136,23 +134,21 @@ fn lchflags_set_flags_no_follow_symlink(ctx: &mut TestContext) {
     let file = ctx.create(FileType::Regular).unwrap();
     let link = ctx.create(FileType::Symlink(Some(file.clone()))).unwrap();
 
-    let file_flags = stat(&file).unwrap().st_flags;
-    let link_flags = lstat(&link).unwrap().st_flags;
-    assert_eq!(file_flags, FileFlag::empty().bits() as fflags_t);
-    assert_eq!(link_flags, FileFlag::empty().bits() as fflags_t);
+    let original_file_flags = stat(&file).unwrap().st_flags;
 
     for flags_set in [flags, user_flags, system_flags, FileFlag::empty()] {
-        assert!(lchflags(&file, flags_set).is_ok());
+        assert!(lchflags(&link, flags_set).is_ok());
         let file_flags = stat(&file).unwrap().st_flags;
         let link_flags = lstat(&link).unwrap().st_flags;
-        assert_eq!(file_flags, FileFlag::empty().bits() as fflags_t);
+        assert_eq!(file_flags, original_file_flags);
         assert_eq!(link_flags, flags_set.bits() as fflags_t);
+        assert!(lchflags(&link, FileFlag::empty()).is_ok());
     }
 }
 
 crate::test_case! {
     // successful chflags(2) updates ctime
-    changed_ctime_success => [Regular, Dir, Fifo, Block, Char, Socket]
+    changed_ctime_success, root => [Regular, Dir, Fifo, Block, Char, Socket]
 }
 fn changed_ctime_success(ctx: &mut TestContext, ft: FileType) {
     let allflags: Vec<FileFlag> = ctx
