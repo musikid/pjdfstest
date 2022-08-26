@@ -1,6 +1,6 @@
 use std::path::Path;
 
-use nix::{errno::Errno, sys::statfs::statfs, unistd::pathconf};
+use nix::{errno::Errno, unistd::pathconf};
 
 use crate::{
     config::Config,
@@ -10,7 +10,7 @@ use crate::{
 
 const LINK_MAX_LIMIT: i64 = 65535;
 
-// TODO: Some systems return bogus value, and testing directories can give different result than trying directly on the file
+// TODO: Some systems return bogus value, and testing directories might give different result than trying directly on the file
 #[cfg(not(target_os = "linux"))]
 fn has_reasonable_link_max(_: &Config, base_path: &Path) -> anyhow::Result<()> {
     let link_max = pathconf(base_path, nix::unistd::PathconfVar::LINK_MAX)?
@@ -59,4 +59,41 @@ fn link_count_max(ctx: &mut TestContext) {
     }
 
     assert_eq!(link(&file, &ctx.gen_path()), Err(Errno::EMLINK));
+}
+
+// POSIX states that open should return ELOOP, but FreeBSD returns EMLINK instead
+#[cfg(target_os = "freebsd")]
+crate::test_case! {
+    /// open returns EMLINK when O_NOFOLLOW was specified and the target is a symbolic link
+    open_nofollow
+}
+#[cfg(target_os = "freebsd")]
+fn open_nofollow(ctx: &mut TestContext) {
+    use nix::{
+        fcntl::{open, OFlag},
+        sys::stat::Mode,
+    };
+
+    let link = ctx.create(FileType::Symlink(None)).unwrap();
+
+    assert_eq!(
+        open(
+            &link,
+            OFlag::O_RDONLY | OFlag::O_CREAT | OFlag::O_NOFOLLOW,
+            Mode::empty()
+        ),
+        Err(Errno::EMLINK)
+    );
+    assert_eq!(
+        open(&link, OFlag::O_RDONLY | OFlag::O_NOFOLLOW, Mode::empty()),
+        Err(Errno::EMLINK)
+    );
+    assert_eq!(
+        open(&link, OFlag::O_WRONLY | OFlag::O_NOFOLLOW, Mode::empty()),
+        Err(Errno::EMLINK)
+    );
+    assert_eq!(
+        open(&link, OFlag::O_RDWR | OFlag::O_NOFOLLOW, Mode::empty()),
+        Err(Errno::EMLINK)
+    );
 }
