@@ -111,7 +111,7 @@ fn component_two_params(ctx: &mut TestContext) {
     {
         let mut invalid_path = ctx.create_name_max(FileType::Regular).unwrap();
         invalid_path.set_extension("x");
-        let valid_path = ctx.create_path_max(FileType::Regular).unwrap();
+        let valid_path = ctx.create_name_max(FileType::Regular).unwrap();
         assert_eq!(
             f(&invalid_path, &valid_path).unwrap_err(),
             Errno::ENAMETOOLONG
