@@ -2,23 +2,13 @@ use nix::{
     fcntl::{open, OFlag},
     sys::{
         socket::{bind, socket, SockFlag, UnixAddr},
-        stat::{mknod, mode_t, stat, umask, Mode, SFlag},
+        stat::{lstat, mknod, mode_t, umask, Mode, SFlag},
     },
     unistd::{
         close, getgroups, mkdir, mkfifo, pathconf, setegid, seteuid, setgroups, Gid, Group, Uid,
         User,
     },
 };
-
-#[cfg(any(
-    target_os = "openbsd",
-    target_os = "netbsd",
-    target_os = "freebsd",
-    target_os = "dragonfly",
-    target_os = "macos",
-    target_os = "ios"
-))]
-use nix::{sys::stat::FileFlag, unistd::chflags};
 
 use rand::{distributions::Alphanumeric, thread_rng, Rng};
 use std::{
@@ -338,7 +328,7 @@ impl<'a> Drop for TestContext<'a> {
                 target_os = "ios"
             )) || entry.file_type().is_dir()
             {
-                let file_stat = match stat(entry.path()) {
+                let file_stat = match lstat(entry.path()) {
                     Ok(s) => s,
                     _ => continue,
                 };
@@ -349,6 +339,7 @@ impl<'a> Drop for TestContext<'a> {
                 }
 
                 // We remove all flags
+                // TODO: Some platforms do not support lchflags, write chflagsat alternative for those (openbsd, macos, ios?)
                 #[cfg(any(
                     target_os = "openbsd",
                     target_os = "netbsd",
@@ -357,8 +348,13 @@ impl<'a> Drop for TestContext<'a> {
                     target_os = "macos",
                     target_os = "ios"
                 ))]
-                if file_stat.st_flags != 0 {
-                    let _ = chflags(entry.path(), FileFlag::empty());
+                {
+                    use crate::utils::lchflags;
+                    use nix::{libc::fflags_t, sys::stat::FileFlag};
+
+                    if file_stat.st_flags != FileFlag::empty().bits() as fflags_t {
+                        let _ = lchflags(entry.path(), FileFlag::empty());
+                    }
                 }
             }
         }
