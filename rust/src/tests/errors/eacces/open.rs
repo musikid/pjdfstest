@@ -306,18 +306,23 @@ fn write_perm_o_trunc(ctx: &mut SerializedTestContext) {
 }
 
 crate::test_case! {
-    /// open returns EACCES when O_TRUNC is specified and write permission is denied
-    // open/07.t
+    /// open returns EACCES when O_CREAT is specified, the file does not exist,
+    /// and the directory in which it is to be created does not permit writing
+    // open/08.t
     o_creat_parent_write_perm, serialized, root
 }
 fn o_creat_parent_write_perm(ctx: &mut SerializedTestContext) {
-    let file = ctx.create(FileType::Regular).unwrap();
-    assert_eq!(
-        open(
-            &file,
-            OFlag::O_RDONLY | OFlag::O_CREAT,
-            Mode::S_IRUSR | Mode::S_IWUSR
-        ),
-        Err(Errno::EACCES)
-    );
+    let file = ctx.gen_path();
+    let user = ctx.get_new_user();
+
+    ctx.as_user(&user, None, || {
+        assert_eq!(
+            open(
+                &file,
+                OFlag::O_RDONLY | OFlag::O_CREAT,
+                Mode::S_IRUSR | Mode::S_IWUSR
+            ),
+            Err(Errno::EACCES)
+        );
+    });
 }
