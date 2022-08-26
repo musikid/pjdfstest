@@ -573,7 +573,7 @@ mod tests {
             .unwrap()
             .unwrap();
         assert_eq!(name_len, max_len as usize);
-        let mut invalid = file.clone();
+        let mut invalid = file;
         invalid.set_file_name(invalid.file_name().unwrap().to_string_lossy().into_owned() + "x");
 
         assert_eq!(
@@ -596,7 +596,7 @@ mod tests {
             .unwrap()
             - 1;
         assert_eq!(path_len, max_len as usize);
-        let mut invalid = file.clone();
+        let mut invalid = file;
         invalid.set_file_name(invalid.file_name().unwrap().to_string_lossy().into_owned() + "x");
 
         assert_eq!(

@@ -47,7 +47,7 @@ crate::test_case! {
 }
 fn create_symlink_to_symlink(ctx: &mut TestContext) {
     let target = ctx.create(FileType::Regular).unwrap();
-    let file = ctx.create(FileType::Symlink(Some(target.clone()))).unwrap();
+    let file = ctx.create(FileType::Symlink(Some(target))).unwrap();
     let link = ctx.gen_path();
     symlink(&file, &link).unwrap();
 

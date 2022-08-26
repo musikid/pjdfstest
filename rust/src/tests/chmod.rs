@@ -5,7 +5,7 @@ use crate::{
     utils::{chmod, ALLPERMS},
 };
 use nix::{
-    sys::stat::{lstat, mode_t, stat, Mode},
+    sys::stat::{lstat, stat, Mode},
     unistd::chown,
 };
 
