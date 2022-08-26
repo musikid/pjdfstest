@@ -9,6 +9,8 @@ use nix::{
     unistd::chown,
 };
 
+mod errno;
+
 // chmod/00.t:L24
 crate::test_case! {
     /// chmod successfully change permissions
