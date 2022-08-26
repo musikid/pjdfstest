@@ -19,9 +19,12 @@ fn open_wrapper(path: &Path, mode: Mode) -> nix::Result<()> {
 }
 
 crate::test_case! {
-    /// POSIX: The file permission bits of the new directory shall be initialized from
-    /// mode. These file permission bits of the mode argument shall be modified by the
-    /// process' file creation mask.
+    /// POSIX: (If O_CREAT is specified and the file doesn't exist) [...] the access
+    /// permission bits of the file mode shall be set to the value of the third
+    /// argument taken as type mode_t modified as follows: a bitwise AND is performed
+    /// on the file-mode bits and the corresponding bits in the complement of the
+    /// process' file mode creation mask. Thus, all bits in the file mode whose
+    /// corresponding bit in the file mode creation mask is set are cleared.
     permission_bits_from_mode, serialized
 }
 fn permission_bits_from_mode(ctx: &mut SerializedTestContext) {
@@ -29,9 +32,10 @@ fn permission_bits_from_mode(ctx: &mut SerializedTestContext) {
 }
 
 crate::test_case! {
-    /// POSIX: The directory's user ID shall be set to the process' effective user ID.
-    /// The directory's group ID shall be set to the group ID of the parent directory
-    /// or to the effective group ID of the process.
+    /// POSIX: (If O_CREAT is specified and the file doesn't exist) [...] the user ID
+    /// of the file shall be set to the effective user ID of the process; the group ID
+    /// of the file shall be set to the group ID of the file's parent directory or to
+    /// the effective group ID of the process [...]
     uid_gid_eq_euid_egid, serialized, root
 }
 fn uid_gid_eq_euid_egid(ctx: &mut SerializedTestContext) {
@@ -39,7 +43,7 @@ fn uid_gid_eq_euid_egid(ctx: &mut SerializedTestContext) {
 }
 
 crate::test_case! {
-    /// POSIX: Upon successful completion, mkdir() shall mark for update the st_atime,
+    /// POSIX: Upon successful completion, open(O_CREAT) shall mark for update the st_atime,
     /// st_ctime, and st_mtime fields of the directory. Also, the st_ctime and
     /// st_mtime fields of the directory that contains the new entry shall be marked
     /// for update.
