@@ -10,6 +10,8 @@ use crate::{
     utils::{chmod, lchown, rename, rmdir, ALLPERMS},
 };
 
+//TODO: Refactor
+
 crate::test_case! {
     /// unlink returns EACCES or EPERM if the directory containing the file is marked sticky, and neither the containing directory
     /// nor the file to be removed are owned by the effective user ID
@@ -134,7 +136,7 @@ crate::test_case! {
     /// rename returns EACCES or EPERM if the file pointed at by the 'to' argument exists, the directory containing 'to' is marked sticky,
     /// and neither the containing directory nor 'to' are owned by the effective user ID
     // rename/09.t
-    // TODO: How to handle the file types?
+    // TODO: How to handle the file types? Create a macro for it?
     rename_sticky_dir_to, serialized, root => [Regular, Fifo, Block, Char, Socket, Symlink(None)]
 }
 fn rename_sticky_dir_to(ctx: &mut SerializedTestContext, ft: FileType) {
@@ -250,165 +252,166 @@ fn rename_sticky_dir_to(ctx: &mut SerializedTestContext, ft: FileType) {
         }
     }
 }
-crate::test_case! {
-    /// rename returns EACCES or EPERM if the file pointed at by the 'to' argument exists, the directory containing 'to' is marked sticky,
-    /// and neither the containing directory nor 'to' are owned by the effective user ID
-    // rename/09.t
-    // TODO: How to handle the file types?
-    rename_sticky_dir_to_dir, serialized, root
-}
-fn rename_sticky_dir_to_dir(ctx: &mut SerializedTestContext) {
-    let user = ctx.get_new_user();
-    let from_dir = ctx.create(FileType::Dir).unwrap();
-    chown(&from_dir, Some(user.uid), Some(user.gid)).unwrap();
-    let from_path = ctx
-        .create_named(FileType::Dir, from_dir.join("file"))
-        .unwrap();
-    chown(&from_path, Some(user.uid), Some(user.gid)).unwrap();
-    let metadata = lstat(&from_path).unwrap().as_time_invariant();
 
-    let to_dir = ctx.create(FileType::Dir).unwrap();
-    chmod(&to_dir, Mode::from_bits_truncate(ALLPERMS) | Mode::S_ISVTX).unwrap();
-    chown(&to_dir, Some(user.uid), Some(user.gid)).unwrap();
+// crate::test_case! {
+//     /// rename returns EACCES or EPERM if the file pointed at by the 'to' argument exists, the directory containing 'to' is marked sticky,
+//     /// and neither the containing directory nor 'to' are owned by the effective user ID
+//     // rename/09.t
+//     // TODO: How to handle the file types?
+//     rename_sticky_dir_to_dir, serialized, root
+// }
+// fn rename_sticky_dir_to_dir(ctx: &mut SerializedTestContext) {
+//     let user = ctx.get_new_user();
+//     let from_dir = ctx.create(FileType::Dir).unwrap();
+//     chown(&from_dir, Some(user.uid), Some(user.gid)).unwrap();
+//     let from_path = ctx
+//         .create_named(FileType::Dir, from_dir.join("file"))
+//         .unwrap();
+//     chown(&from_path, Some(user.uid), Some(user.gid)).unwrap();
+//     let metadata = lstat(&from_path).unwrap().as_time_invariant();
 
-    // User owns both: the sticky directory and the destination directory.
-    let to_path = to_dir.join("file");
-    ctx.as_user(&user, None, || {
-        assert!(rename(&from_path, &to_path).is_ok());
-    });
+//     let to_dir = ctx.create(FileType::Dir).unwrap();
+//     chmod(&to_dir, Mode::from_bits_truncate(ALLPERMS) | Mode::S_ISVTX).unwrap();
+//     chown(&to_dir, Some(user.uid), Some(user.gid)).unwrap();
 
-    let current_user = User::from_uid(Uid::effective()).unwrap().unwrap();
-    let other_user = ctx.get_new_user();
-    let different_users = &[current_user, other_user];
+//     // User owns both: the sticky directory and the destination directory.
+//     let to_path = to_dir.join("file");
+//     ctx.as_user(&user, None, || {
+//         assert!(rename(&from_path, &to_path).is_ok());
+//     });
 
-    // User owns the sticky directory, but doesn't own the destination file.
-    chown(&to_dir, Some(user.uid), Some(user.gid)).unwrap();
-    for other_user in different_users {
-        chown(&to_path, Some(other_user.uid), Some(other_user.gid)).unwrap();
-        ctx.as_user(&user, None, || {
-            assert!(rename(&from_path, &to_path).is_ok());
-        });
-    }
-    todo!()
-}
+//     let current_user = User::from_uid(Uid::effective()).unwrap().unwrap();
+//     let other_user = ctx.get_new_user();
+//     let different_users = &[current_user, other_user];
 
-crate::test_case! {
-    /// rename returns EACCES or EPERM if the file pointed at by the 'from' argument exists, the directory containing 'from' is marked sticky,
-    /// and neither the containing directory nor 'from' are owned by the effective user ID
-    // rename/10.t
-    // TODO: How to handle the file types?
-    rename_sticky_dir_from, serialized, root => [Regular, Fifo, Block, Char, Socket, Symlink(None)]
-}
-fn rename_sticky_dir_from(ctx: &mut SerializedTestContext, ft: FileType) {
-    todo!();
-    let user = ctx.get_new_user();
-    let from_dir = ctx.create(FileType::Dir).unwrap();
-    chown(&from_dir, Some(user.uid), Some(user.gid)).unwrap();
-    let from_path = ctx.create_named(ft, from_dir.join("file")).unwrap();
-    lchown(&from_path, Some(user.uid), Some(user.gid)).unwrap();
+//     // User owns the sticky directory, but doesn't own the destination file.
+//     chown(&to_dir, Some(user.uid), Some(user.gid)).unwrap();
+//     for other_user in different_users {
+//         chown(&to_path, Some(other_user.uid), Some(other_user.gid)).unwrap();
+//         ctx.as_user(&user, None, || {
+//             assert!(rename(&from_path, &to_path).is_ok());
+//         });
+//     }
+//     todo!()
+// }
 
-    let to_dir = ctx.create(FileType::Dir).unwrap();
-    chmod(&to_dir, Mode::from_bits_truncate(ALLPERMS) | Mode::S_ISVTX).unwrap();
+// crate::test_case! {
+//     /// rename returns EACCES or EPERM if the file pointed at by the 'from' argument exists, the directory containing 'from' is marked sticky,
+//     /// and neither the containing directory nor 'from' are owned by the effective user ID
+//     // rename/10.t
+//     // TODO: How to handle the file types?
+//     rename_sticky_dir_from, serialized, root => [Regular, Fifo, Block, Char, Socket, Symlink(None)]
+// }
+// fn rename_sticky_dir_from(ctx: &mut SerializedTestContext, ft: FileType) {
+//     todo!();
+//     let user = ctx.get_new_user();
+//     let from_dir = ctx.create(FileType::Dir).unwrap();
+//     chown(&from_dir, Some(user.uid), Some(user.gid)).unwrap();
+//     let from_path = ctx.create_named(ft, from_dir.join("file")).unwrap();
+//     lchown(&from_path, Some(user.uid), Some(user.gid)).unwrap();
 
-    let to_path = to_dir.join("file");
+//     let to_dir = ctx.create(FileType::Dir).unwrap();
+//     chmod(&to_dir, Mode::from_bits_truncate(ALLPERMS) | Mode::S_ISVTX).unwrap();
 
-    let fts = [
-        FileType::Regular,
-        FileType::Fifo,
-        FileType::Block,
-        FileType::Char,
-        FileType::Socket,
-        FileType::Symlink(None),
-    ];
+//     let to_path = to_dir.join("file");
 
-    // User owns both: the sticky directory and the destination file.
-    chown(&to_dir, Some(user.uid), Some(user.gid)).unwrap();
-    let metadata = lstat(&from_path).unwrap().as_time_invariant();
-    for to_ft in &fts {
-        let to_path = ctx.create_named(to_ft.clone(), &to_path).unwrap();
-        lchown(&to_path, Some(user.uid), Some(user.gid)).unwrap();
+//     let fts = [
+//         FileType::Regular,
+//         FileType::Fifo,
+//         FileType::Block,
+//         FileType::Char,
+//         FileType::Socket,
+//         FileType::Symlink(None),
+//     ];
 
-        ctx.as_user(&user, None, || {
-            assert!(rename(&from_path, &to_path).is_ok());
-        });
-        assert_eq!(lstat(&from_path), Err(Errno::ENOENT));
-        let current_meta = lstat(&to_path).unwrap();
-        assert_eq!(metadata, current_meta.as_time_invariant());
+//     // User owns both: the sticky directory and the destination file.
+//     chown(&to_dir, Some(user.uid), Some(user.gid)).unwrap();
+//     let metadata = lstat(&from_path).unwrap().as_time_invariant();
+//     for to_ft in &fts {
+//         let to_path = ctx.create_named(to_ft.clone(), &to_path).unwrap();
+//         lchown(&to_path, Some(user.uid), Some(user.gid)).unwrap();
 
-        ctx.as_user(&user, None, || {
-            assert!(rename(&to_path, &from_path).is_ok());
-        });
-        assert_eq!(lstat(&to_path), Err(Errno::ENOENT));
-        let current_meta = lstat(&from_path).unwrap();
-        assert_eq!(metadata, current_meta.as_time_invariant());
-    }
+//         ctx.as_user(&user, None, || {
+//             assert!(rename(&from_path, &to_path).is_ok());
+//         });
+//         assert_eq!(lstat(&from_path), Err(Errno::ENOENT));
+//         let current_meta = lstat(&to_path).unwrap();
+//         assert_eq!(metadata, current_meta.as_time_invariant());
 
-    let current_user = User::from_uid(Uid::effective()).unwrap().unwrap();
-    let other_user = ctx.get_new_user();
-    let different_users = &[current_user, other_user];
+//         ctx.as_user(&user, None, || {
+//             assert!(rename(&to_path, &from_path).is_ok());
+//         });
+//         assert_eq!(lstat(&to_path), Err(Errno::ENOENT));
+//         let current_meta = lstat(&from_path).unwrap();
+//         assert_eq!(metadata, current_meta.as_time_invariant());
+//     }
 
-    // User owns the sticky directory, but doesn't own the destination file.
-    chown(&to_dir, Some(user.uid), Some(user.gid)).unwrap();
-    for other_user in different_users {
-        for to_ft in &fts {
-            let to_path = ctx.create_named(to_ft.clone(), &to_path).unwrap();
-            lchown(&to_path, Some(other_user.uid), Some(other_user.gid)).unwrap();
+//     let current_user = User::from_uid(Uid::effective()).unwrap().unwrap();
+//     let other_user = ctx.get_new_user();
+//     let different_users = &[current_user, other_user];
 
-            ctx.as_user(&user, None, || {
-                assert!(rename(&from_path, &to_path).is_ok());
-            });
-            assert!(!from_path.exists());
-            let current_meta = lstat(&to_path).unwrap();
-            assert_eq!(metadata, current_meta.as_time_invariant());
+//     // User owns the sticky directory, but doesn't own the destination file.
+//     chown(&to_dir, Some(user.uid), Some(user.gid)).unwrap();
+//     for other_user in different_users {
+//         for to_ft in &fts {
+//             let to_path = ctx.create_named(to_ft.clone(), &to_path).unwrap();
+//             lchown(&to_path, Some(other_user.uid), Some(other_user.gid)).unwrap();
 
-            ctx.as_user(&user, None, || {
-                assert!(rename(&to_path, &from_path).is_ok());
-            });
-            assert!(!to_path.exists());
-            let current_meta = lstat(&from_path).unwrap();
-            assert_eq!(metadata, current_meta.as_time_invariant());
-        }
-    }
+//             ctx.as_user(&user, None, || {
+//                 assert!(rename(&from_path, &to_path).is_ok());
+//             });
+//             assert!(!from_path.exists());
+//             let current_meta = lstat(&to_path).unwrap();
+//             assert_eq!(metadata, current_meta.as_time_invariant());
 
-    // User owns the file, but doesn't own the sticky directory.
-    for other_user in different_users {
-        chown(&to_dir, Some(other_user.uid), Some(other_user.gid)).unwrap();
-        for to_ft in &fts {
-            let to_path = ctx.create_named(to_ft.clone(), &to_path).unwrap();
-            lchown(&to_path, Some(user.uid), Some(user.gid)).unwrap();
+//             ctx.as_user(&user, None, || {
+//                 assert!(rename(&to_path, &from_path).is_ok());
+//             });
+//             assert!(!to_path.exists());
+//             let current_meta = lstat(&from_path).unwrap();
+//             assert_eq!(metadata, current_meta.as_time_invariant());
+//         }
+//     }
 
-            ctx.as_user(&user, None, || {
-                assert!(rename(&from_path, &to_path).is_ok());
-            });
-            assert!(!from_path.exists());
-            let current_meta = lstat(&to_path).unwrap();
-            assert_eq!(metadata, current_meta.as_time_invariant());
+//     // User owns the file, but doesn't own the sticky directory.
+//     for other_user in different_users {
+//         chown(&to_dir, Some(other_user.uid), Some(other_user.gid)).unwrap();
+//         for to_ft in &fts {
+//             let to_path = ctx.create_named(to_ft.clone(), &to_path).unwrap();
+//             lchown(&to_path, Some(user.uid), Some(user.gid)).unwrap();
 
-            ctx.as_user(&user, None, || {
-                assert!(rename(&to_path, &from_path).is_ok());
-            });
-            assert!(!to_path.exists());
-            let current_meta = lstat(&from_path).unwrap();
-            assert_eq!(metadata, current_meta.as_time_invariant());
-        }
-    }
+//             ctx.as_user(&user, None, || {
+//                 assert!(rename(&from_path, &to_path).is_ok());
+//             });
+//             assert!(!from_path.exists());
+//             let current_meta = lstat(&to_path).unwrap();
+//             assert_eq!(metadata, current_meta.as_time_invariant());
 
-    // User doesn't own the sticky directory nor the file.
-    for other_user in different_users {
-        chown(&to_dir, Some(other_user.uid), Some(other_user.gid)).unwrap();
-        for to_ft in &fts {
-            let to_path = ctx.create_named(to_ft.clone(), &to_path).unwrap();
-            lchown(&to_path, Some(other_user.uid), Some(other_user.gid)).unwrap();
+//             ctx.as_user(&user, None, || {
+//                 assert!(rename(&to_path, &from_path).is_ok());
+//             });
+//             assert!(!to_path.exists());
+//             let current_meta = lstat(&from_path).unwrap();
+//             assert_eq!(metadata, current_meta.as_time_invariant());
+//         }
+//     }
 
-            ctx.as_user(&user, None, || {
-                assert!(matches!(
-                    rename(&from_path, &to_path),
-                    Err(Errno::EACCES | Errno::EPERM)
-                ));
-            });
-            let current_meta = lstat(&from_path).unwrap();
-            assert_eq!(metadata, current_meta.as_time_invariant());
-            unlink(&to_path).unwrap();
-        }
-    }
-}
+//     // User doesn't own the sticky directory nor the file.
+//     for other_user in different_users {
+//         chown(&to_dir, Some(other_user.uid), Some(other_user.gid)).unwrap();
+//         for to_ft in &fts {
+//             let to_path = ctx.create_named(to_ft.clone(), &to_path).unwrap();
+//             lchown(&to_path, Some(other_user.uid), Some(other_user.gid)).unwrap();
+
+//             ctx.as_user(&user, None, || {
+//                 assert!(matches!(
+//                     rename(&from_path, &to_path),
+//                     Err(Errno::EACCES | Errno::EPERM)
+//                 ));
+//             });
+//             let current_meta = lstat(&from_path).unwrap();
+//             assert_eq!(metadata, current_meta.as_time_invariant());
+//             unlink(&to_path).unwrap();
+//         }
+//     }
+// }
