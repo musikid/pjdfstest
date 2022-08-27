@@ -1,18 +1,18 @@
 #[macro_export]
 macro_rules! test_case {
-    ($(#[doc = $docs:literal])*
+    ($(#[doc = $docs:expr])*
         $f:ident, serialized, root $(,)* $( $features:expr ),* $(,)* $(; $( $flags:expr ),+)? $(=> $ftypes: tt )?) => {
         $crate::test_case! {@serialized $f, &[$( $features ),*], &[$( $( $flags ),+ )?], concat!($($docs),*), true $(=> $ftypes)?}
     };
-    ($(#[doc = $docs:literal])*
+    ($(#[doc = $docs:expr])*
         $f:ident, serialized $(,)* $( $features:expr ),* $(,)* $(; $( $flags:expr ),+)? $(=> $ftypes: tt )?) => {
         $crate::test_case! {@serialized $f, &[$( $features ),*], &[$( $( $flags ),+ )?], concat!($($docs),*), false $(=> $ftypes)?}
     };
-    ($(#[doc = $docs:literal])*
+    ($(#[doc = $docs:expr])*
         $f:ident, root $(,)* $( $features:expr ),* $(,)* $(; $( $flags:expr ),+)? $(=> $ftypes: tt )?) => {
         $crate::test_case! {@ $f, &[$( $features ),*], &[$( $( $flags ),+ )?], true, concat!($($docs),*) $(=> $ftypes)?}
     };
-    ($(#[doc = $docs:literal])*
+    ($(#[doc = $docs:expr])*
         $f:ident $(,)* $( $features:expr ),* $(,)* $(; $( $flags:expr ),+)? $(=> $ftypes: tt )?) => {
         $crate::test_case! {@ $f, &[$( $features ),*], &[$( $( $flags ),+ )?], false, concat!($($docs),*) $(=> $ftypes)?}
     };
@@ -20,16 +20,14 @@ macro_rules! test_case {
 
 
     (@serialized $f:ident, $features:expr, $flags:expr, $desc:expr, $require_root:expr ) => {
-        paste::paste! {
-            ::inventory::submit! {
-                $crate::test::TestCase {
-                    name: concat!(module_path!(), "::", stringify!($f)),
-                    description: $desc,
-                    required_features: $features,
-                    required_file_flags: $flags,
-                    require_root: $require_root,
-                    fun: $crate::test::TestFn::Serialized($f),
-                }
+        ::inventory::submit! {
+            $crate::test::TestCase {
+                name: concat!(module_path!(), "::", stringify!($f)),
+                description: $desc,
+                required_features: $features,
+                required_file_flags: $flags,
+                require_root: $require_root,
+                fun: $crate::test::TestFn::Serialized($f),
             }
         }
     };
@@ -51,16 +49,14 @@ macro_rules! test_case {
     };
 
     (@ $f:ident, $features:expr, $flags:expr, $require_root:expr, $desc:expr ) => {
-        paste::paste! {
-            ::inventory::submit! {
-                $crate::test::TestCase {
-                    name: concat!(module_path!(), "::", stringify!($f)),
-                    description: $desc,
-                    required_features: $features,
-                    required_file_flags: $flags,
-                    require_root: $require_root,
-                    fun: $crate::test::TestFn::NonSerialized($f),
-                }
+        ::inventory::submit! {
+            $crate::test::TestCase {
+                name: concat!(module_path!(), "::", stringify!($f)),
+                description: $desc,
+                required_features: $features,
+                required_file_flags: $flags,
+                require_root: $require_root,
+                fun: $crate::test::TestFn::NonSerialized($f),
             }
         }
     };
@@ -111,11 +107,7 @@ mod t {
         assert!(!tc.require_root);
         assert!(tc.required_features.is_empty());
         assert!(tc.required_file_flags.is_empty());
-        if let TestFn::NonSerialized(f) = tc.fun {
-            assert!(f as usize == basic as usize);
-        } else {
-            panic!("Wrong func type");
-        }
+        assert!(matches!(tc.fun, TestFn::NonSerialized(f) if f as usize == basic as usize));
     }
 
     crate::test_case! {
@@ -138,11 +130,7 @@ mod t {
             ]
         );
         assert!(tc.required_file_flags.is_empty());
-        if let TestFn::NonSerialized(f) = tc.fun {
-            assert!(f as usize == features as usize);
-        } else {
-            panic!("Wrong func type");
-        }
+        assert!(matches!(tc.fun, TestFn::NonSerialized(f) if f as usize == features as usize));
     }
 
     #[cfg(any(
@@ -186,11 +174,7 @@ mod t {
             tc.required_file_flags,
             &[FileFlags::SF_IMMUTABLE, FileFlags::UF_IMMUTABLE]
         );
-        if let TestFn::NonSerialized(f) = tc.fun {
-            assert!(f as usize == flags as usize);
-        } else {
-            panic!("Wrong func type");
-        }
+        assert!(matches!(tc.fun, TestFn::NonSerialized(f) if f as usize == flags as usize));
     }
 
     crate::test_case! {
@@ -207,11 +191,7 @@ mod t {
         assert!(tc.require_root);
         assert!(tc.required_features.is_empty());
         assert!(tc.required_file_flags.is_empty());
-        if let TestFn::NonSerialized(f) = tc.fun {
-            assert!(f as usize == root as usize);
-        } else {
-            panic!("Wrong func type");
-        }
+        assert!(matches!(tc.fun, TestFn::NonSerialized(f) if f as usize == root as usize));
     }
 
     crate::test_case! {
@@ -254,10 +234,6 @@ mod t {
         assert!(!tc.require_root);
         assert!(tc.required_features.is_empty());
         assert!(tc.required_file_flags.is_empty());
-        if let TestFn::Serialized(f) = tc.fun {
-            assert!(f as usize == serialized as usize);
-        } else {
-            panic!("Wrong func type");
-        }
+        assert!(matches!(tc.fun, TestFn::Serialized(f) if f as usize == serialized as usize));
     }
 }
