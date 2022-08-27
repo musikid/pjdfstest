@@ -1,6 +1,7 @@
 use std::{
     fs::{metadata, remove_dir, remove_file, symlink_metadata},
     os::unix::{fs::symlink, prelude::FileTypeExt},
+    path::Path,
 };
 
 use nix::{errno::Errno, sys::stat::stat};
@@ -72,4 +73,9 @@ fn changed_parent_time_success(ctx: &mut TestContext) {
             ctx.create(FileType::Symlink(None)).unwrap();
         })
     });
+}
+
+// symlink/8.t
+crate::eexist_test_case! {symlink, |_ctx, path|
+    crate::utils::symlink(Path::new("nonexistent"), path)
 }

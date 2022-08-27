@@ -44,3 +44,8 @@ fn changed_time_fields_success(ctx: &mut TestContext) {
             mkdir(&path, Mode::from_bits_truncate(0o755)).unwrap();
         });
 }
+
+// mkdir/10.t
+crate::eexist_test_case! {mkdir, |_ctx, path|
+    mkdir(path, Mode::from_bits_truncate(0o755))
+}

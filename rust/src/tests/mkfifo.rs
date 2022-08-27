@@ -44,3 +44,8 @@ fn changed_time_fields_success(ctx: &mut TestContext) {
             mkfifo(&path, Mode::from_bits_truncate(0o600)).unwrap();
         });
 }
+
+// mkfifo/09.t
+crate::eexist_test_case! {mkfifo, |_ctx, path|
+    mkfifo(path, Mode::from_bits_truncate(0o600))
+}

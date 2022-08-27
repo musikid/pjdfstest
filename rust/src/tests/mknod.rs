@@ -49,3 +49,8 @@ fn changed_time_fields_success(ctx: &mut TestContext) {
             mknod_wrapper(&path, Mode::from_bits_truncate(0o644)).unwrap();
         });
 }
+
+// mknod/08.t
+crate::eexist_test_case! {mknod, |_ctx, path|
+    mknod(path, SFlag::S_IFIFO, Mode::from_bits_truncate(0o600), 0)
+}

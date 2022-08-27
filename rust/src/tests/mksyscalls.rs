@@ -16,6 +16,25 @@ use crate::{
     utils::{chmod, ALLPERMS},
 };
 
+/// Generates a test case that tries to create a file, expecting it to fail with
+/// EEXIST.
+#[macro_export]
+macro_rules! eexist_test_case {
+    ($syscall:ident, $f:expr) => {
+        $crate::test_case! {
+            /// Syscall returns EEXIST if the file already exists
+            eexist
+        }
+        fn eexist(ctx: &mut crate::test::TestContext) {
+            let path = ctx.gen_path();
+
+            let mode = nix::sys::stat::Mode::from_bits_truncate(0o755);
+            ::nix::unistd::mkdir(&path, mode).unwrap();
+            assert_eq!($f(ctx, &path), Err(nix::errno::Errno::EEXIST));
+        }
+    };
+}
+
 /// Assert that the created entry gets its permission bits from the mode
 /// provided to the function negated by the process's file creation mask
 /// (umask), and its file type is equal to the expected one.

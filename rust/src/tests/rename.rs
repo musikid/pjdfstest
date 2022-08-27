@@ -6,7 +6,7 @@ use nix::{
 };
 
 use crate::{
-    runner::context::{FileType, SerializedTestContext, TestContext},
+    runner::context::{FileBuilder, FileType, SerializedTestContext, TestContext},
     test::FileSystemFeature,
     tests::{assert_symlink_ctime_unchanged, AsTimeInvariant, MetadataExt},
     utils::{link, rename},
@@ -127,6 +127,32 @@ fn unchanged_ctime_failed(ctx: &mut SerializedTestContext, ft: FileType) {
             assert!(rename(&file, &other_path).is_err());
         })
     });
+}
+
+crate::test_case! {
+    /// rename returns EISDIR when the 'to' argument is a directory, but 'from' is not a directory
+    // rename/14.t
+    eisdir => [Regular, Fifo, Block, Char, Socket, Symlink(None)]
+}
+fn eisdir(ctx: &mut TestContext, ft: FileType) {
+    let dir0 = ctx.new_file(FileType::Dir).mode(0o755).create().unwrap();
+    let file0 = ctx.new_file(ft).mode(0o755).create().unwrap();
+    assert_eq!(rename(&file0, &dir0), Err(Errno::EISDIR));
+    assert!(symlink_metadata(&dir0).unwrap().is_dir());
+    assert!(!symlink_metadata(&file0).unwrap().is_dir());
+}
+
+crate::test_case! {
+    /// rename returns EEXIST or ENOTEMPTY if the 'to' argument is a directory and is not empty.
+    // rename/20.t
+    eexist => [Regular, Dir, Fifo, Block, Char, Socket, Symlink(None)]
+}
+fn eexist(ctx: &mut TestContext, ft: FileType) {
+    let dir0 = ctx.new_file(FileType::Dir).mode(0o755).create().unwrap();
+    let dir1 = ctx.new_file(FileType::Dir).mode(0o755).create().unwrap();
+    let _file0 = FileBuilder::new(ft, &dir1).create().unwrap();
+    let e = rename(&dir0, &dir1).unwrap_err();
+    assert!(e == Errno::EEXIST || e == Errno::ENOTEMPTY);
 }
 
 crate::test_case! {

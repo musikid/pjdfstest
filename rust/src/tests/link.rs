@@ -146,3 +146,10 @@ fn unchanged_ctime_fails(ctx: &mut SerializedTestContext, ft: FileType) {
         });
     })
 }
+
+// link/10.t
+crate::eexist_test_case! {link, |ctx: &mut TestContext, path| {
+        let file = ctx.create(FileType::Regular).unwrap();
+        link(&*file, path)
+    }
+}
