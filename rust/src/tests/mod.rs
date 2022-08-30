@@ -22,7 +22,6 @@ use crate::test::TestContext;
     target_os = "dragonfly",
     target_os = "macos",
     target_os = "ios",
-    target_os = "watchos",
 ))]
 pub mod chflags;
 pub mod chmod;
