@@ -22,6 +22,8 @@ use strum::{EnumMessage, IntoEnumIterator};
 use tempfile::{tempdir_in, TempDir};
 
 mod config;
+mod features;
+mod flags;
 mod macros;
 mod runner;
 mod test;
@@ -56,10 +58,13 @@ struct ArgOptions {
 
     #[options(free, help = "Filter test names")]
     test_patterns: Vec<String>,
+
+    #[options(help = "Path to a secondary file system")]
+    secondary_file_system: Option<PathBuf>,
 }
 
 fn main() -> anyhow::Result<()> {
-    let args = ArgOptions::parse_args_default_or_exit();
+    let mut args = ArgOptions::parse_args_default_or_exit();
 
     if args.list_features {
         for feature in FileSystemFeature::iter() {
@@ -68,7 +73,7 @@ fn main() -> anyhow::Result<()> {
         return Ok(());
     }
 
-    let config: Config = {
+    let mut config: Config = {
         let mut config = Figment::from(Serialized::defaults(Config::default()));
         if let Some(path) = args.configuration_file.as_deref() {
             config = config.merge(Toml::file(path))
@@ -76,6 +81,10 @@ fn main() -> anyhow::Result<()> {
 
         config.extract()?
     };
+
+    if let Some(path) = args.secondary_file_system.take() {
+        config.settings.secondary_fs = Some(path);
+    }
 
     let path = args
         .path
@@ -145,7 +154,6 @@ fn run_test_cases(
     let is_root = Uid::current().is_root();
 
     let enabled_features: HashSet<_> = config.features.fs_features.keys().into_iter().collect();
-    let enabled_flags: HashSet<_> = config.features.file_flags.iter().collect();
 
     let entries: Vec<(User, Group)> = config
         .dummy_auth
@@ -196,23 +204,13 @@ fn run_test_cases(
             skip_message += "\n";
         }
 
-        let required_flags: HashSet<_> = test_case.required_file_flags.iter().collect();
-        let missing_flags: Vec<_> = required_flags.difference(&enabled_flags).collect();
-        if !missing_flags.is_empty() {
+        if let Err(e) = test_case
+            .guards
+            .iter()
+            .try_for_each(|g| g(config, base_dir.path()))
+        {
             should_skip = true;
-
-            let flags = missing_flags
-                .iter()
-                .map(|f| {
-                    let f = f.to_string();
-
-                    ["\"", &f, "\""].join("")
-                })
-                .collect::<Vec<_>>()
-                .join(", ");
-
-            skip_message += "requires flags: ";
-            skip_message += &flags;
+            skip_message += &e.to_string();
             skip_message += "\n";
         }
 
