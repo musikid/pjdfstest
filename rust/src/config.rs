@@ -1,7 +1,10 @@
 use std::collections::HashMap;
+use std::collections::HashSet;
+use std::path::PathBuf;
 
-use crate::test::FileFlags;
-use crate::test::FileSystemFeature;
+use crate::features::FileSystemFeature;
+use crate::flags::FileFlags;
+use figment::value::Value;
 use nix::unistd::Group;
 use nix::unistd::User;
 use serde::Deserialize;
@@ -15,7 +18,8 @@ pub struct CommonFeatureConfig {}
 #[derive(Debug, Default, Serialize, Deserialize)]
 pub struct FeaturesConfig {
     #[serde(default)]
-    pub file_flags: Vec<FileFlags>,
+    pub file_flags: HashSet<FileFlags>,
+    pub eperm: EpermConfig,
     #[serde(flatten)]
     pub fs_features: HashMap<FileSystemFeature, CommonFeatureConfig>,
 }
@@ -26,12 +30,17 @@ pub struct FeaturesConfig {
 pub struct SettingsConfig {
     #[serde(default = "default_naptime")]
     pub naptime: f64,
+    #[serde(default)]
+    pub erofs: bool,
+    pub secondary_fs: Option<PathBuf>,
 }
 
 impl Default for SettingsConfig {
     fn default() -> Self {
         SettingsConfig {
             naptime: default_naptime(),
+            erofs: false,
+            secondary_fs: None,
         }
     }
 }
@@ -63,6 +72,11 @@ impl Default for DummyAuthConfig {
             ],
         }
     }
+}
+
+#[derive(Debug, Default, Serialize, Deserialize)]
+pub struct EpermConfig {
+    pub syscalls_flags: HashMap<String, Value>,
 }
 
 #[derive(Debug, Default, Serialize, Deserialize)]
