@@ -19,19 +19,19 @@ macro_rules! test_case {
 
 
 
-    (@serialized $f:ident, $features:expr, $flags:expr, $desc:expr, $require_root:expr ) => {
+    (@serialized $f:ident, $features:expr, $guards:expr, $desc:expr, $require_root:expr ) => {
         ::inventory::submit! {
             $crate::test::TestCase {
                 name: concat!(module_path!(), "::", stringify!($f)),
                 description: $desc,
                 required_features: $features,
-                required_file_flags: $flags,
+                guards: $guards,
                 require_root: $require_root,
                 fun: $crate::test::TestFn::Serialized($f),
             }
         }
     };
-    (@serialized $f:ident, $features:expr, $flags:expr, $desc:expr, $require_root:expr => [$( $file_type:tt $( ($ft_args: tt) )? ),+ $(,)*]) => {
+    (@serialized $f:ident, $features:expr, $guards:expr, $desc:expr, $require_root:expr => [$( $file_type:tt $( ($ft_args: tt) )? ),+ $(,)*]) => {
         $(
             paste::paste! {
                 ::inventory::submit! {
@@ -39,7 +39,7 @@ macro_rules! test_case {
                         name: concat!(module_path!(), "::", stringify!($f), "::", stringify!([<$file_type:lower>])),
                         description: $desc,
                         required_features: $features,
-                        required_file_flags: $flags,
+                        guards: $guards,
                         require_root: $require_root || $crate::runner::context::FileType::$file_type $( ($ft_args) )?.privileged(),
                         fun: $crate::test::TestFn::Serialized(|ctx| $f(ctx, $crate::runner::context::FileType::$file_type $( ($ft_args) )?)),
                     }
@@ -48,19 +48,19 @@ macro_rules! test_case {
         )+
     };
 
-    (@ $f:ident, $features:expr, $flags:expr, $require_root:expr, $desc:expr ) => {
+    (@ $f:ident, $features:expr, $guards:expr, $require_root:expr, $desc:expr ) => {
         ::inventory::submit! {
             $crate::test::TestCase {
                 name: concat!(module_path!(), "::", stringify!($f)),
                 description: $desc,
                 required_features: $features,
-                required_file_flags: $flags,
+                guards: $guards,
                 require_root: $require_root,
                 fun: $crate::test::TestFn::NonSerialized($f),
             }
         }
     };
-    (@ $f:ident, $features:expr, $flags:expr, $require_root:expr, $desc:expr => [$( $file_type:tt $( ($ft_args: tt) )? ),+ $(,)*]) => {
+    (@ $f:ident, $features:expr, $guards:expr, $require_root:expr, $desc:expr => [$( $file_type:tt $( ($ft_args: tt) )? ),+ $(,)*]) => {
         $(
             paste::paste! {
                 ::inventory::submit! {
@@ -68,7 +68,7 @@ macro_rules! test_case {
                         name: concat!(module_path!(), "::", stringify!($f), "::", stringify!([<$file_type:lower>])),
                         description: $desc,
                         required_features: $features,
-                        required_file_flags: $flags,
+                        guards: $guards,
                         require_root: $require_root || $crate::runner::context::FileType::$file_type $( ($ft_args) )?.privileged(),
                         fun: $crate::test::TestFn::NonSerialized(|ctx| $f(ctx, $crate::runner::context::FileType::$file_type $( ($ft_args) )?)),
                     }
@@ -81,17 +81,9 @@ macro_rules! test_case {
 #[cfg(test)]
 mod t {
     use crate::runner::context::FileType;
-    #[cfg(any(
-        target_os = "openbsd",
-        target_os = "netbsd",
-        target_os = "freebsd",
-        target_os = "dragonfly",
-        target_os = "macos",
-        target_os = "ios",
-    ))]
-    use crate::test::FileFlags;
     use crate::test::FileSystemFeature;
     use crate::{SerializedTestContext, TestCase, TestContext, TestFn};
+    use std::path::Path;
 
     crate::test_case! {
         /// description
@@ -106,8 +98,8 @@ mod t {
         assert_eq!(" description", tc.description);
         assert!(!tc.require_root);
         assert!(tc.required_features.is_empty());
-        assert!(tc.required_file_flags.is_empty());
         assert!(matches!(tc.fun, TestFn::NonSerialized(f) if f as usize == basic as usize));
+        assert!(tc.guards.is_empty());
     }
 
     crate::test_case! {
@@ -129,52 +121,34 @@ mod t {
                 FileSystemFeature::PosixFallocate
             ]
         );
-        assert!(tc.required_file_flags.is_empty());
         assert!(matches!(tc.fun, TestFn::NonSerialized(f) if f as usize == features as usize));
+        assert!(tc.guards.is_empty());
     }
 
-    #[cfg(any(
-        target_os = "openbsd",
-        target_os = "netbsd",
-        target_os = "freebsd",
-        target_os = "dragonfly",
-        target_os = "macos",
-        target_os = "ios",
-    ))]
+    fn guard_example(_: &crate::config::Config, _: &Path) -> anyhow::Result<()> {
+        Ok(())
+    }
+
     crate::test_case! {
         /// description
-        flags, FileSystemFeature::Chflags; FileFlags::SF_IMMUTABLE, FileFlags::UF_IMMUTABLE
+        guard; guard_example
     }
-    #[cfg(any(
-        target_os = "openbsd",
-        target_os = "netbsd",
-        target_os = "freebsd",
-        target_os = "dragonfly",
-        target_os = "macos",
-        target_os = "ios",
-    ))]
-    fn flags(_: &mut TestContext) {}
-    #[cfg(any(
-        target_os = "openbsd",
-        target_os = "netbsd",
-        target_os = "freebsd",
-        target_os = "dragonfly",
-        target_os = "macos",
-        target_os = "ios",
-    ))]
+    fn guard(_: &mut TestContext) {}
     #[test]
-    fn flags_test() {
+    fn guard_test() {
         let tc = inventory::iter::<TestCase>()
-            .find(|tc| tc.name == "pjdfstest::macros::t::flags")
+            .find(|tc| tc.name == "pjdfstest::macros::t::guard")
             .unwrap();
         assert_eq!(" description", tc.description);
         assert!(!tc.require_root);
-        assert_eq!(tc.required_features, &[FileSystemFeature::Chflags]);
         assert_eq!(
-            tc.required_file_flags,
-            &[FileFlags::SF_IMMUTABLE, FileFlags::UF_IMMUTABLE]
+            tc.guards
+                .into_iter()
+                .map(|&g| g as usize)
+                .collect::<Vec<_>>(),
+            vec![guard_example as usize]
         );
-        assert!(matches!(tc.fun, TestFn::NonSerialized(f) if f as usize == flags as usize));
+        assert!(matches!(tc.fun, TestFn::NonSerialized(f) if f as usize == guard as usize));
     }
 
     crate::test_case! {
@@ -190,8 +164,8 @@ mod t {
         assert_eq!(" description", tc.description);
         assert!(tc.require_root);
         assert!(tc.required_features.is_empty());
-        assert!(tc.required_file_flags.is_empty());
         assert!(matches!(tc.fun, TestFn::NonSerialized(f) if f as usize == root as usize));
+        assert!(tc.guards.is_empty());
     }
 
     crate::test_case! {
@@ -207,7 +181,7 @@ mod t {
         assert_eq!(" description", tc.description);
         assert!(!tc.require_root);
         assert!(tc.required_features.is_empty());
-        assert!(tc.required_file_flags.is_empty());
+        assert!(tc.guards.is_empty());
         // Can't check fun because it's a closure
 
         let tc = inventory::iter::<TestCase>()
@@ -216,7 +190,7 @@ mod t {
         assert_eq!(" description", tc.description);
         assert!(!tc.require_root);
         assert!(tc.required_features.is_empty());
-        assert!(tc.required_file_flags.is_empty());
+        assert!(tc.guards.is_empty());
         // Can't check fun because it's a closure
     }
 
@@ -233,7 +207,7 @@ mod t {
         assert_eq!(" description", tc.description);
         assert!(!tc.require_root);
         assert!(tc.required_features.is_empty());
-        assert!(tc.required_file_flags.is_empty());
         assert!(matches!(tc.fun, TestFn::Serialized(f) if f as usize == serialized as usize));
+        assert!(tc.guards.is_empty());
     }
 }
