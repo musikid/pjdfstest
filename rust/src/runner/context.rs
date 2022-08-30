@@ -35,7 +35,7 @@ use tempfile::{tempdir_in, TempDir};
 use thiserror::Error;
 
 use crate::{
-    config::SettingsConfig,
+    config::{Config, FeaturesConfig},
     test::TestError,
     utils::{chmod, lchmod, symlink},
 };
@@ -84,38 +84,35 @@ impl DummyAuthEntries {
     }
 }
 
-pub struct TestContext {
+pub struct TestContext<'a> {
     naptime: Duration,
+    features_config: &'a FeaturesConfig,
     temp_dir: TempDir,
     auth_entries: DummyAuthEntries,
 }
 
-pub struct SerializedTestContext {
-    ctx: TestContext,
+pub struct SerializedTestContext<'a> {
+    ctx: TestContext<'a>,
 }
 
-impl Deref for SerializedTestContext {
-    type Target = TestContext;
+impl<'a> Deref for SerializedTestContext<'a> {
+    type Target = TestContext<'a>;
 
     fn deref(&self) -> &Self::Target {
         &self.ctx
     }
 }
 
-impl DerefMut for SerializedTestContext {
+impl<'a> DerefMut for SerializedTestContext<'a> {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.ctx
     }
 }
 
-impl SerializedTestContext {
-    pub fn new<P: AsRef<Path>>(
-        settings: &SettingsConfig,
-        entries: &[(User, Group)],
-        base_dir: P,
-    ) -> Self {
+impl<'a> SerializedTestContext<'a> {
+    pub fn new<P: AsRef<Path>>(config: &'a Config, entries: &[(User, Group)], base_dir: P) -> Self {
         Self {
-            ctx: TestContext::new(settings, entries, base_dir),
+            ctx: TestContext::new(config, entries, base_dir),
         }
     }
 
@@ -168,26 +165,22 @@ impl SerializedTestContext {
     }
 }
 
-impl Drop for SerializedTestContext {
+impl<'a> Drop for SerializedTestContext<'a> {
     fn drop(&mut self) {
         umask(Mode::empty());
     }
 }
 
-impl TestContext {
-    /// Create a new test context.
-    pub fn new<P: AsRef<Path>>(
-        settings: &SettingsConfig,
-        entries: &[(User, Group)],
-        base_dir: P,
-    ) -> Self {
-        let naptime = Duration::from_secs_f64(settings.naptime);
+impl<'a> TestContext<'a> {
+    pub fn new<P: AsRef<Path>>(config: &'a Config, entries: &[(User, Group)], base_dir: P) -> Self {
+        let naptime = Duration::from_secs_f64(config.settings.naptime);
         let temp_dir = tempdir_in(base_dir).unwrap();
         // FIX: some tests need a 0o755 base dir
         chmod(temp_dir.path(), Mode::from_bits_truncate(0o755)).unwrap();
         TestContext {
             naptime,
             temp_dir,
+            features_config: &config.features,
             auth_entries: DummyAuthEntries::new(entries.to_vec()),
         }
     }
@@ -195,6 +188,10 @@ impl TestContext {
     /// Return the base path for this context.
     pub fn base_path(&self) -> &Path {
         self.temp_dir.path()
+    }
+
+    pub fn config(&self) -> &FeaturesConfig {
+        self.features_config
     }
 
     /// Generate a random path.
@@ -206,6 +203,15 @@ impl TestContext {
                 .map(char::from)
                 .collect::<String>(),
         )
+    }
+
+    /// Create a file with a custom name.
+    pub fn create_named<P: AsRef<Path>>(
+        &self,
+        f_type: FileType,
+        name: P,
+    ) -> Result<PathBuf, TestError> {
+        Ok(self.new_file(f_type).name(name).create()?)
     }
 
     /// Create a regular file and open it.
@@ -322,7 +328,7 @@ impl TestContext {
 
 // We implement Drop to circumvent the errors which arise from unlinking a directory for which
 // search or write permission is denied, or a flag denying delete for a file.
-impl Drop for TestContext {
+impl<'a> Drop for TestContext<'a> {
     fn drop(&mut self) {
         let iter = walkdir::WalkDir::new(self.base_path()).into_iter();
         for entry in iter {
@@ -489,7 +495,7 @@ mod tests {
     use walkdir::WalkDir;
 
     use crate::{
-        config::SettingsConfig,
+        config::Config,
         utils::{chmod, ALLPERMS},
     };
 
@@ -504,9 +510,9 @@ mod tests {
             FileType::Socket,
             FileType::Symlink(None),
         ] {
-            let settings = SettingsConfig { naptime: 0. };
+            let config = Config::default();
             let tempdir = TempDir::new().unwrap();
-            let ctx = TestContext::new(&settings, &Vec::new(), tempdir.path());
+            let ctx = TestContext::new(&config, &Vec::new(), tempdir.path());
 
             assert!(ctx.temp_dir.path().starts_with(tempdir.path()));
 
@@ -564,8 +570,8 @@ mod tests {
     #[test]
     fn name_max() {
         let tmpdir = TempDir::new().unwrap();
-        let settings = SettingsConfig { naptime: 0. };
-        let ctx = TestContext::new(&settings, &Vec::new(), tmpdir.path());
+        let config = Config::default();
+        let ctx = TestContext::new(&config, &Vec::new(), tmpdir.path());
         let file = ctx.create_name_max(FileType::Regular).unwrap();
         let name_len = file.file_name().unwrap().to_string_lossy().len();
 
@@ -585,8 +591,8 @@ mod tests {
     #[test]
     fn path_max() {
         let tmpdir = TempDir::new().unwrap();
-        let settings = SettingsConfig { naptime: 0. };
-        let ctx = TestContext::new(&settings, &Vec::new(), &tmpdir.path());
+        let config = Config::default();
+        let ctx = TestContext::new(&config, &Vec::new(), &tmpdir.path());
         let file = ctx.create_path_max(FileType::Regular).unwrap();
         let path_len = file.to_string_lossy().len();
 
@@ -619,8 +625,8 @@ mod tests {
             // FileType::Symlink(None),
         ] {
             let tmpdir = TempDir::new().unwrap();
-            let settings = SettingsConfig { naptime: 0. };
-            let ctx = TestContext::new(&settings, &Vec::new(), &tmpdir.path());
+            let config = Config::default();
+            let ctx = TestContext::new(&config, &Vec::new(), &tmpdir.path());
             let name = "testing";
             let expected_mode = 0o725;
             let (path, _file) = ctx
@@ -641,8 +647,8 @@ mod tests {
     #[test]
     fn regular_unique_syscall() {
         let tmpdir = TempDir::new().unwrap();
-        let settings = SettingsConfig { naptime: 0. };
-        let ctx = TestContext::new(&settings, &Vec::new(), &tmpdir.path());
+        let config = Config::default();
+        let ctx = TestContext::new(&config, &Vec::new(), &tmpdir.path());
 
         assert!(ctx
             .new_file(FileType::Regular)
