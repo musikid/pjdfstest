@@ -207,6 +207,8 @@ pub enum FileFlags {
 pub enum FileSystemFeature {
     /// The chflags syscall is available
     Chflags,
+    /// NFSv4 style Access Control Lists
+    Nfsv4Acls,
     /// The posix_fallocate syscall is available
     PosixFallocate,
     /// rename changes st_ctime on success

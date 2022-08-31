@@ -126,7 +126,7 @@ impl SerializedTestContext {
     /// Otherwise, the first provided [`Gid`] will be the effective one and the other other will be added with `setgroups`.
     pub fn as_user<F>(&self, user: &User, groups: Option<&[Gid]>, f: F)
     where
-        F: FnMut(),
+        F: FnOnce(),
     {
         let original_euid = Uid::effective();
         let original_egid = Gid::effective();
