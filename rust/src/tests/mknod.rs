@@ -118,9 +118,45 @@ fn device_files(ctx: &mut TestContext, ft: FileType) {
     assert_eq!(major(stat.rdev()) as u64, major_num as u64);
     assert_eq!(minor(stat.rdev()) as u64, minor_num as u64);
     assert!(check(&stat.file_type()));
+}
 
-    // TODO: EINVAL seems to be sent by makedev?
-    #[cfg(target_os = "illumos")]
+crate::test_case! {
+    /// mknod changes st_ctime and st_mtime of the parent directory
+    /// and marks for update the st_atime, st_ctime and st_mtime fields
+    /// of the new file
+    changed_times_success, root => [Block, Char]
+}
+fn changed_times_success(ctx: &mut TestContext, ft: FileType) {
+    use crate::utils::dev::makedev;
+
+    let argument = match ft {
+        FileType::Block => SFlag::S_IFBLK,
+        FileType::Char => SFlag::S_IFCHR,
+        _ => unreachable!(),
+    };
+
+    let file = ctx.gen_path();
+    assert_times_changed()
+        .path(ctx.base_path(), CTIME | MTIME)
+        .paths(ctx.base_path(), &file, ATIME | CTIME | MTIME)
+        .execute(ctx, false, || {
+            assert!(mknod(
+                &file,
+                argument,
+                Mode::from_bits_truncate(0o755),
+                makedev(1, 2)
+            )
+            .is_ok());
+        })
+}
+
+#[cfg(target_os = "illumos")]
+crate::test_case! {
+    /// mknod creates devices with old and new numbers
+    create_old_new_device, root
+}
+#[cfg(target_os = "illumos")]
+fn create_old_new_device(ctx: &mut TestContext) {
     {
         let file = ctx.gen_path();
         assert!(mknod(
@@ -149,18 +185,4 @@ fn device_files(ctx: &mut TestContext, ft: FileType) {
             Err(Errno::EINVAL)
         );
     }
-
-    let file = ctx.gen_path();
-    assert_times_changed()
-        .path(ctx.base_path(), CTIME | MTIME)
-        .paths(ctx.base_path(), &file, ATIME | CTIME | MTIME)
-        .execute(ctx, false, || {
-            assert!(mknod(
-                &file,
-                argument,
-                Mode::from_bits_truncate(mode),
-                makedev(1, 2)
-            )
-            .is_ok());
-        })
 }
