@@ -74,13 +74,13 @@ fn enotdir_comp_char_block(ctx: &mut TestContext, ft: FileType) {
     );
 }
 
-#[cfg(any(target_os = "linux", target_os = "freebsd", target_os = "solaris"))]
+#[cfg(any(target_os = "linux", target_os = "freebsd", target_os = "illumos"))]
 crate::test_case! {
     /// mknod create device files
     // mknod/11.t
     device_files, root => [Block, Char]
 }
-#[cfg(any(target_os = "linux", target_os = "freebsd", target_os = "solaris"))]
+#[cfg(any(target_os = "linux", target_os = "freebsd", target_os = "illumos"))]
 fn device_files(ctx: &mut TestContext, ft: FileType) {
     use std::{
         fs::symlink_metadata,
@@ -130,7 +130,7 @@ fn device_files(ctx: &mut TestContext, ft: FileType) {
     );
 
     // TODO: EINVAL seems to be sent by makedev?
-    #[cfg(target_os = "solaris")]
+    #[cfg(target_os = "illumos")]
     {
         let file = ctx.gen_path();
         assert!(mknod(

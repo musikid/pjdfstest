@@ -2,10 +2,10 @@
 
 #[cfg(target_os = "freebsd")]
 pub use freebsd::*;
+#[cfg(target_os = "illumos")]
+pub use illumos::*;
 #[cfg(target_os = "linux")]
 pub use linux::*;
-#[cfg(target_os = "solaris")]
-pub use solaris::*;
 
 #[cfg(target_os = "linux")]
 mod linux {
@@ -21,8 +21,6 @@ mod linux {
         nix::sys::stat::minor(dev)
     }
 }
-
-// TODO: Upstream to nix/libc?
 
 #[cfg(target_os = "freebsd")]
 mod freebsd {
@@ -47,8 +45,8 @@ mod freebsd {
     }
 }
 
-#[cfg(target_os = "solaris")]
-mod solaris {
+#[cfg(target_os = "illumos")]
+mod illumos {
     // sysmacros.h
 
     type major_t = nix::libc::uint32_t;
@@ -62,8 +60,8 @@ mod solaris {
     }
 
     mod x64 {
-        const L_BITSMAJOR: usize = 32; /* # of major device bits in 64-bit Solaris */
-        const L_BITSMINOR: usize = 32; /* # of minor device bits in 64-bit Solaris */
+        const L_BITSMAJOR: usize = 32; /* # of major device bits in 64-bit illumos */
+        const L_BITSMINOR: usize = 32; /* # of minor device bits in 64-bit illumos */
         const L_MAXMAJ: usize = 0xffffffff; /* max major value */
         const L_MAXMIN: usize = 0xffffffff; /* max minor value */
     }
