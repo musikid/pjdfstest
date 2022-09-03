@@ -1,4 +1,4 @@
-use std::fs::{metadata, FileType};
+use std::fs::{metadata, symlink_metadata, FileType};
 use std::os::unix::prelude::MetadataExt;
 use std::path::Path;
 
@@ -99,7 +99,6 @@ fn open_trunc(ctx: &mut TestContext) {
 
 crate::test_case! {
     /// interact with > 2 GB files
-    // TODO: Where should this be?
     // open/25.t
     interact_2gb
 }
@@ -109,6 +108,9 @@ fn interact_2gb(ctx: &mut TestContext) {
     const GB: usize = 1024usize.pow(3);
     let offset = 2 * GB as i64 + 1;
     pwrite(fd, DATA.as_bytes(), offset).unwrap();
+    let expected_size = offset as u64 + DATA.len() as u64;
+    let size = symlink_metadata(&path).unwrap().size();
+    assert_eq!(size, expected_size);
     close(fd).unwrap();
 
     let fd = open(&path, OFlag::O_RDONLY, Mode::empty()).unwrap();
