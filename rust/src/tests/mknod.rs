@@ -119,16 +119,6 @@ fn device_files(ctx: &mut TestContext, ft: FileType) {
     assert_eq!(minor(stat.rdev()) as u64, minor_num as u64);
     assert!(check(&stat.file_type()));
 
-    assert_eq!(
-        mknod(
-            &file,
-            argument,
-            Mode::from_bits_truncate(mode),
-            makedev(3, 4)
-        ),
-        Err(Errno::EEXIST)
-    );
-
     // TODO: EINVAL seems to be sent by makedev?
     #[cfg(target_os = "illumos")]
     {
@@ -146,16 +136,6 @@ fn device_files(ctx: &mut TestContext, ft: FileType) {
         assert_eq!(major(stat.rdev()), major_num);
         assert_eq!(minor(stat.rdev()), minor_num);
         assert!(check(&stat.file_type()));
-
-        assert_eq!(
-            mknod(
-                &file,
-                argument,
-                Mode::from_bits_truncate(mode),
-                makedev(4000, 4000)
-            ),
-            Err(Errno::EEXIST)
-        );
 
         let file = ctx.gen_path();
 
