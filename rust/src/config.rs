@@ -86,3 +86,21 @@ pub struct Config {
     pub settings: SettingsConfig,
     pub dummy_auth: DummyAuthConfig,
 }
+
+/// Return flags which intersects with the provided ones
+/// and those available in the configuration,
+/// along with the other available in the configuration.
+pub fn get_flags_intersection(
+    config: &FeaturesConfig,
+    flags: &[FileFlags],
+) -> (Vec<FileFlags>, Vec<FileFlags>) {
+    let flags: HashSet<_> = flags.iter().copied().collect();
+    let eperm_flags: HashSet<_> = config.file_flags.intersection(&flags).copied().collect();
+    let valid_flags: Vec<_> = config
+        .file_flags
+        .difference(&eperm_flags)
+        .copied()
+        .collect();
+
+    (eperm_flags.into_iter().collect(), valid_flags)
+}

@@ -24,6 +24,8 @@ use nix::{
     target_os = "ios",
     target_os = "watchos",
 ))]
+mod chflags;
+#[cfg(any(target_os = "freebsd"))]
 mod flag;
 
 // From https://pubs.opengroup.org/onlinepubs/9699919799/functions/unlink.html
