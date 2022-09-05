@@ -32,6 +32,7 @@ pub mod mkdir;
 pub mod mkfifo;
 pub mod mknod;
 mod mksyscalls;
+pub mod open;
 pub mod posix_fallocate;
 pub mod rename;
 pub mod rmdir;
