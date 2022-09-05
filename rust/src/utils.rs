@@ -35,3 +35,16 @@ pub fn link<P: ?Sized + nix::NixPath>(old_path: &P, new_path: &P) -> nix::Result
 pub fn symlink<P: ?Sized + nix::NixPath>(path1: &P, path2: &P) -> nix::Result<()> {
     symlinkat(path1, None, path2)
 }
+
+/// Safe wrapper for `lchflags`.
+#[cfg(any(target_os = "netbsd", target_os = "freebsd", target_os = "dragonfly"))]
+pub fn lchflags<P: ?Sized + nix::NixPath>(
+    path: &P,
+    flags: nix::sys::stat::FileFlag,
+) -> nix::Result<()> {
+    use nix::errno::Errno;
+    let res =
+        path.with_nix_path(|cstr| unsafe { nix::libc::lchflags(cstr.as_ptr(), flags.bits()) })?;
+
+    Errno::result(res).map(drop)
+}

@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::collections::HashSet;
 
 use crate::test::FileFlags;
 use crate::test::FileSystemFeature;
@@ -15,7 +16,7 @@ pub struct CommonFeatureConfig {}
 #[derive(Debug, Default, Serialize, Deserialize)]
 pub struct FeaturesConfig {
     #[serde(default)]
-    pub file_flags: Vec<FileFlags>,
+    pub file_flags: HashSet<FileFlags>,
     #[serde(flatten)]
     pub fs_features: HashMap<FileSystemFeature, CommonFeatureConfig>,
 }

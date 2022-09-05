@@ -16,6 +16,15 @@ use nix::sys::time::TimeSpec;
 
 use crate::test::TestContext;
 
+#[cfg(any(
+    target_os = "openbsd",
+    target_os = "netbsd",
+    target_os = "freebsd",
+    target_os = "dragonfly",
+    target_os = "macos",
+    target_os = "ios",
+))]
+pub mod chflags;
 pub mod chmod;
 pub mod ftruncate;
 pub mod link;
