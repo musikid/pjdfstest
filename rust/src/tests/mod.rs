@@ -164,8 +164,7 @@ impl<'a> TimeAssertion<'a> {
         path_after: &'a Path,
         fields: TimestampField,
     ) -> Self {
-        self.compared_paths
-            .push((path_before.as_ref(), path_after.as_ref(), fields));
+        self.compared_paths.push((path_before, path_after, fields));
         self
     }
 
@@ -240,7 +239,7 @@ where
     F: FnOnce(),
 {
     assert_times_changed()
-        .path(&path, CTIME)
+        .path(path, CTIME)
         .execute(ctx, false, f)
 }
 
@@ -250,7 +249,7 @@ where
     F: FnOnce(),
 {
     assert_times_changed()
-        .path(&path, MTIME)
+        .path(path, MTIME)
         .execute(ctx, false, f)
 }
 
@@ -260,7 +259,7 @@ where
     F: FnOnce(),
 {
     assert_times_unchanged()
-        .path(&path, CTIME)
+        .path(path, CTIME)
         .execute(ctx, false, f)
 }
 
@@ -270,7 +269,7 @@ where
     F: FnOnce(),
 {
     assert_times_unchanged()
-        .path(&path, CTIME)
+        .path(path, CTIME)
         .execute(ctx, true, f)
 }
 
@@ -280,6 +279,6 @@ where
     F: FnOnce(),
 {
     assert_times_unchanged()
-        .path(&path, MTIME)
+        .path(path, MTIME)
         .execute(ctx, false, f)
 }
