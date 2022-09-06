@@ -523,13 +523,12 @@ mod tests {
             );
 
             let file = ctx.create(ft.clone()).unwrap();
-            let parent_content: Vec<_> = WalkDir::new(tempdir.path())
+            let parent_content = WalkDir::new(tempdir.path())
                 .min_depth(1)
                 .max_depth(1)
                 .into_iter()
-                .filter_map(|e| e.ok())
-                .collect();
-            assert_eq!(parent_content.len(), 1);
+                .filter_map(|e| e.ok());
+            assert_eq!(parent_content.count(), 1);
 
             let content: Vec<_> = WalkDir::new(ctx.temp_dir.path())
                 .min_depth(1)
