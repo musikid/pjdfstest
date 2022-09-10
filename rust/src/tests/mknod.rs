@@ -127,7 +127,7 @@ crate::test_case! {
     changed_times_success, root => [Block, Char]
 }
 fn changed_times_success(ctx: &mut TestContext, ft: FileType) {
-    use crate::utils::dev::makedev;
+    use nix::libc::makedev;
 
     let argument = match ft {
         FileType::Block => SFlag::S_IFBLK,

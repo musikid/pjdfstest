@@ -24,16 +24,8 @@ mod linux {
 
 #[cfg(target_os = "freebsd")]
 mod freebsd {
-    // sys/types.h
-    // TODO: Replace u64 by c_int?
-
     pub fn makedev(major: u64, minor: u64) -> nix::libc::dev_t {
-        (((major & 0xffffff00) << 32)
-            | ((major & 0x000000ff) << 8)
-            | ((minor & 0xff00) << 24)
-            | minor & 0xffff00ff)
-            .try_into()
-            .unwrap()
+        nix::libc::makedev(major.try_into().unwrap(), minor.try_into().unwrap())
     }
 
     pub fn major(dev: u64) -> u64 {
