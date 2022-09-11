@@ -86,7 +86,7 @@ fn denied_delete_does_not_prohibit_rename(ctx: &mut SerializedTestContext, ft: F
         rename(&newpath, &file).unwrap();
     });
 }
-
+#[cfg(any(target_os = "macos", target_os = "freebsd"))]
 crate::test_case! {
     /// DELETE allows for unlinking directories, no matter what the permissions
     /// on the parent directory are.
