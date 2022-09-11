@@ -129,7 +129,8 @@ crate::test_case! {
     immutable_file, FileSystemFeature::Chflags
 }
 fn immutable_file(ctx: &mut TestContext) {
-    let (flags, valid_flags) = get_flags_intersection(ctx.config(), FileFlags::IMMUTABLE_FLAGS);
+    let (flags, valid_flags) =
+        get_flags_intersection(ctx.features_config(), FileFlags::IMMUTABLE_FLAGS);
 
     // open/10.t
     // TODO: atime can remain unchanged depending on the mount flags
@@ -156,7 +157,8 @@ crate::test_case! {
     append_file, FileSystemFeature::Chflags
 }
 fn append_file(ctx: &mut TestContext) {
-    let (flags, valid_flags) = get_flags_intersection(ctx.config(), FileFlags::APPEND_ONLY_FLAGS);
+    let (flags, valid_flags) =
+        get_flags_intersection(ctx.features_config(), FileFlags::APPEND_ONLY_FLAGS);
 
     // open/11.t
     assert_flags_named_file(
@@ -182,7 +184,7 @@ crate::test_case! {
 }
 fn immutable_append_file(ctx: &mut TestContext) {
     let (flags, valid_flags) = get_flags_intersection(
-        ctx.config(),
+        ctx.features_config(),
         &[FileFlags::IMMUTABLE_FLAGS, FileFlags::APPEND_ONLY_FLAGS].concat(),
     );
 
@@ -271,7 +273,7 @@ crate::test_case! {
 }
 fn immutable_append_undeletable_file(ctx: &mut TestContext) {
     let (flags, valid_flags) = get_flags_intersection(
-        ctx.config(),
+        ctx.features_config(),
         &[
             FileFlags::IMMUTABLE_FLAGS,
             FileFlags::APPEND_ONLY_FLAGS,
@@ -323,7 +325,7 @@ crate::test_case! {
 }
 fn immutable_append_parent(ctx: &mut TestContext) {
     let (flags, valid_flags) = get_flags_intersection(
-        ctx.config(),
+        ctx.features_config(),
         &[FileFlags::IMMUTABLE_FLAGS, FileFlags::APPEND_ONLY_FLAGS].concat(),
     );
 
@@ -369,7 +371,8 @@ crate::test_case! {
     immutable_parent, FileSystemFeature::Chflags
 }
 fn immutable_parent(ctx: &mut TestContext) {
-    let (flags, valid_flags) = get_flags_intersection(ctx.config(), FileFlags::IMMUTABLE_FLAGS);
+    let (flags, valid_flags) =
+        get_flags_intersection(ctx.features_config(), FileFlags::IMMUTABLE_FLAGS);
 
     let mode = Mode::from_bits_truncate(0o755);
 

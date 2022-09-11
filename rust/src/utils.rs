@@ -66,19 +66,6 @@ pub fn lchown<P: ?Sized + nix::NixPath>(
     fchownat(None, path, owner, group, FchownatFlags::NoFollowSymlink)
 }
 
-/// Safe wrapper for `lchflags`.
-#[cfg(any(target_os = "netbsd", target_os = "freebsd", target_os = "dragonfly"))]
-pub fn lchflags<P: ?Sized + nix::NixPath>(
-    path: &P,
-    flags: nix::sys::stat::FileFlag,
-) -> nix::Result<()> {
-    use nix::errno::Errno;
-    let res =
-        path.with_nix_path(|cstr| unsafe { nix::libc::lchflags(cstr.as_ptr(), flags.bits()) })?;
-
-    Errno::result(res).map(drop)
-}
-
 pub fn get_mountpoint(base_path: &Path) -> Result<&Path, anyhow::Error> {
     let base_dev = nix::sys::stat::lstat(base_path)?.st_dev;
 
