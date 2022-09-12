@@ -19,7 +19,7 @@ pub fn rmdir<P: ?Sized + nix::NixPath>(path: &P) -> nix::Result<()> {
     nix::errno::Errno::result(res).map(std::mem::drop)
 }
 
-pub const ALLPERMS: nix::sys::stat::mode_t = 0o777;
+pub const ALLPERMS: nix::sys::stat::mode_t = 0o7777;
 
 /// Wrapper for `renameat(None, old_path, None, new_path)`.
 pub fn rename<P: ?Sized + nix::NixPath>(old_path: &P, new_path: &P) -> nix::Result<()> {

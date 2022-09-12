@@ -2,6 +2,9 @@
 
 chflags = {}
 file_flags = ["SF_IMMUTABLE"]
+# For now, don't run the NFSv4 ACL tests on UFS
+# https://bugs.freebsd.org/bugzilla/show_bug.cgi?id=266240
+# nfsv4_acls = {}
 posix_fallocate = {}
 stat_st_birthtime = {}
 utime_now = {}

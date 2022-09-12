@@ -27,6 +27,7 @@ use crate::test::TestContext;
 pub mod chflags;
 pub mod chmod;
 pub mod ftruncate;
+pub mod nfsv4acl;
 pub mod link;
 pub mod mkdir;
 pub mod mkfifo;

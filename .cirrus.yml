@@ -38,6 +38,8 @@ task:
     CFG: ci/linux-ext4.toml
     SU_ARGS: -s /bin/sh -m nobody -c
   setup_script:
+    - apt-get update
+    - apt-get -y install libacl1-dev acl
     - |
       cat <<EOF | newusers -r
       tests:x:::Dummy User for pjdfstest:/:/usr/bin/nologin
