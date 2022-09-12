@@ -322,7 +322,7 @@ fn ctime(ctx: &amp;mut TestContext, f_type: FileType) {
 <p>The test runner has to run the tests, and provide a command-line interface to allow the user to modify how the tests should be run.
 It takes the tests from the specified test groups.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="test-declaration"><a class="header" href="#test-declaration">Test declaration</a></h1>
-<p>Test cases have the same anatomy than usual Rust tests, 
+<p>Test cases have the same structure than usual Rust tests, 
 that is <code>unwrap</code>ing <code>Result</code>s and using assertion macros (<code>assert</code> and <code>assert_eq</code>),
 the exception being that it should take a <code>&amp;mut TestContext</code> parameter.
 It might also take a <code>FileType</code> argument if required.
@@ -344,9 +344,8 @@ fn ctime(ctx: &amp;mut TestContext, f_type: FileType) {
 }
 </code></pre>
 <h2 id="description"><a class="header" href="#description">Description</a></h2>
-<p>To provide better explanation on the test, 
-it is possible to provide doc comments which will be used as documentation for developers
-but also describe more in detail the meaning of the test for end users.
+<p>It is possible to provide doc comments which will be used as documentation for developers
+but also be displayed to users when they run the test.
 The doc comments should be written in the <code>test_case!</code> declaration, before anything.
 For example:</p>
 <pre><code class="language-rust ignore">crate::test_case! {
@@ -362,17 +361,17 @@ to modify the execution of the tests or add requirements.</p>
 <h3 id="file-system-exclusive-features"><a class="header" href="#file-system-exclusive-features">File-system exclusive features</a></h3>
 <p>Some features are not available for every file system.
 For tests requiring such features, the execution becomes opt-in.
-When a test needs such feature,
-a variant of <code>FileSystemFeature</code> corresponding to this feature should be specified
-after potential <code>root</code> requirement and before file flags.
-Multiple features can be specified, each separated by a comma <code>,</code> separator.</p>
+A variant of the <code>FileSystemFeature</code> enum corresponding to this feature
+should be specified after potential <code>root</code> requirement and before file flags.
+Multiple features can be specified, separated by a comma <code>,</code>.</p>
 <p>For example:</p>
 <pre><code class="language-rust ignore">#[cfg(target_os = &quot;freebsd&quot;)]
 crate::test_case! {eperm_immutable_flag, FileSystemFeature::Chflags, FileSystemFeature::PosixFallocate ...}
 </code></pre>
 <h4 id="adding-features"><a class="header" href="#adding-features">Adding features</a></h4>
 <p>New features can be added to the <code>FileSystemFeature</code> enum.
-A description of the feature should be provided as documentation.</p>
+A description of the feature should be provided as documentation
+for both developers and users.</p>
 <h4 id="file-flags"><a class="header" href="#file-flags">File flags</a></h4>
 <p><strong>NOTE: This feature is not supported by all POSIX systems, 
 therefore its use needs a <code>#[cfg(target_os = ...)]</code> attribute specifying the relevant system(s).</strong></p>
@@ -384,7 +383,7 @@ crate::test_case! {eperm_immutable_flag, root, FileSystemFeature::Chflags; FileF
 </code></pre>
 <h3 id="root-privileges"><a class="header" href="#root-privileges">Root privileges</a></h3>
 <p>Some tests may need root privileges to run.
-To declare that a test function require root privileges, 
+To declare that a test function require such privileges, 
 <code>root</code> should be added to its declaration.
 For example:</p>
 <pre><code class="language-rust ignore">crate::test_case!{change_perm, root}
@@ -414,8 +413,7 @@ mod lchmod;
 <p>Some test cases need functions only available when they are run serialized, especially when they affect the whole process.
 An example is changing user (<code>SerializedTestContext::as_user</code>).
 To have access to these functions, the test should be declared with a <code>SerializedTestContext</code>
-parameter in place of <code>TestContext</code> 
-and the <code>serialized</code> keyword should be prepended before features.</p>
+parameter in place of <code>TestContext</code> and the <code>serialized</code> keyword should be prepended before features.</p>
 <p>For example:</p>
 <pre><code class="language-rust ignore">crate::test_case! {
     /// The file mode of a newly created file should not affect whether
