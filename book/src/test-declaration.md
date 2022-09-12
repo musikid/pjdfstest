@@ -1,6 +1,6 @@
 # Test declaration
 
-Test cases have the same anatomy than usual Rust tests, 
+Test cases have the same structure than usual Rust tests, 
 that is `unwrap`ing `Result`s and using assertion macros (`assert` and `assert_eq`),
 the exception being that it should take a `&mut TestContext` parameter.
 It might also take a `FileType` argument if required.
@@ -27,9 +27,8 @@ fn ctime(ctx: &mut TestContext, f_type: FileType) {
 
 ## Description
 
-To provide better explanation on the test, 
-it is possible to provide doc comments which will be used as documentation for developers
-but also describe more in detail the meaning of the test for end users.
+It is possible to provide doc comments which will be used as documentation for developers
+but also be displayed to users when they run the test.
 The doc comments should be written in the `test_case!` declaration, before anything.
 For example:
 
@@ -51,10 +50,9 @@ to modify the execution of the tests or add requirements.
 
 Some features are not available for every file system.
 For tests requiring such features, the execution becomes opt-in.
-When a test needs such feature,
-a variant of `FileSystemFeature` corresponding to this feature should be specified
-after potential `root` requirement and before file flags.
-Multiple features can be specified, each separated by a comma `,` separator.
+A variant of the `FileSystemFeature` enum corresponding to this feature
+should be specified after potential `root` requirement and before file flags.
+Multiple features can be specified, separated by a comma `,`.
 
 For example:
 
@@ -66,7 +64,8 @@ crate::test_case! {eperm_immutable_flag, FileSystemFeature::Chflags, FileSystemF
 #### Adding features
 
 New features can be added to the `FileSystemFeature` enum.
-A description of the feature should be provided as documentation.
+A description of the feature should be provided as documentation
+for both developers and users.
 
 #### File flags
 
@@ -85,7 +84,7 @@ crate::test_case! {eperm_immutable_flag, root, FileSystemFeature::Chflags; FileF
 ### Root privileges
 
 Some tests may need root privileges to run.
-To declare that a test function require root privileges, 
+To declare that a test function require such privileges, 
 `root` should be added to its declaration.
 For example:
 
@@ -129,8 +128,7 @@ mod lchmod;
 Some test cases need functions only available when they are run serialized, especially when they affect the whole process.
 An example is changing user (`SerializedTestContext::as_user`).
 To have access to these functions, the test should be declared with a `SerializedTestContext`
-parameter in place of `TestContext` 
-and the `serialized` keyword should be prepended before features.
+parameter in place of `TestContext` and the `serialized` keyword should be prepended before features.
 
 For example:
 
