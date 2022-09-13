@@ -1,18 +1,23 @@
-//! Tests for readattr (called ACL_READ_ATTRIBUTES) on FreeBSD 
+//! Tests for readattr (called ACL_READ_ATTRIBUTES) on FreeBSD
+use nix::{errno::Errno, sys::stat::stat};
 
+use super::prependacl;
+use crate::{
+    runner::context::{FileType, SerializedTestContext},
+    test::FileSystemFeature,
+};
 
-
-
-
-#[cfg(any(target_os = "macos", target_os = "freebsd"))]
 crate::test_case! {
     /// ACL_READ_ATTRIBUTES allows a user to read file attributes
     // granular/01.t
     allowed, serialized, root, FileSystemFeature::Nfsv4Acls
 }
-#[cfg(any(target_os = "macos", target_os = "freebsd"))]
 fn allowed(ctx: &mut SerializedTestContext) {
-    let path = ctx.new_file(FileType::Regular).mode(0o644).create().unwrap();
+    let path = ctx
+        .new_file(FileType::Regular)
+        .mode(0o644)
+        .create()
+        .unwrap();
     let user = ctx.get_new_user();
 
     prependacl(&path, &format!("deny::group:{}:readattr", user.gid));
@@ -28,15 +33,17 @@ fn allowed(ctx: &mut SerializedTestContext) {
     });
 }
 
-#[cfg(any(target_os = "macos", target_os = "freebsd"))]
 crate::test_case! {
     /// ACL_READ_ATTRIBUTES denied prevents a user from reading file attributes
     // granular/01.t
     denied, serialized, root, FileSystemFeature::Nfsv4Acls
 }
-#[cfg(any(target_os = "macos", target_os = "freebsd"))]
 fn denied(ctx: &mut SerializedTestContext) {
-    let path = ctx.new_file(FileType::Regular).mode(0o644).create().unwrap();
+    let path = ctx
+        .new_file(FileType::Regular)
+        .mode(0o644)
+        .create()
+        .unwrap();
     let user = ctx.get_new_user();
     ctx.as_user(&user, None, || {
         stat(&path).unwrap(); // Anybody can stat it

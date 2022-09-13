@@ -1,18 +1,19 @@
 //! Tests for ACL_WRITE_DATA
+use nix::{errno::Errno, unistd::unlink};
 
+use super::prependacl;
+use crate::{
+    runner::context::{FileBuilder, FileType, SerializedTestContext},
+    test::FileSystemFeature,
+    utils::{rename, rmdir},
+};
 
-
-
-
-
-#[cfg(any(target_os = "macos", target_os = "freebsd"))]
 crate::test_case! {
     /// ACL_WRITE_DATA on a directory allows a user to create files
     // granular/00.t:L39
     can_create_files, serialized, root, FileSystemFeature::Nfsv4Acls
         => [Regular, Symlink(None)]
 }
-#[cfg(any(target_os = "macos", target_os = "freebsd"))]
 fn can_create_files(ctx: &mut SerializedTestContext, ft: FileType) {
     let user = ctx.get_new_user();
     let path = ctx.new_file(FileType::Dir).mode(0o755).create().unwrap();
@@ -24,14 +25,12 @@ fn can_create_files(ctx: &mut SerializedTestContext, ft: FileType) {
     });
 }
 
-#[cfg(any(target_os = "macos", target_os = "freebsd"))]
 crate::test_case! {
     /// ACL_WRITE_DATA on a directory does not allow a user to create
     /// subdirectories
     // granular/00.t:L49
     cant_create_directories, serialized, root, FileSystemFeature::Nfsv4Acls
 }
-#[cfg(any(target_os = "macos", target_os = "freebsd"))]
 fn cant_create_directories(ctx: &mut SerializedTestContext) {
     let user = ctx.get_new_user();
     let path = ctx.new_file(FileType::Dir).mode(0o755).create().unwrap();
@@ -44,14 +43,12 @@ fn cant_create_directories(ctx: &mut SerializedTestContext) {
     });
 }
 
-#[cfg(any(target_os = "macos", target_os = "freebsd"))]
 crate::test_case! {
     /// ACL_WRITE_DATA on a directory allows a user to move in files from
     /// elsewhere, overwriting existing files if necessary.
     // granular/00.t:L56
     can_rename_files, serialized, root, FileSystemFeature::Nfsv4Acls
 }
-#[cfg(any(target_os = "macos", target_os = "freebsd"))]
 fn can_rename_files(ctx: &mut SerializedTestContext) {
     let user = ctx.get_new_user();
     let dir = ctx.new_file(FileType::Dir).mode(0o755).create().unwrap();
@@ -66,14 +63,12 @@ fn can_rename_files(ctx: &mut SerializedTestContext) {
     });
 }
 
-#[cfg(any(target_os = "macos", target_os = "freebsd"))]
 crate::test_case! {
     /// ACL_WRITE_DATA on a directory does not allow a user to move in
     /// directories from elsewhere.
     // granular/00.t:L56
     cant_rename_directories, serialized, root, FileSystemFeature::Nfsv4Acls
 }
-#[cfg(any(target_os = "macos", target_os = "freebsd"))]
 fn cant_rename_directories(ctx: &mut SerializedTestContext) {
     let user = ctx.get_new_user();
     let dir = ctx.new_file(FileType::Dir).mode(0o755).create().unwrap();
@@ -89,14 +84,12 @@ fn cant_rename_directories(ctx: &mut SerializedTestContext) {
     });
 }
 
-#[cfg(any(target_os = "macos", target_os = "freebsd"))]
 crate::test_case! {
     /// ACL_WRITE_DATA on a directory allows a user to remove other users'
     /// directories
     // granular/00.t:L53
     rmdir_ok, serialized, root, FileSystemFeature::Nfsv4Acls
 }
-#[cfg(any(target_os = "macos", target_os = "freebsd"))]
 fn rmdir_ok(ctx: &mut SerializedTestContext) {
     let user = ctx.get_new_user();
     let dir = ctx.new_file(FileType::Dir).mode(0o755).create().unwrap();
@@ -109,13 +102,11 @@ fn rmdir_ok(ctx: &mut SerializedTestContext) {
     });
 }
 
-#[cfg(any(target_os = "macos", target_os = "freebsd"))]
 crate::test_case! {
     /// ACL_WRITE_DATA on a directory allows a user to unlink other users' files
     // granular/00.t:L63
     unlink_ok, serialized, root, FileSystemFeature::Nfsv4Acls
 }
-#[cfg(any(target_os = "macos", target_os = "freebsd"))]
 fn unlink_ok(ctx: &mut SerializedTestContext) {
     let user = ctx.get_new_user();
     let dir = ctx.new_file(FileType::Dir).mode(0o755).create().unwrap();

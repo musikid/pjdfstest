@@ -1,10 +1,13 @@
 //! Tests for ACL_DELETE_CHILD
+use nix::{errno::Errno, unistd::unlink};
 
+use super::prependacl;
+use crate::{
+    runner::context::{FileBuilder, FileType, SerializedTestContext},
+    test::FileSystemFeature,
+    utils::{rename, rmdir},
+};
 
-
-
-
-#[cfg(any(target_os = "macos", target_os = "freebsd"))]
 crate::test_case! {
     /// DELETE_CHILD allows for for moving a file out of the target directory,
     /// but not for moving it back.
@@ -13,7 +16,6 @@ crate::test_case! {
     allows_rename, serialized, root, FileSystemFeature::Nfsv4Acls
         => [Regular, Dir]
 }
-#[cfg(any(target_os = "macos", target_os = "freebsd"))]
 fn allows_rename(ctx: &mut SerializedTestContext, ft: FileType) {
     let user = ctx.get_new_user();
     let dir0 = ctx.new_file(FileType::Dir).mode(0o755).create().unwrap();
@@ -29,18 +31,18 @@ fn allows_rename(ctx: &mut SerializedTestContext, ft: FileType) {
     });
 }
 
-#[cfg(any(target_os = "macos", target_os = "freebsd"))]
 crate::test_case! {
     /// DELETE_CHILD allows for rmdir, no matter what the permissions on the
     /// parent directory are.
     // granular/05.t:L119
     allows_rmdir, serialized, root, FileSystemFeature::Nfsv4Acls
 }
-#[cfg(any(target_os = "macos", target_os = "freebsd"))]
 fn allows_rmdir(ctx: &mut SerializedTestContext) {
     let user = ctx.get_new_user();
     let dir0 = ctx.new_file(FileType::Dir).mode(0o755).create().unwrap();
-    let dir1 = FileBuilder::new(FileType::Dir, &dir0).mode(0o755).create()
+    let dir1 = FileBuilder::new(FileType::Dir, &dir0)
+        .mode(0o755)
+        .create()
         .unwrap();
 
     prependacl(&dir0, &format!("allow::user:{}:delete_child", user.uid));
@@ -50,14 +52,12 @@ fn allows_rmdir(ctx: &mut SerializedTestContext) {
     });
 }
 
-#[cfg(any(target_os = "macos", target_os = "freebsd"))]
 crate::test_case! {
     /// DELETE_CHILD allows for unlinking, no matter what the permissions on the
     /// parent directory are.
     // granular/03.t:L110
     allows_unlink, serialized, root, FileSystemFeature::Nfsv4Acls
 }
-#[cfg(any(target_os = "macos", target_os = "freebsd"))]
 fn allows_unlink(ctx: &mut SerializedTestContext) {
     let user = ctx.get_new_user();
     let dir = ctx.new_file(FileType::Dir).mode(0o755).create().unwrap();
@@ -70,14 +70,12 @@ fn allows_unlink(ctx: &mut SerializedTestContext) {
     });
 }
 
-#[cfg(any(target_os = "macos", target_os = "freebsd"))]
 crate::test_case! {
     /// Denied DELETE_CHILD prohibits unlink, even if the directory is writable.
     /// the directory.
     // granular/03.t:L63
     denied_unlink, serialized, root, FileSystemFeature::Nfsv4Acls
 }
-#[cfg(any(target_os = "macos", target_os = "freebsd"))]
 fn denied_unlink(ctx: &mut SerializedTestContext) {
     let user = ctx.get_new_user();
     let dir = ctx.new_file(FileType::Dir).mode(0o777).create().unwrap();
@@ -90,14 +88,12 @@ fn denied_unlink(ctx: &mut SerializedTestContext) {
     });
 }
 
-#[cfg(any(target_os = "macos", target_os = "freebsd"))]
 crate::test_case! {
     /// Denied DELETE_CHILD prohibits rmdir, even if the directory is writable.
     /// the directory.
     // granular/05.t:L66
     denied_rmdir, serialized, root, FileSystemFeature::Nfsv4Acls
 }
-#[cfg(any(target_os = "macos", target_os = "freebsd"))]
 fn denied_rmdir(ctx: &mut SerializedTestContext) {
     let user = ctx.get_new_user();
     let dir = ctx.new_file(FileType::Dir).mode(0o777).create().unwrap();
@@ -110,7 +106,6 @@ fn denied_rmdir(ctx: &mut SerializedTestContext) {
     });
 }
 
-#[cfg(any(target_os = "macos", target_os = "freebsd"))]
 crate::test_case! {
     /// Denied DELETE_CHILD prohibits moving a file out, even if the directory
     /// is writable.  the directory.
@@ -118,7 +113,6 @@ crate::test_case! {
     denied_rename, serialized, root, FileSystemFeature::Nfsv4Acls
         => [Regular, Dir]
 }
-#[cfg(any(target_os = "macos", target_os = "freebsd"))]
 fn denied_rename(ctx: &mut SerializedTestContext, ft: FileType) {
     let user = ctx.get_new_user();
     let dir0 = ctx.new_file(FileType::Dir).mode(0o777).create().unwrap();

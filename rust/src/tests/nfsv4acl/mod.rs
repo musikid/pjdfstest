@@ -1,7 +1,4 @@
-use std::{
-    path::Path,
-    str::FromStr
-};
+use std::{path::Path, str::FromStr};
 
 use exacl::{AclEntry, AclOption};
 
@@ -22,5 +19,3 @@ fn prependacl<P: AsRef<Path>>(path: P, spec: &str) {
     new_entries.append(&mut entries);
     exacl::setfacl(&[path][..], &new_entries, AclOption::empty()).unwrap();
 }
-
-
