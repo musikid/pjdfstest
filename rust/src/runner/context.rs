@@ -182,7 +182,7 @@ impl<'a> TestContext<'a> {
     }
 
     pub fn features_config(&self) -> &FeaturesConfig {
-        &self.features_config
+        self.features_config
     }
 
     /// Generate a random path.

@@ -1,11 +1,8 @@
 //! Tests for readattr (called ACL_READ_ATTRIBUTES) on FreeBSD 
-use nix::{errno::Errno, sys::stat::stat};
 
-use crate::{
-    runner::context::{FileType, SerializedTestContext},
-    test::FileSystemFeature,
-};
-use super::prependacl;
+
+
+
 
 #[cfg(any(target_os = "macos", target_os = "freebsd"))]
 crate::test_case! {
