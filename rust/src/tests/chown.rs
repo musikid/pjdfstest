@@ -926,7 +926,7 @@ crate::test_case! {
 }
 #[cfg(any(target_os = "freebsd", target_os = "netbsd", target_os = "dragonfly"))]
 fn update_ctime_success_symlink(ctx: &mut SerializedTestContext) {
-    use crate::tests::assert_symlink_ctime_changed;
+    use super::assert_symlink_ctime_changed;
 
     let file = ctx.create(FileType::Symlink(None)).unwrap();
     let (user, group) = ctx.get_new_entry();
@@ -1009,45 +1009,6 @@ fn unchanged_ctime_no_params_symlink(ctx: &mut SerializedTestContext) {
     assert_eq!(file_stat.uid() as uid_t, uid);
     assert_eq!(file_stat.gid() as gid_t, gid);
 }
-
-// #[cfg(target_os = "linux")]
-// crate::test_case! {
-//     changed_ctime_no_params, serialized, root => [Regular, Dir, Fifo, Block, Char, Socket]
-// }
-// #[cfg(target_os = "linux")]
-// fn changed_ctime_no_params(ctx: &mut SerializedTestContext, ft: FileType) {
-//     let file = ctx.create(ft).unwrap();
-//     let file_stat = metadata(&file).unwrap();
-//     let uid = file_stat.uid() as uid_t;
-//     let gid = file_stat.gid() as gid_t;
-
-//     assert_ctime_changed(ctx, &file, || {
-//         assert!(chown(&file, None, None).is_ok());
-//     });
-//     let file_stat = metadata(&file).unwrap();
-//     assert_eq!(file_stat.uid() as uid_t, uid);
-//     assert_eq!(file_stat.gid() as gid_t, gid);
-
-//     // Test if it follows symlinks
-
-//     let link = ctx.create(FileType::Symlink(Some(file.clone()))).unwrap();
-
-//     assert_ctime_changed(ctx, &link, || {
-//         assert!(chown(&link, None, None).is_ok());
-//     });
-//     let link_stat = metadata(&link).unwrap();
-//     assert_eq!(link_stat.uid() as uid_t, uid);
-//     assert_eq!(link_stat.gid() as gid_t, gid);
-
-//     // lchown
-
-//     assert_ctime_changed(ctx, &file, || {
-//         assert!(lchown(&file, None, None).is_ok());
-//     });
-//     let file_stat = metadata(&file).unwrap();
-//     assert_eq!(file_stat.uid() as uid_t, uid);
-//     assert_eq!(file_stat.gid() as gid_t, gid);
-// }
 
 crate::test_case! {
     /// unsuccessful chown(2) does not update ctime.
