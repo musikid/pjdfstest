@@ -1,7 +1,7 @@
 use nix::{
     fcntl::renameat,
     sys::stat::{fchmodat, FchmodatFlags},
-    unistd::{linkat, symlinkat, LinkatFlags},
+    unistd::{fchownat, linkat, symlinkat, FchownatFlags, Gid, LinkatFlags, Uid},
 };
 
 /// Wrapper for `fchmodat(None, path, mode, FchmodatFlags::FollowSymlink)`.
@@ -12,6 +12,15 @@ pub fn chmod<P: ?Sized + nix::NixPath>(path: &P, mode: nix::sys::stat::Mode) -> 
 /// Wrapper for `fchmodat(None, path, mode, FchmodatFlags::NoFollowSymlink)`.
 pub fn lchmod<P: ?Sized + nix::NixPath>(path: &P, mode: nix::sys::stat::Mode) -> nix::Result<()> {
     fchmodat(None, path, mode, FchmodatFlags::NoFollowSymlink)
+}
+
+/// Wrapper for `fchownat(None, path, mode, FchownatFlags::NoFollowSymlink)`.
+pub fn lchown<P: ?Sized + nix::NixPath>(
+    path: &P,
+    owner: Option<Uid>,
+    group: Option<Gid>,
+) -> nix::Result<()> {
+    fchownat(None, path, owner, group, FchownatFlags::NoFollowSymlink)
 }
 
 pub fn rmdir<P: ?Sized + nix::NixPath>(path: &P) -> nix::Result<()> {

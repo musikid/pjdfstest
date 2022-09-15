@@ -4,6 +4,7 @@ use nix::{sys::stat::Mode, unistd::mkfifo};
 
 use crate::runner::context::{SerializedTestContext, TestContext};
 
+use super::errors::enotdir::assert_enotdir_comp;
 use super::mksyscalls::{assert_perms_from_mode_and_umask, assert_uid_gid};
 use super::{assert_times_changed, ATIME, CTIME, MTIME};
 
@@ -44,3 +45,6 @@ fn changed_time_fields_success(ctx: &mut TestContext) {
             mkfifo(&path, Mode::from_bits_truncate(0o600)).unwrap();
         });
 }
+
+// mkfifo/01.t
+assert_enotdir_comp!(mkfifo(~path, Mode::empty()));

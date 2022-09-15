@@ -10,7 +10,10 @@ use crate::{
     utils::{chmod, link},
 };
 
-use super::{assert_times_changed, assert_times_unchanged, CTIME, MTIME};
+use super::{
+    assert_times_changed, assert_times_unchanged, errors::enotdir::assert_enotdir_comp, CTIME,
+    MTIME,
+};
 
 crate::test_case! {
     /// link creates hardlinks which share the same metadata
@@ -140,3 +143,6 @@ fn unchanged_ctime_fails(ctx: &mut SerializedTestContext, ft: FileType) {
             })
         });
 }
+
+// link/01.t
+assert_enotdir_comp!(link, either);

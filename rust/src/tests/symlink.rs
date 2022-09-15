@@ -6,11 +6,13 @@ use std::{
 
 use nix::{errno::Errno, sys::stat::stat};
 
-use crate::utils::symlink;
 use crate::{
     runner::context::{FileType, TestContext},
     tests::{assert_times_changed, CTIME, MTIME},
+    utils::symlink,
 };
+
+use super::errors::enotdir::assert_enotdir_comp;
 
 crate::test_case! {
     /// symlink creates symbolic links
@@ -77,3 +79,6 @@ fn changed_parent_time_success(ctx: &mut TestContext) {
             assert!(symlink(Path::new("test"), &link).is_ok());
         });
 }
+
+// symlink/01.t
+assert_enotdir_comp!(symlink(Path::new("test"), ~path));

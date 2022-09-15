@@ -9,6 +9,8 @@ use crate::{
     tests::{assert_ctime_changed, assert_ctime_unchanged},
 };
 
+use super::errors::enotdir::assert_enotdir_comp;
+
 // tests/truncate/00.t
 
 crate::test_case! {
@@ -79,3 +81,6 @@ fn unchanged_ctime_failed(ctx: &mut SerializedTestContext) {
         });
     });
 }
+
+// (f)truncate/01.t
+assert_enotdir_comp!(truncate(~path, 0));

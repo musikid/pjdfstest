@@ -15,7 +15,7 @@ use crate::{
     test::{FileFlags, FileSystemFeature},
 };
 
-use super::{assert_ctime_changed, assert_ctime_unchanged};
+use super::{assert_ctime_changed, assert_ctime_unchanged, errors::enotdir::assert_enotdir_comp};
 
 //TODO: Split tests with unprivileged tests for user flags
 
@@ -212,3 +212,6 @@ fn unchanged_ctime_failed(ctx: &mut SerializedTestContext, ft: FileType) {
         });
     }
 }
+
+// chflags/01.t
+assert_enotdir_comp!(chflags(~path, FileFlag::empty()));

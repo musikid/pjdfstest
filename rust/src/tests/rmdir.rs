@@ -4,7 +4,7 @@ use nix::{errno::Errno, sys::stat::lstat};
 
 use crate::{runner::context::TestContext, tests::assert_mtime_changed, utils::rmdir};
 
-use super::assert_ctime_changed;
+use super::{assert_ctime_changed, errors::enotdir::assert_enotdir_comp};
 
 crate::test_case! {
     /// rmdir remove directory
@@ -29,3 +29,5 @@ fn changed_time_parent_success(ctx: &mut TestContext) {
         });
     });
 }
+// rmdir/01.t
+assert_enotdir_comp!(rmdir);

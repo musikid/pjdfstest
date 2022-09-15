@@ -26,6 +26,8 @@ use crate::test::TestContext;
 ))]
 pub mod chflags;
 pub mod chmod;
+pub mod chown;
+pub mod errors;
 pub mod ftruncate;
 pub mod link;
 pub mod mkdir;

@@ -12,7 +12,7 @@ use crate::{
     utils::{link, rename},
 };
 
-use super::assert_ctime_changed;
+use super::{assert_ctime_changed, errors::enotdir::assert_enotdir_comp};
 
 crate::test_case! {
     /// rename preserve file metadata
@@ -262,4 +262,19 @@ fn updates_link_parent(ctx: &mut TestContext) {
     assert_eq!(dst_parent_stat.st_nlink, 3);
     let dotdot_stat = lstat(&dst.join("..")).unwrap();
     assert_eq!(dst_parent_stat.st_ino, dotdot_stat.st_ino);
+}
+
+// rename/12.t
+assert_enotdir_comp!(rename, either);
+
+// rename/13.t
+crate::test_case! {
+    /// Return ENOTDIR when the 'from' argument is a directory, but 'to' is not a directory
+    enotdir_from_to => [Regular, Fifo, Block, Char, Socket]
+}
+fn enotdir_from_to(ctx: &mut TestContext, ft: FileType) {
+    let path = ctx.create(ft.clone()).unwrap();
+    let dir = ctx.create(FileType::Dir).unwrap();
+
+    assert_eq!(rename(&dir, &path).unwrap_err(), Errno::ENOTDIR);
 }
