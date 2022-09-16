@@ -160,7 +160,7 @@ fn verify_sticky(ctx: &mut SerializedTestContext, ft: FileType) {
 #[cfg(any(target_os = "netbsd", target_os = "freebsd", target_os = "dragonfly"))]
 crate::test_case! {
     // chmod/11.t
-    verify_sticky_symlink
+    verify_sticky_symlink, root
 }
 #[cfg(any(target_os = "netbsd", target_os = "freebsd", target_os = "dragonfly"))]
 fn verify_sticky_symlink(ctx: &mut TestContext) {
