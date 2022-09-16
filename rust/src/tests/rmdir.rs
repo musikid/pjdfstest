@@ -1,16 +1,8 @@
-use std::{
-    fs::metadata,
-    panic::{catch_unwind, resume_unwind},
-    process::Command,
-};
+use std::{fs::metadata, path::PathBuf, process::Command};
 
 use nix::{errno::Errno, sys::stat::lstat};
 
-use crate::{
-    runner::context::{SerializedTestContext, TestContext},
-    tests::assert_mtime_changed,
-    utils::rmdir,
-};
+use crate::{runner::context::TestContext, tests::assert_mtime_changed, utils::rmdir};
 
 use super::{assert_ctime_changed, errors::enotdir::enotdir_comp_test_case};
 
@@ -41,31 +33,43 @@ fn changed_time_parent_success(ctx: &mut TestContext) {
 // rmdir/01.t
 enotdir_comp_test_case!(rmdir);
 
+/// Dummy mountpoint to check that rmdir returns EBUSY when using it on a mountpoint.
+struct DummyMnt {
+    path: PathBuf,
+}
+
+impl DummyMnt {
+    fn new(ctx: &mut TestContext) -> anyhow::Result<Self> {
+        // We don't really care about a specific type of file system here, the directory just have to be a mount point
+        let from = ctx.create(crate::runner::context::FileType::Dir)?;
+        let path = ctx.create(crate::runner::context::FileType::Dir)?;
+        let mut mount = Command::new("mount");
+
+        if cfg!(target_os = "linux") {
+            mount.arg("--bind");
+        } else {
+            mount.args(["-t", "nullfs"]);
+        }
+
+        let result = mount.arg(&from).arg(&path).output()?;
+        debug_assert!(result.status.success());
+
+        Ok(Self { path })
+    }
+}
+
+impl Drop for DummyMnt {
+    fn drop(&mut self) {
+        let umount = Command::new("umount").arg(&self.path).output();
+        debug_assert!(matches!(umount, Ok(res) if res.status.success()));
+    }
+}
+
 crate::test_case! {
     /// rmdir return EBUSY if the directory to be removed is the mount point for a mounted file system
-    ebusy, serialized, root
+    ebusy, root
 }
-fn ebusy(ctx: &mut SerializedTestContext) {
-    // We don't really care about a specific type of file system here, the directory just have to be a mount point
-    let from = ctx.create(crate::runner::context::FileType::Dir).unwrap();
-    let to = ctx.create(crate::runner::context::FileType::Dir).unwrap();
-    let mut mount = Command::new("mount");
-
-    if cfg!(target_os = "linux") {
-        mount.arg("--bind");
-    } else {
-        mount.args(["-t", "nullfs"]);
-    }
-
-    let result = mount.arg(&from).arg(&to).output().unwrap();
-    assert!(result.status.success());
-
-    let res = catch_unwind(|| assert_eq!(rmdir(&to), Err(Errno::EBUSY)));
-
-    let umount = Command::new("umount").arg(&to).output().unwrap();
-    assert!(umount.status.success());
-
-    if let Err(e) = res {
-        resume_unwind(e);
-    }
+fn ebusy(ctx: &mut TestContext) {
+    let dummy_mount = DummyMnt::new(ctx).unwrap();
+    assert_eq!(rmdir(&dummy_mount.path), Err(Errno::EBUSY));
 }
