@@ -1,17 +1,11 @@
-use nix::errno::Errno;
-
-use crate::{
-    runner::context::{FileType, TestContext},
-    utils::{link, rename},
-};
-
 /// Asserts that it returns ENOTDIR if a component of the path prefix is not a directory.
 macro_rules! assert_enotdir_comp {
     ($syscall: ident, either) => {
         assert_enotdir_comp!($syscall, |ctx: &mut crate::runner::context::TestContext,
                                              path: &std::path::Path| {
                 let new_path = ctx.gen_path();
-                $syscall(path, &new_path)
+                let file = path.parent().unwrap();
+                $syscall(path, &new_path).or($syscall(file, path))
         });
     };
 
