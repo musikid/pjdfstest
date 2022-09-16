@@ -24,14 +24,14 @@ crate::test_case! {
 fn extend_file_shrink_sparse(ctx: &mut TestContext) {
     let (path, file) = ctx.create_file(OFlag::O_RDWR, None).unwrap();
     let size = 1234567;
-    ftruncate(file, size).unwrap();
+    assert!(ftruncate(file, size).is_ok());
 
     let actual_size = lstat(&path).unwrap().st_size;
     assert_eq!(actual_size, size);
 
     let wronly_file = open(&path, OFlag::O_WRONLY, Mode::empty()).unwrap();
     let size = 567;
-    ftruncate(wronly_file, size).unwrap();
+    assert!(ftruncate(wronly_file, size).is_ok());
 
     let actual_size = lstat(&path).unwrap().st_size;
     assert_eq!(actual_size, size);
@@ -50,14 +50,14 @@ fn shrink_not_empty(ctx: &mut TestContext) {
         .write_all(&random_data)
         .unwrap();
 
-    ftruncate(file, size).unwrap();
+    assert!(ftruncate(file, size).is_ok());
     let actual_size = lstat(&path).unwrap().st_size;
     assert_eq!(actual_size, size);
 
     let wronly_file = open(&path, OFlag::O_WRONLY, Mode::empty()).unwrap();
 
     let size = 1;
-    ftruncate(wronly_file, size).unwrap();
+    assert!(ftruncate(wronly_file, size).is_ok());
     let actual_size = lstat(&path).unwrap().st_size;
     assert_eq!(actual_size, size);
 }
@@ -70,7 +70,7 @@ fn update_ctime_success(ctx: &mut TestContext) {
     let (path, file) = ctx.create_file(OFlag::O_RDWR, Some(0o644)).unwrap();
 
     assert_ctime_changed(ctx, &path, || {
-        ftruncate(file, 123).unwrap();
+        assert!(ftruncate(file, 123).is_ok());
     });
 }
 

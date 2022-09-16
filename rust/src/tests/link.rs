@@ -10,9 +10,7 @@ use crate::{
     utils::{chmod, link},
 };
 
-use super::{
-    assert_ctime_changed, assert_ctime_unchanged, assert_mtime_changed, assert_mtime_unchanged,
-};
+use super::{assert_times_changed, assert_times_unchanged, CTIME, MTIME};
 
 crate::test_case! {
     /// link creates hardlinks which share the same metadata
@@ -84,7 +82,7 @@ fn remove_link(ctx: &mut TestContext, ft: FileType) {
     link(&first_link, &second_link).unwrap();
 
     unlink(&file).unwrap();
-    assert_eq!(lstat(&file).unwrap_err(), Errno::ENOENT);
+    assert!(!file.exists());
 
     let first_link_stat = lstat(&first_link).unwrap();
     let second_link_stat = lstat(&second_link).unwrap();
@@ -95,13 +93,13 @@ fn remove_link(ctx: &mut TestContext, ft: FileType) {
     );
 
     unlink(&second_link).unwrap();
-    assert_eq!(lstat(&second_link).unwrap_err(), Errno::ENOENT);
+    assert!(!second_link.exists());
 
     let first_link_stat = lstat(&first_link).unwrap();
     assert_eq!(first_link_stat.st_nlink, 1);
 
     unlink(&first_link).unwrap();
-    assert_eq!(lstat(&first_link).unwrap_err(), Errno::ENOENT);
+    assert!(!first_link.exists());
 }
 
 crate::test_case! {
@@ -113,14 +111,12 @@ fn changed_ctime_success(ctx: &mut TestContext, ft: FileType) {
     let file = ctx.create(ft).unwrap();
     let new_path = ctx.gen_path();
 
-    //TODO: Migrate to new time assertion api when merged
-    assert_ctime_changed(ctx, &file, || {
-        assert_ctime_changed(ctx, ctx.base_path(), || {
-            assert_mtime_changed(ctx, ctx.base_path(), || {
-                assert!(link(&file, &new_path).is_ok());
-            });
+    assert_times_changed()
+        .path(&file, CTIME)
+        .path(ctx.base_path(), CTIME | MTIME)
+        .execute(ctx, false, || {
+            assert!(link(&file, &new_path).is_ok());
         });
-    })
 }
 crate::test_case! {
     /// link changes neither ctime of file nor ctime or mtime of parent when it fails
@@ -132,17 +128,15 @@ fn unchanged_ctime_fails(ctx: &mut SerializedTestContext, ft: FileType) {
     let new_path = ctx.gen_path();
 
     let user = ctx.get_new_user();
-    //TODO: Migrate to new time assertion api when merged
-    assert_ctime_unchanged(ctx, &file, || {
-        assert_ctime_unchanged(ctx, ctx.base_path(), || {
-            assert_mtime_unchanged(ctx, ctx.base_path(), || {
-                ctx.as_user(&user, None, || {
-                    assert!(matches!(
-                        link(&file, &new_path),
-                        Err(Errno::EPERM | Errno::EACCES)
-                    ));
-                })
-            });
+    assert_times_unchanged()
+        .path(&file, CTIME)
+        .path(ctx.base_path(), CTIME | MTIME)
+        .execute(ctx, false, || {
+            ctx.as_user(&user, None, || {
+                assert!(matches!(
+                    link(&file, &new_path),
+                    Err(Errno::EPERM | Errno::EACCES)
+                ));
+            })
         });
-    })
 }

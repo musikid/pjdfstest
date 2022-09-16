@@ -20,7 +20,7 @@ fn change_perm(ctx: &mut TestContext, f_type: FileType) {
     let path = ctx.create(f_type).unwrap();
     let expected_mode = Mode::from_bits_truncate(0o111);
 
-    chmod(&path, expected_mode).unwrap();
+    assert!(chmod(&path, expected_mode).is_ok());
 
     let actual_mode = stat(&path).unwrap().st_mode;
 
@@ -31,7 +31,7 @@ fn change_perm(ctx: &mut TestContext, f_type: FileType) {
     let link_mode = lstat(&symlink_path).unwrap().st_mode;
     let expected_mode = Mode::from_bits_truncate(0o222);
 
-    chmod(&symlink_path, expected_mode).unwrap();
+    assert!(chmod(&symlink_path, expected_mode).is_ok());
 
     let actual_mode = stat(&path).unwrap().st_mode;
     let actual_sym_mode = stat(&symlink_path).unwrap().st_mode;
@@ -50,7 +50,7 @@ crate::test_case! {
 fn update_ctime(ctx: &mut TestContext, f_type: FileType) {
     let path = ctx.create(f_type).unwrap();
     assert_ctime_changed(ctx, &path, || {
-        chmod(&path, Mode::from_bits_truncate(0o111)).unwrap();
+        assert!(chmod(&path, Mode::from_bits_truncate(0o111)).is_ok());
     });
 }
 
@@ -78,7 +78,7 @@ crate::test_case! {
 }
 fn clear_isgid_bit(ctx: &mut SerializedTestContext) {
     let path = ctx.create(FileType::Regular).unwrap();
-    chmod(&path, Mode::from_bits_truncate(0o0755)).unwrap();
+    assert!(chmod(&path, Mode::from_bits_truncate(0o0755)).is_ok());
 
     let user = ctx.get_new_user();
 
@@ -94,7 +94,7 @@ fn clear_isgid_bit(ctx: &mut SerializedTestContext) {
 
     let expected_mode = Mode::from_bits_truncate(0o0755);
     ctx.as_user(&user, None, || {
-        chmod(&path, expected_mode).unwrap();
+        assert!(chmod(&path, expected_mode).is_ok());
     });
 
     let actual_mode = stat(&path).unwrap().st_mode;
