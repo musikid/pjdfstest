@@ -1,13 +1,16 @@
 use std::{
     fs::{metadata, remove_dir, remove_file, symlink_metadata},
-    os::unix::{fs::symlink, prelude::FileTypeExt},
+    os::unix::prelude::FileTypeExt,
+    path::Path,
 };
 
 use nix::{errno::Errno, sys::stat::stat};
 
-use crate::runner::context::{FileType, TestContext};
-
-use super::{assert_ctime_changed, assert_mtime_changed};
+use crate::utils::symlink;
+use crate::{
+    runner::context::{FileType, TestContext},
+    tests::{assert_times_changed, CTIME, MTIME},
+};
 
 crate::test_case! {
     /// symlink creates symbolic links
@@ -17,7 +20,7 @@ crate::test_case! {
 fn create_symlink(ctx: &mut TestContext, ft: FileType) {
     let file = ctx.create(ft.clone()).unwrap();
     let link = ctx.gen_path();
-    symlink(&file, &link).unwrap();
+    assert!(symlink(&file, &link).is_ok());
 
     let link_stat = symlink_metadata(&link).unwrap();
     let follow_link_stat = metadata(&link).unwrap();
@@ -37,7 +40,7 @@ fn create_symlink(ctx: &mut TestContext, ft: FileType) {
         _ => remove_file(&file),
     }
     .unwrap();
-    assert_eq!(stat(&link).unwrap_err(), Errno::ENOENT);
+    assert!(!link.exists());
 }
 
 crate::test_case! {
@@ -49,7 +52,7 @@ fn create_symlink_to_symlink(ctx: &mut TestContext) {
     let target = ctx.create(FileType::Regular).unwrap();
     let file = ctx.create(FileType::Symlink(Some(target))).unwrap();
     let link = ctx.gen_path();
-    symlink(&file, &link).unwrap();
+    assert!(symlink(&file, &link).is_ok());
 
     let link_stat = symlink_metadata(&link).unwrap();
     let follow_link_stat = metadata(&link).unwrap();
@@ -58,7 +61,7 @@ fn create_symlink_to_symlink(ctx: &mut TestContext) {
     assert!(follow_link_type.is_file());
 
     remove_file(&file).unwrap();
-    assert_eq!(stat(&link).unwrap_err(), Errno::ENOENT);
+    assert!(!link.exists());
 }
 
 crate::test_case! {
@@ -66,10 +69,11 @@ crate::test_case! {
     changed_parent_time_success
 }
 fn changed_parent_time_success(ctx: &mut TestContext) {
-    // TODO: Migrate to new time asssertion syntax when merged
-    assert_ctime_changed(ctx, ctx.base_path(), || {
-        assert_mtime_changed(ctx, ctx.base_path(), || {
-            ctx.create(FileType::Symlink(None)).unwrap();
-        })
-    });
+    assert_times_changed()
+        .path(ctx.base_path(), CTIME | MTIME)
+        .execute(ctx, true, || {
+            let link = ctx.gen_path();
+
+            assert!(symlink(Path::new("test"), &link).is_ok());
+        });
 }
