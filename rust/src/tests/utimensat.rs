@@ -37,7 +37,7 @@ fn changes_timestamps(ctx: &mut TestContext, f_type: FileType) {
     let date2 = TimeSpec::seconds(1950000000); // Fri Oct 17 04:40:00 MDT 2031
     let path = ctx.create(f_type).unwrap();
 
-    utimensat(None, &path, &date1, &date2, FollowSymlink).unwrap();
+    assert!(utimensat(None, &path, &date1, &date2, FollowSymlink).is_ok());
 
     let md = metadata(&path).unwrap();
     assert_eq!(md.atime_ts(), date1);
@@ -59,7 +59,7 @@ fn utime_now(ctx: &mut TestContext) {
     let orig_mtime = md.mtime_ts();
     ctx.nap();
 
-    utimensat(None, &path, &UTIME_NOW, &UTIME_NOW, FollowSymlink).unwrap();
+    assert!(utimensat(None, &path, &UTIME_NOW, &UTIME_NOW, FollowSymlink).is_ok());
 
     let md = metadata(&path).unwrap();
     let delta_atime = md.atime_ts() - orig_atime;
@@ -88,12 +88,12 @@ fn utime_omit(ctx: &mut TestContext) {
     let md = metadata(&path).unwrap();
     let orig_mtime = md.mtime_ts();
 
-    utimensat(None, &path, &date1, &UTIME_OMIT, FollowSymlink).unwrap();
+    assert!(utimensat(None, &path, &date1, &UTIME_OMIT, FollowSymlink).is_ok());
     let md = metadata(&path).unwrap();
     assert_eq!(md.atime_ts(), date1);
     assert_eq!(md.mtime_ts(), orig_mtime);
 
-    utimensat(None, &path, &UTIME_OMIT, &date2, FollowSymlink).unwrap();
+    assert!(utimensat(None, &path, &UTIME_OMIT, &date2, FollowSymlink).is_ok());
     let md = metadata(&path).unwrap();
     assert_eq!(md.atime_ts(), date1);
     assert_eq!(md.mtime_ts(), date2);
@@ -123,13 +123,13 @@ fn birthtime(ctx: &mut TestContext) {
     let date2 = TimeSpec::seconds(200000000); // Mon May  3 13:33:20 MDT 1976
     let path = ctx.create(FileType::Regular).unwrap();
 
-    utimensat(None, &path, &date1, &date1, FollowSymlink).unwrap();
+    assert!(utimensat(None, &path, &date1, &date1, FollowSymlink).is_ok());
     let md = metadata(&path).unwrap();
     assert_eq!(date1, md.atime_ts());
     assert_eq!(date1, md.mtime_ts());
     assert_eq!(date1, birthtime_ts(&path));
 
-    utimensat(None, &path, &date2, &date2, FollowSymlink).unwrap();
+    assert!(utimensat(None, &path, &date2, &date2, FollowSymlink).is_ok());
     let md = metadata(&path).unwrap();
     assert_eq!(date2, md.atime_ts());
     assert_eq!(date2, md.mtime_ts());
@@ -145,8 +145,8 @@ fn order(ctx: &mut TestContext) {
     let date1 = TimeSpec::seconds(1900000000); // Sun Mar 17 11:46:40 MDT 2030
     let date2 = TimeSpec::seconds(1950000000); // Fri Oct 17 04:40:00 MDT 2031
     let path = ctx.create(FileType::Regular).unwrap();
-    utimensat(None, &path, &date1, &date2, FollowSymlink).unwrap();
-    utimensat(None, &path, &date2, &date1, FollowSymlink).unwrap();
+    assert!(utimensat(None, &path, &date1, &date2, FollowSymlink).is_ok());
+    assert!(utimensat(None, &path, &date2, &date1, FollowSymlink).is_ok());
 }
 
 crate::test_case! {
@@ -166,8 +166,8 @@ fn follow_symlink(ctx: &mut TestContext) {
     let lpath = path.with_extension("link");
     symlink(&path, &lpath).unwrap();
 
-    utimensat(None, &path, &date1, &date2, FollowSymlink).unwrap();
-    utimensat(None, &lpath, &date3, &date4, NoFollowSymlink).unwrap();
+    assert!(utimensat(None, &path, &date1, &date2, FollowSymlink).is_ok());
+    assert!(utimensat(None, &lpath, &date3, &date4, NoFollowSymlink).is_ok());
 
     let md = metadata(&path).unwrap();
     let lmd = symlink_metadata(&lpath).unwrap();
@@ -176,7 +176,7 @@ fn follow_symlink(ctx: &mut TestContext) {
     assert_eq!(date3, lmd.atime_ts());
     assert_eq!(date4, lmd.mtime_ts());
 
-    utimensat(None, &lpath, &date5, &date6, FollowSymlink).unwrap();
+    assert!(utimensat(None, &lpath, &date5, &date6, FollowSymlink).is_ok());
     let md = metadata(&path).unwrap();
     let lmd = symlink_metadata(&lpath).unwrap();
     assert_eq!(date5, md.atime_ts());
@@ -185,7 +185,7 @@ fn follow_symlink(ctx: &mut TestContext) {
     // still be date3.  However, if atime is enabled, then lpath's atime will
     // be the current system time.  For this test, it's sufficient to simply
     // check that it didn't get set to date5.
-    assert!(date5 != lmd.atime_ts());
+    assert_ne!(date5, lmd.atime_ts());
     assert_eq!(date4, lmd.mtime_ts());
 }
 
@@ -201,8 +201,8 @@ fn utime_now_nobody(ctx: &mut SerializedTestContext) {
     let user = ctx.get_new_user();
     ctx.as_user(&user, None, || {
         assert_eq!(
-            Errno::EACCES,
-            utimensat(None, &path, &UTIME_NOW, &UTIME_NOW, FollowSymlink).unwrap_err()
+            Err(Errno::EACCES),
+            utimensat(None, &path, &UTIME_NOW, &UTIME_NOW, FollowSymlink)
         );
     });
 }
@@ -216,7 +216,7 @@ fn utime_now_owner(ctx: &mut TestContext) {
     let path = ctx.create(FileType::Regular).unwrap();
     let mode = Mode::from_bits_truncate(0o444);
     chmod(&path, mode).unwrap();
-    utimensat(None, &path, &UTIME_NOW, &UTIME_NOW, FollowSymlink).unwrap();
+    assert!(utimensat(None, &path, &UTIME_NOW, &UTIME_NOW, FollowSymlink).is_ok());
 }
 
 crate::test_case! {
@@ -228,7 +228,7 @@ fn utime_now_root(ctx: &mut TestContext) {
     let path = ctx.create(FileType::Regular).unwrap();
     let mode = Mode::from_bits_truncate(0o444);
     chmod(&path, mode).unwrap();
-    utimensat(None, &path, &UTIME_NOW, &UTIME_NOW, FollowSymlink).unwrap();
+    assert!(utimensat(None, &path, &UTIME_NOW, &UTIME_NOW, FollowSymlink).is_ok());
 }
 
 crate::test_case! {
@@ -242,7 +242,7 @@ fn utime_now_write_perm(ctx: &mut SerializedTestContext) {
     chmod(&path, mode).unwrap();
     let user = ctx.get_new_user();
     ctx.as_user(&user, None, || {
-        utimensat(None, &path, &UTIME_OMIT, &UTIME_OMIT, FollowSymlink).unwrap();
+        assert!(utimensat(None, &path, &UTIME_OMIT, &UTIME_OMIT, FollowSymlink).is_ok());
     });
 }
 
@@ -260,16 +260,16 @@ fn nobody(ctx: &mut SerializedTestContext) {
     let user = ctx.get_new_user();
     ctx.as_user(&user, None, || {
         assert_eq!(
-            Errno::EPERM,
-            utimensat(None, &path, &UTIME_OMIT, &date2, FollowSymlink).unwrap_err()
+            Err(Errno::EPERM),
+            utimensat(None, &path, &UTIME_OMIT, &date2, FollowSymlink)
         );
         assert_eq!(
-            Errno::EPERM,
-            utimensat(None, &path, &date1, &UTIME_OMIT, FollowSymlink).unwrap_err()
+            Err(Errno::EPERM),
+            utimensat(None, &path, &date1, &UTIME_OMIT, FollowSymlink)
         );
         assert_eq!(
-            Errno::EPERM,
-            utimensat(None, &path, &date1, &date2, FollowSymlink).unwrap_err()
+            Err(Errno::EPERM),
+            utimensat(None, &path, &date1, &date2, FollowSymlink)
         );
     })
 }
@@ -288,16 +288,16 @@ fn write_perm(ctx: &mut SerializedTestContext) {
     let user = ctx.get_new_user();
     ctx.as_user(&user, None, || {
         assert_eq!(
-            Errno::EPERM,
-            utimensat(None, &path, &UTIME_OMIT, &date2, FollowSymlink).unwrap_err()
+            Err(Errno::EPERM),
+            utimensat(None, &path, &UTIME_OMIT, &date2, FollowSymlink)
         );
         assert_eq!(
-            Errno::EPERM,
-            utimensat(None, &path, &date1, &UTIME_OMIT, FollowSymlink).unwrap_err()
+            Err(Errno::EPERM),
+            utimensat(None, &path, &date1, &UTIME_OMIT, FollowSymlink)
         );
         assert_eq!(
-            Errno::EPERM,
-            utimensat(None, &path, &date1, &date2, FollowSymlink).unwrap_err()
+            Err(Errno::EPERM),
+            utimensat(None, &path, &date1, &date2, FollowSymlink)
         );
     })
 }
@@ -313,7 +313,7 @@ fn owner(ctx: &mut TestContext) {
     let path = ctx.create(FileType::Regular).unwrap();
     let mode = Mode::from_bits_truncate(0o444);
     chmod(&path, mode).unwrap();
-    utimensat(None, &path, &date1, &date2, FollowSymlink).unwrap();
+    assert!(utimensat(None, &path, &date1, &date2, FollowSymlink).is_ok());
 }
 crate::test_case! {
     /// Root can always update the timestamps, even if the file is read-only
@@ -326,7 +326,7 @@ fn root(ctx: &mut TestContext) {
     let path = ctx.create(FileType::Regular).unwrap();
     let mode = Mode::from_bits_truncate(0o444);
     chmod(&path, mode).unwrap();
-    utimensat(None, &path, &date1, &date2, FollowSymlink).unwrap();
+    assert!(utimensat(None, &path, &date1, &date2, FollowSymlink).is_ok());
 }
 
 crate::test_case! {
@@ -345,7 +345,7 @@ fn subsecond(ctx: &mut TestContext) {
 
     let path = ctx.create(FileType::Regular).unwrap();
 
-    utimensat(None, &path, &date1, &date2, FollowSymlink).unwrap();
+    assert!(utimensat(None, &path, &date1, &date2, FollowSymlink).is_ok());
 
     let md = metadata(&path).unwrap();
     assert_eq!(date1, md.atime_ts());
@@ -365,7 +365,7 @@ fn y2038(ctx: &mut TestContext) {
 
     let path = ctx.create(FileType::Regular).unwrap();
 
-    utimensat(None, &path, &date1, &date2, FollowSymlink).unwrap();
+    assert!(utimensat(None, &path, &date1, &date2, FollowSymlink).is_ok());
 
     let md = metadata(&path).unwrap();
     assert_eq!(date1, md.atime_ts());

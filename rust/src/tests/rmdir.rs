@@ -14,7 +14,7 @@ fn remove_dir(ctx: &mut TestContext) {
     let dir = ctx.create(crate::runner::context::FileType::Dir).unwrap();
     assert!(metadata(&dir).unwrap().is_dir());
     assert!(rmdir(&dir).is_ok());
-    assert_eq!(lstat(&dir).unwrap_err(), Errno::ENOENT);
+    assert!(!dir.exists());
 }
 
 crate::test_case! {

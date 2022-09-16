@@ -21,7 +21,7 @@ fn remove_type(ctx: &mut TestContext, ft: FileType) {
     let path = ctx.create(ft).unwrap();
 
     assert!(unlink(&path).is_ok());
-    assert_eq!(lstat(&path).unwrap_err(), Errno::ENOENT);
+    assert!(!path.exists());
 }
 
 crate::test_case! {

@@ -26,7 +26,7 @@ fn preserve_metadata(ctx: &mut TestContext, ft: FileType) {
     let old_path_stat = lstat(&old_path).unwrap();
 
     assert!(rename(&old_path, &new_path).is_ok());
-    assert_eq!(lstat(&old_path).unwrap_err(), Errno::ENOENT);
+    assert!(!old_path.exists());
 
     let new_path_stat = lstat(&new_path).unwrap();
     assert_eq!(
@@ -47,7 +47,7 @@ fn preserve_metadata(ctx: &mut TestContext, ft: FileType) {
 
     let another_path = ctx.base_path().join("another");
     assert!(rename(&new_path, &another_path).is_ok());
-    assert_eq!(lstat(&new_path).unwrap_err(), Errno::ENOENT);
+    assert!(!new_path.exists());
 
     let another_path_stat = lstat(&another_path).unwrap();
     assert_eq!(
@@ -68,7 +68,7 @@ fn preserve_metadata_dir(ctx: &mut TestContext) {
     let old_path_stat = lstat(&old_path).unwrap();
 
     assert!(rename(&old_path, &new_path).is_ok());
-    assert_eq!(lstat(&old_path).unwrap_err(), Errno::ENOENT);
+    assert!(!old_path.exists());
 
     let new_path_stat = lstat(&new_path).unwrap();
     assert_eq!(
@@ -104,7 +104,7 @@ fn preserve_metadata_symlink(ctx: &mut TestContext) {
 
     let sym_target_stat = stat(&sym_new_path).unwrap();
     assert_eq!(target_stat, sym_target_stat);
-    assert_eq!(lstat(&symlink_old_path).unwrap_err(), Errno::ENOENT);
+    assert!(!symlink_old_path.exists());
 
     let sym_new_stat = lstat(&sym_new_path).unwrap();
     assert_eq!(

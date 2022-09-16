@@ -21,7 +21,7 @@ fn increase_empty(ctx: &mut TestContext) {
     let expected_size = 567;
 
     let (path, file) = ctx.create_file(OFlag::O_RDWR, None).unwrap();
-    posix_fallocate(file, 0, expected_size).unwrap();
+    assert!(posix_fallocate(file, 0, expected_size).is_ok());
 
     let size = lstat(&path).unwrap().st_size;
     assert_eq!(size, expected_size);
@@ -40,7 +40,7 @@ fn increase_not_empty(ctx: &mut TestContext) {
     let random_data: [u8; 1234] = rand::random();
     std_file.write_all(&random_data).unwrap();
 
-    posix_fallocate(file, offset, size).unwrap();
+    assert!(posix_fallocate(file, offset, size).is_ok());
 
     let actual_size = lstat(&path).unwrap().st_size;
     assert_eq!(actual_size, offset + size);
@@ -54,7 +54,7 @@ fn update_ctime_success(ctx: &mut TestContext) {
     let (path, file) = ctx.create_file(OFlag::O_RDWR, None).unwrap();
 
     assert_ctime_changed(ctx, &path, || {
-        posix_fallocate(file, 0, 123).unwrap();
+        assert!(posix_fallocate(file, 0, 123).is_ok());
     })
 }
 
@@ -66,8 +66,7 @@ fn no_update_ctime_fail(ctx: &mut TestContext) {
     let (path, file) = ctx.create_file(OFlag::O_WRONLY, None).unwrap();
 
     assert_ctime_unchanged(ctx, &path, || {
-        let err = posix_fallocate(file, 0, 0).unwrap_err();
-        assert_eq!(err, Errno::EINVAL);
+        assert_eq!(posix_fallocate(file, 0, 0), Err(Errno::EINVAL));
     })
 }
 
