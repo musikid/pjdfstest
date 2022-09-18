@@ -5,11 +5,17 @@ use crate::{
     utils::{chmod, ALLPERMS},
 };
 use nix::{
+    libc::mode_t,
     sys::stat::{lstat, stat, Mode},
     unistd::chown,
 };
 
-mod errno;
+#[cfg(any(target_os = "netbsd", target_os = "freebsd", target_os = "dragonfly"))]
+use crate::utils::lchmod;
+
+use super::errors::enotdir::enotdir_comp_test_case;
+
+const ALLPERMS_STICKY: mode_t = ALLPERMS | Mode::S_ISVTX.bits();
 
 // chmod/00.t:L24
 crate::test_case! {
@@ -100,4 +106,13 @@ fn clear_isgid_bit(ctx: &mut SerializedTestContext) {
     let actual_mode = stat(&path).unwrap().st_mode;
     assert_eq!(actual_mode & 0o7777, expected_mode.bits());
     //TODO: FreeBSD "S_ISGID should be removed and chmod(2) should success and FreeBSD returns EPERM."
+}
+
+// chmod/01.t
+enotdir_comp_test_case!(chmod(~path, Mode::empty()));
+#[cfg(any(target_os = "netbsd", target_os = "freebsd", target_os = "dragonfly"))]
+mod lchmod {
+    use super::*;
+
+    enotdir_comp_test_case!(lchmod(~path, Mode::empty()));
 }

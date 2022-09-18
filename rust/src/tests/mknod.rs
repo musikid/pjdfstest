@@ -1,9 +1,11 @@
-use std::{fs::FileType, os::unix::fs::FileTypeExt, path::Path};
+use std::{fs::FileType as StdFileType, os::unix::fs::FileTypeExt, path::Path};
 
+use nix::errno::Errno;
 use nix::sys::stat::{mknod, Mode, SFlag};
 
-use crate::runner::context::{SerializedTestContext, TestContext};
+use crate::runner::context::{FileType, SerializedTestContext, TestContext};
 
+use super::errors::enotdir::enotdir_comp_test_case;
 use super::mksyscalls::{assert_perms_from_mode_and_umask, assert_uid_gid};
 use super::{assert_times_changed, ATIME, CTIME, MTIME};
 
@@ -19,7 +21,7 @@ crate::test_case! {
     permission_bits_from_mode, serialized
 }
 fn permission_bits_from_mode(ctx: &mut SerializedTestContext) {
-    assert_perms_from_mode_and_umask(ctx, mknod_wrapper, FileType::is_fifo);
+    assert_perms_from_mode_and_umask(ctx, mknod_wrapper, StdFileType::is_fifo);
 }
 
 crate::test_case! {
@@ -48,4 +50,27 @@ fn changed_time_fields_success(ctx: &mut TestContext) {
         .execute(ctx, false, || {
             mknod_wrapper(&path, Mode::from_bits_truncate(0o644)).unwrap();
         });
+}
+
+// mknod/01.t
+enotdir_comp_test_case!(mknod(~path, SFlag::S_IFIFO, Mode::empty(), 0));
+
+crate::test_case! {
+    /// mknod returns ENOTDIR if a component of the path prefix is not a directory
+    /// when trying to create char/block files
+    enotdir_comp_char_block, root => [Regular, Fifo, Block, Char, Socket]
+}
+fn enotdir_comp_char_block(ctx: &mut TestContext, ft: FileType) {
+    let base_path = ctx.create(ft).unwrap();
+    let path = base_path.join("previous_not_dir");
+
+    // mknod/01.t
+    assert_eq!(
+        mknod(&path, SFlag::S_IFCHR, Mode::empty(), 0).unwrap_err(),
+        Errno::ENOTDIR
+    );
+    assert_eq!(
+        mknod(&path, SFlag::S_IFBLK, Mode::empty(), 0).unwrap_err(),
+        Errno::ENOTDIR
+    );
 }
