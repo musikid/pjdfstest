@@ -269,7 +269,8 @@ enotdir_comp_either_test_case!(rename);
 
 // rename/13.t
 crate::test_case! {
-    /// Return ENOTDIR when the 'from' argument is a directory, but 'to' is not a directory
+    /// rename returns ENOTDIR when the 'from' argument is a directory,
+    /// but 'to' is not a directory
     enotdir_from_to => [Regular, Fifo, Block, Char, Socket]
 }
 fn enotdir_from_to(ctx: &mut TestContext, ft: FileType) {

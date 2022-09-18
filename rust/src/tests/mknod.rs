@@ -56,7 +56,8 @@ fn changed_time_fields_success(ctx: &mut TestContext) {
 enotdir_comp_test_case!(mknod(~path, SFlag::S_IFIFO, Mode::empty(), 0));
 
 crate::test_case! {
-    /// Return ENOTDIR if a component of the path prefix is not a directory
+    /// mknod returns ENOTDIR if a component of the path prefix is not a directory
+    /// when trying to create char/block files
     enotdir_comp_char_block, root => [Regular, Fifo, Block, Char, Socket]
 }
 fn enotdir_comp_char_block(ctx: &mut TestContext, ft: FileType) {

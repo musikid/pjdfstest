@@ -28,7 +28,7 @@ macro_rules! enotdir_comp_test_case {
     ($syscall: ident, $f: expr) => {
         crate::test_case! {
             #[doc = concat!(stringify!($syscall),
-                 "returns ENOTDIR if a component of the path prefix is not a directory")]
+                 " returns ENOTDIR if a component of the path prefix is not a directory")]
             enotdir_component => [Regular, Fifo, Block, Char, Socket]
         }
         fn enotdir_component(ctx: &mut crate::runner::context::TestContext,
@@ -58,7 +58,7 @@ macro_rules! enotdir_comp_either_test_case {
     ($syscall: ident) => {
         crate::test_case! {
             #[doc = concat!(stringify!($syscall),
-                 "returns ENOTDIR if a component of either path prefix is not a directory")]
+                 " returns ENOTDIR if a component of either path prefix is not a directory")]
             enotdir_component_either => [Regular, Fifo, Block, Char, Socket]
         }
         fn enotdir_component_either(
