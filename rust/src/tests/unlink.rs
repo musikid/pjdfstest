@@ -1,8 +1,4 @@
-use nix::{
-    errno::Errno,
-    sys::stat::{fstat, lstat},
-    unistd::unlink,
-};
+use nix::{sys::stat::fstat, unistd::unlink};
 
 use crate::{
     runner::context::{FileType, SerializedTestContext, TestContext},
@@ -10,7 +6,10 @@ use crate::{
     utils::link,
 };
 
-use super::{assert_mtime_changed, errors::enotdir::enotdir_comp_test_case};
+use super::{
+    assert_mtime_changed, errors::enoent::enoent_named_file_test_case,
+    errors::enotdir::enotdir_comp_test_case,
+};
 
 crate::test_case! {
     /// unlink removes regular, block and char files, symbolic links, fifos and sockets
@@ -136,3 +135,6 @@ fn open_file_not_freed(ctx: &mut TestContext) {
 
 // unlink/01.t
 enotdir_comp_test_case!(unlink);
+
+// unlink/04.t
+enoent_named_file_test_case!(unlink);

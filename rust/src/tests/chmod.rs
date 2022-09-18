@@ -4,15 +4,19 @@ use crate::{
     tests::{assert_ctime_changed, assert_ctime_unchanged},
     utils::{chmod, ALLPERMS},
 };
+
+#[cfg(any(target_os = "netbsd", target_os = "freebsd", target_os = "dragonfly"))]
+use crate::utils::lchmod;
+
 use nix::{
     libc::mode_t,
     sys::stat::{lstat, stat, Mode},
     unistd::chown,
 };
 
-#[cfg(any(target_os = "netbsd", target_os = "freebsd", target_os = "dragonfly"))]
-use crate::utils::lchmod;
-
+use super::errors::enoent::{
+    enoent_comp_test_case, enoent_named_file_test_case, enoent_symlink_named_file_test_case,
+};
 use super::errors::enotdir::enotdir_comp_test_case;
 
 const ALLPERMS_STICKY: mode_t = ALLPERMS | Mode::S_ISVTX.bits();
@@ -26,7 +30,7 @@ fn change_perm(ctx: &mut TestContext, f_type: FileType) {
     let path = ctx.create(f_type).unwrap();
     let expected_mode = Mode::from_bits_truncate(0o111);
 
-    assert!(chmod(&path, expected_mode).is_ok());
+    chmod(&path, expected_mode).unwrap();
 
     let actual_mode = stat(&path).unwrap().st_mode;
 
@@ -37,7 +41,7 @@ fn change_perm(ctx: &mut TestContext, f_type: FileType) {
     let link_mode = lstat(&symlink_path).unwrap().st_mode;
     let expected_mode = Mode::from_bits_truncate(0o222);
 
-    assert!(chmod(&symlink_path, expected_mode).is_ok());
+    chmod(&symlink_path, expected_mode).unwrap();
 
     let actual_mode = stat(&path).unwrap().st_mode;
     let actual_sym_mode = stat(&symlink_path).unwrap().st_mode;
@@ -56,7 +60,7 @@ crate::test_case! {
 fn update_ctime(ctx: &mut TestContext, f_type: FileType) {
     let path = ctx.create(f_type).unwrap();
     assert_ctime_changed(ctx, &path, || {
-        assert!(chmod(&path, Mode::from_bits_truncate(0o111)).is_ok());
+        chmod(&path, Mode::from_bits_truncate(0o111)).unwrap();
     });
 }
 
@@ -84,7 +88,7 @@ crate::test_case! {
 }
 fn clear_isgid_bit(ctx: &mut SerializedTestContext) {
     let path = ctx.create(FileType::Regular).unwrap();
-    assert!(chmod(&path, Mode::from_bits_truncate(0o0755)).is_ok());
+    chmod(&path, Mode::from_bits_truncate(0o0755)).unwrap();
 
     let user = ctx.get_new_user();
 
@@ -100,7 +104,7 @@ fn clear_isgid_bit(ctx: &mut SerializedTestContext) {
 
     let expected_mode = Mode::from_bits_truncate(0o0755);
     ctx.as_user(&user, None, || {
-        assert!(chmod(&path, expected_mode).is_ok());
+        chmod(&path, expected_mode).unwrap();
     });
 
     let actual_mode = stat(&path).unwrap().st_mode;
@@ -116,3 +120,24 @@ mod lchmod {
 
     enotdir_comp_test_case!(lchmod(~path, Mode::empty()));
 }
+
+// chmod/04.t
+#[cfg(not(any(target_os = "netbsd", target_os = "freebsd", target_os = "dragonfly")))]
+enoent_named_file_test_case!(chmod(~path, Mode::empty()));
+#[cfg(not(any(target_os = "netbsd", target_os = "freebsd", target_os = "dragonfly")))]
+enoent_comp_test_case!(chmod(~path, Mode::empty()));
+
+#[cfg(any(target_os = "netbsd", target_os = "freebsd", target_os = "dragonfly"))]
+enoent_named_file_test_case!(
+    chmod,
+    |_: &mut TestContext, path| chmod(path, Mode::empty()),
+    |_: &mut TestContext, path| lchmod(path, Mode::empty())
+);
+#[cfg(any(target_os = "netbsd", target_os = "freebsd", target_os = "dragonfly"))]
+enoent_comp_test_case!(
+    chmod,
+    |_: &mut TestContext, path| chmod(path, Mode::empty()),
+    |_: &mut TestContext, path| lchmod(path, Mode::empty())
+);
+
+enoent_symlink_named_file_test_case!(chmod(~path, Mode::empty()));

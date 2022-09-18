@@ -12,7 +12,10 @@ use crate::{
     utils::{link, rename},
 };
 
-use super::{assert_ctime_changed, errors::enotdir::enotdir_comp_either_test_case};
+use super::{
+    assert_ctime_changed, errors::enoent::enoent_either_named_file_test_case,
+    errors::enotdir::enotdir_comp_either_test_case,
+};
 
 crate::test_case! {
     /// rename preserve file metadata
@@ -279,3 +282,6 @@ fn enotdir_from_to(ctx: &mut TestContext, ft: FileType) {
 
     assert_eq!(rename(&dir, &path).unwrap_err(), Errno::ENOTDIR);
 }
+
+// rename/03.t
+enoent_either_named_file_test_case!(rename);

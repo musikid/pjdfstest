@@ -16,7 +16,9 @@ use crate::{
 };
 
 use super::{
-    assert_ctime_changed, assert_ctime_unchanged, errors::enotdir::enotdir_comp_test_case,
+    assert_ctime_changed, assert_ctime_unchanged,
+    errors::enoent::{enoent_comp_test_case, enoent_named_file_test_case},
+    errors::enotdir::enotdir_comp_test_case,
 };
 
 //TODO: Split tests with unprivileged tests for user flags
@@ -217,3 +219,9 @@ fn unchanged_ctime_failed(ctx: &mut SerializedTestContext, ft: FileType) {
 
 // chflags/01.t
 enotdir_comp_test_case!(chflags(~path, FileFlag::empty()));
+
+// chflags/04.t
+enoent_named_file_test_case!(chflags(~path, FileFlag::empty()));
+
+// chflags/04.t
+enoent_comp_test_case!(chflags(~path, FileFlag::empty()));
