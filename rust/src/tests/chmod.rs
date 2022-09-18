@@ -13,7 +13,7 @@ use nix::{
 #[cfg(any(target_os = "netbsd", target_os = "freebsd", target_os = "dragonfly"))]
 use crate::utils::lchmod;
 
-use super::errors::enotdir::assert_enotdir_comp;
+use super::errors::enotdir::enotdir_comp_test_case;
 
 const ALLPERMS_STICKY: mode_t = ALLPERMS | Mode::S_ISVTX.bits();
 
@@ -174,10 +174,10 @@ fn verify_sticky_symlink(ctx: &mut TestContext) {
 }
 
 // chmod/01.t
-assert_enotdir_comp!(chmod(~path, Mode::empty()));
+enotdir_comp_test_case!(chmod(~path, Mode::empty()));
 #[cfg(any(target_os = "netbsd", target_os = "freebsd", target_os = "dragonfly"))]
 mod lchmod {
     use super::*;
 
-    assert_enotdir_comp!(lchmod(~path, Mode::empty()));
+    enotdir_comp_test_case!(lchmod(~path, Mode::empty()));
 }

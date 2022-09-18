@@ -11,8 +11,8 @@ use crate::{
 };
 
 use super::{
-    assert_times_changed, assert_times_unchanged, errors::enotdir::assert_enotdir_comp, CTIME,
-    MTIME,
+    assert_times_changed, assert_times_unchanged, errors::enotdir::enotdir_comp_either_test_case,
+    CTIME, MTIME,
 };
 
 crate::test_case! {
@@ -145,4 +145,4 @@ fn unchanged_ctime_fails(ctx: &mut SerializedTestContext, ft: FileType) {
 }
 
 // link/01.t
-assert_enotdir_comp!(link, either);
+enotdir_comp_either_test_case!(link);

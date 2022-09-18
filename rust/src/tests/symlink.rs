@@ -12,7 +12,7 @@ use crate::{
     utils::symlink,
 };
 
-use super::errors::enotdir::assert_enotdir_comp;
+use super::errors::enotdir::enotdir_comp_test_case;
 
 crate::test_case! {
     /// symlink creates symbolic links
@@ -81,4 +81,4 @@ fn changed_parent_time_success(ctx: &mut TestContext) {
 }
 
 // symlink/01.t
-assert_enotdir_comp!(symlink(Path::new("test"), ~path));
+enotdir_comp_test_case!(symlink(Path::new("test"), ~path));

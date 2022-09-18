@@ -2,9 +2,9 @@ use nix::unistd::chown;
 
 use crate::{runner::context::TestContext, utils::lchown};
 
-use super::errors::enotdir::assert_enotdir_comp;
+use super::errors::enotdir::enotdir_comp_test_case;
 
-assert_enotdir_comp!(chown, |ctx: &mut TestContext, path| {
+enotdir_comp_test_case!(chown, |ctx: &mut TestContext, path| {
     let user = ctx.get_new_user();
     chown(path, Some(user.uid), None)
 });
@@ -12,7 +12,7 @@ assert_enotdir_comp!(chown, |ctx: &mut TestContext, path| {
 mod lchown {
     use super::*;
 
-    assert_enotdir_comp!(lchown, |ctx: &mut TestContext, path| {
+    enotdir_comp_test_case!(lchown, |ctx: &mut TestContext, path| {
         let user = ctx.get_new_user();
         lchown(path, Some(user.uid), None)
     });

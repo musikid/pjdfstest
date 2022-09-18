@@ -10,7 +10,7 @@ use crate::{
     utils::link,
 };
 
-use super::{assert_mtime_changed, errors::enotdir::assert_enotdir_comp};
+use super::{assert_mtime_changed, errors::enotdir::enotdir_comp_test_case};
 
 crate::test_case! {
     /// unlink removes regular, block and char files, symbolic links, fifos and sockets
@@ -135,4 +135,4 @@ fn open_file_not_freed(ctx: &mut TestContext) {
 }
 
 // unlink/01.t
-assert_enotdir_comp!(unlink);
+enotdir_comp_test_case!(unlink);

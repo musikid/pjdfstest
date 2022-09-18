@@ -5,7 +5,7 @@ use nix::{sys::stat::Mode, unistd::mkdir};
 use crate::runner::context::{SerializedTestContext, TestContext};
 
 use super::mksyscalls::{assert_perms_from_mode_and_umask, assert_uid_gid};
-use super::{assert_times_changed, errors::enotdir::assert_enotdir_comp, ATIME, CTIME, MTIME};
+use super::{assert_times_changed, errors::enotdir::enotdir_comp_test_case, ATIME, CTIME, MTIME};
 
 crate::test_case! {
     /// POSIX: The file permission bits of the new directory shall be initialized from
@@ -45,4 +45,4 @@ fn changed_time_fields_success(ctx: &mut TestContext) {
         });
 }
 
-assert_enotdir_comp!(mkdir(~path, Mode::empty()));
+enotdir_comp_test_case!(mkdir(~path, Mode::empty()));

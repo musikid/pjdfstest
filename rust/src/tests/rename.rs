@@ -12,7 +12,7 @@ use crate::{
     utils::{link, rename},
 };
 
-use super::{assert_ctime_changed, errors::enotdir::assert_enotdir_comp};
+use super::{assert_ctime_changed, errors::enotdir::enotdir_comp_either_test_case};
 
 crate::test_case! {
     /// rename preserve file metadata
@@ -265,7 +265,7 @@ fn updates_link_parent(ctx: &mut TestContext) {
 }
 
 // rename/12.t
-assert_enotdir_comp!(rename, either);
+enotdir_comp_either_test_case!(rename);
 
 // rename/13.t
 crate::test_case! {
