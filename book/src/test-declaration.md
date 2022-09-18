@@ -67,18 +67,44 @@ New features can be added to the `FileSystemFeature` enum.
 A description of the feature should be provided as documentation
 for both developers and users.
 
-#### File flags
+### Guards
 
-**NOTE: This feature is not supported by all POSIX systems, 
-therefore its use needs a `#[cfg(target_os = ...)]` attribute specifying the relevant system(s).**
-
-It is possible to specify individual file flags for the tests which
-require it. They can be specified by appending `FileFlags` variants after a `;` separator,
+It is possible to specify "guards", which are functions which checks if a requirement
+is met and return an error if not, so the test is skipped.
+They can be specified by appending function names after a `;` separator,
 after potential `root` requirement and features.
 
+The function has to take a `&Config` argument
+which contains the current configuration
+and a `&Path` which represents the parent folder
+of the potential test context which would be created.
+
+#### Guard signature
+
 ```rust,ignore
-#[cfg(target_os = "freebsd")]
-crate::test_case! {eperm_immutable_flag, root, FileSystemFeature::Chflags; FileFlags::SF_IMMUTABLE, FileFlags::UF_IMMUTABLE}
+/// Function which indicates if the test should be skipped by returning an error.
+pub type Guard = fn(&Config, &Path) -> anyhow::Result<()>;
+```
+
+#### Example
+
+```rust,ignore
+fn has_reasonable_link_max(_: &Config, base_path: &Path) -> anyhow::Result<()> {
+    let link_max = pathconf(base_path, nix::unistd::PathconfVar::LINK_MAX)?
+        .ok_or_else(|| anyhow::anyhow!("Failed to get LINK_MAX value"))?;
+    
+    if link_max >= LINK_MAX_LIMIT {
+        anyhow::bail!("LINK_MAX value is too high ({link_max}, expected smaller than {LINK_MAX_LIMIT}");
+    }
+
+    Ok(())
+}
+
+crate::test_case! {
+    /// link returns EMLINK if the link count of the file named by name1 would exceed {LINK_MAX}
+    link_count_max; has_reasonable_link_max
+}
+...
 ```
 
 ### Root privileges
