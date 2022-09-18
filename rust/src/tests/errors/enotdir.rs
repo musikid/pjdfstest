@@ -25,7 +25,7 @@
 /// })
 /// ```
 macro_rules! enotdir_comp_test_case {
-    ($syscall: ident, $($f: expr),+) => {
+    ($syscall: ident, $f: expr) => {
         crate::test_case! {
             #[doc = concat!(stringify!($syscall),
                  "returns ENOTDIR if a component of the path prefix is not a directory")]
@@ -35,9 +35,8 @@ macro_rules! enotdir_comp_test_case {
                             ft: crate::runner::context::FileType) {
             let base_path = ctx.create(ft.clone()).unwrap();
             let path = base_path.join("previous_not_dir");
-            $(
-                assert_eq!($f(ctx, &path).unwrap_err(), nix::errno::Errno::ENOTDIR)
-            );+
+
+            assert_eq!($f(ctx, &path).unwrap_err(), nix::errno::Errno::ENOTDIR)
         }
     };
 
