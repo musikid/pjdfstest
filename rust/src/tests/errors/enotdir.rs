@@ -1,16 +1,22 @@
 /// Create a test case which asserts that the syscall returns ENOTDIR
 /// if a component of the path prefix is not a directory.
 /// There are multiple forms for this macro:
-/// - A basic form which takes the syscall and optionally a `~path` argument if the path
-///   is not the only argument.
+///
+/// - A basic form which takes the syscall, and optionally a `~path` argument
+///   to indicate where the `path` argument should be substituted if the path
+///   is not the only argument taken by the syscall.
 ///
 /// ```
+/// // `unlink` accepts only a path as argument.
 /// enotdir_comp_test_case!(unlink);
+/// // `chflags` takes a path and the flags to set as arguments.
+/// // We need to add `~path` where the path argument should normally be taken.
 /// enotdir_comp_test_case!(chflags(~path, FileFlags::empty()));
 /// ```
 ///
-/// - A more complex form which takes functions with the context and the path
-///   as arguments for syscalls requring to compute other arguments.
+/// - A more complex form which takes multiple functions
+///   with the context and the path as arguments for syscalls
+///   requring to compute other arguments.
 ///
 /// ```
 /// enotdir_comp_test_case!(chown, |ctx: &mut TestContext, path: &Path| {
