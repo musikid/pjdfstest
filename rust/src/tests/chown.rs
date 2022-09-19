@@ -376,7 +376,7 @@ fn root_remove_suid_sgid(ctx: &mut SerializedTestContext, ft: FileType) {
     assert_eq!(file_stat.uid() as uid_t, other_user.uid.as_raw());
     assert_eq!(file_stat.gid() as gid_t, other_group.gid.as_raw());
 
-    let root = User::from_uid(Uid::effective()).unwrap().unwrap();
+    let root = User::from_name("root").unwrap().unwrap();
     assert!(chown(&file, Some(root.uid), Some(root.gid)).is_ok());
 
     let file_stat = metadata(&file).unwrap();
