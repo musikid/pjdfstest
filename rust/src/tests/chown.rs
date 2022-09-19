@@ -48,7 +48,7 @@ fn root_modify_ownership(ctx: &mut SerializedTestContext, ft: FileType) {
     assert_eq!(file_stat.uid() as uid_t, user.uid.as_raw());
     assert_eq!(file_stat.gid() as gid_t, group.gid.as_raw());
 
-    let root = User::from_uid(Uid::effective()).unwrap().unwrap();
+    let root = User::from_name("root").unwrap().unwrap();
     assert!(chown(&file, Some(root.uid), Some(root.gid)).is_ok());
 
     let file_stat = symlink_metadata(&file).unwrap();
