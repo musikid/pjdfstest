@@ -24,8 +24,8 @@ use nix::{
     },
 };
 
-const UTIME_NOW: TimeSpec = TimeSpec::new(0, libc::UTIME_NOW);
-const UTIME_OMIT: TimeSpec = TimeSpec::new(0, libc::UTIME_OMIT);
+const UTIME_NOW: TimeSpec = TimeSpec::new(0, nix::libc::UTIME_NOW);
+const UTIME_OMIT: TimeSpec = TimeSpec::new(0, nix::libc::UTIME_OMIT);
 
 crate::test_case! {
     /// utimensat changes timestamps on any type of file

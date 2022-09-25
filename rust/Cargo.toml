@@ -5,9 +5,9 @@ edition = "2021"
 
 [dependencies]
 exacl = "0.9.0"
-libc = "0.2.126"
 tempfile = "3.3.0"
 rand = { version = "0.8.5", features = ["min_const_gen"] }
+nix = { version = "0.25.0", features = ["fs", "socket"] }
 thiserror = "1.0.31"
 strum = { version = "0.24.0", features = ["derive"] }
 strum_macros = "0.24.0"
@@ -19,11 +19,6 @@ figment = { version = "0.10.6", features = ["toml"] }
 serde = { version = "1.0.138", features = ["derive"] }
 inventory = "0.3.0"
 walkdir = "2.3.2"
-
-[dependencies.nix]
-git = "https://github.com/nix-rust/nix"
-rev = "b1e1a604a713432773fb6bc8590ff9291c70a0bb"
-features = ["fs", "socket"]
 
 [[bin]]
 name = "pjdfstest"
