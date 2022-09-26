@@ -528,10 +528,17 @@ fn root_remove_suid_sgid_symlink(ctx: &mut SerializedTestContext) {
     assert_eq!(file_stat.gid() as gid_t, root.gid.as_raw());
 }
 
+#[cfg(not(target_os = "linux"))]
 crate::test_case! {
     /// when non-super-user calls chown(2) successfully, set-uid and set-gid bits may
     /// be removed, except when both uid and gid are equal to -1.
     user_remove_suid_sgid, serialized, root => [Regular, Dir, Fifo, Block, Char, Socket]
+}
+#[cfg(target_os = "linux")]
+crate::test_case! {
+    /// when non-super-user calls chown(2) successfully, set-uid and set-gid bits may
+    /// be removed, except when both uid and gid are equal to -1.
+    user_remove_suid_sgid, serialized, root => [Regular, Fifo, Block, Char, Socket]
 }
 fn user_remove_suid_sgid(ctx: &mut SerializedTestContext, ft: FileType) {
     let file = ctx.create(ft.clone()).unwrap();
@@ -563,12 +570,10 @@ fn user_remove_suid_sgid(ctx: &mut SerializedTestContext, ft: FileType) {
     //
     // I believe in this particular case, the behavior's bugged.
 
-    if cfg!(not(target_os = "linux")) || ft != FileType::Dir {
-        assert_eq!(
-            file_stat.mode() as mode_t & ALLPERMS_SETBITS,
-            mode_without_setbits.bits()
-        );
-    }
+    assert_eq!(
+        file_stat.mode() as mode_t & ALLPERMS_SETBITS,
+        mode_without_setbits.bits()
+    );
     assert_eq!(file_stat.uid() as uid_t, user.uid.as_raw());
     assert_eq!(file_stat.gid() as gid_t, other_group.gid.as_raw());
 
@@ -583,12 +588,11 @@ fn user_remove_suid_sgid(ctx: &mut SerializedTestContext, ft: FileType) {
         assert!(chown(&file, None, Some(group.gid)).is_ok());
     });
     let file_stat = metadata(&file).unwrap();
-    if cfg!(not(target_os = "linux")) || ft != FileType::Dir {
-        assert_eq!(
-            file_stat.mode() as mode_t & ALLPERMS_SETBITS,
-            mode_without_setbits.bits()
-        );
-    }
+
+    assert_eq!(
+        file_stat.mode() as mode_t & ALLPERMS_SETBITS,
+        mode_without_setbits.bits()
+    );
     assert_eq!(file_stat.uid() as uid_t, user.uid.as_raw());
     assert_eq!(file_stat.gid() as gid_t, group.gid.as_raw());
 
@@ -626,20 +630,16 @@ fn user_remove_suid_sgid(ctx: &mut SerializedTestContext, ft: FileType) {
 
     let file_stat = metadata(&file).unwrap();
     let follow_link_stat = metadata(&link).unwrap();
-    if cfg!(not(target_os = "linux")) || ft != FileType::Dir {
-        assert_eq!(
-            file_stat.mode() as mode_t & ALLPERMS_SETBITS,
-            mode_without_setbits.bits()
-        );
-    }
+    assert_eq!(
+        file_stat.mode() as mode_t & ALLPERMS_SETBITS,
+        mode_without_setbits.bits()
+    );
     assert_eq!(file_stat.uid() as uid_t, user.uid.as_raw());
     assert_eq!(file_stat.gid() as gid_t, other_group.gid.as_raw());
-    if cfg!(not(target_os = "linux")) || ft != FileType::Dir {
-        assert_eq!(
-            follow_link_stat.mode() as mode_t & ALLPERMS_SETBITS,
-            mode_without_setbits.bits()
-        );
-    }
+    assert_eq!(
+        follow_link_stat.mode() as mode_t & ALLPERMS_SETBITS,
+        mode_without_setbits.bits()
+    );
     assert_eq!(follow_link_stat.uid() as uid_t, user.uid.as_raw());
     assert_eq!(follow_link_stat.gid() as gid_t, other_group.gid.as_raw());
 
@@ -662,20 +662,16 @@ fn user_remove_suid_sgid(ctx: &mut SerializedTestContext, ft: FileType) {
 
     let file_stat = metadata(&file).unwrap();
     let follow_link_stat = metadata(&link).unwrap();
-    if cfg!(not(target_os = "linux")) || ft != FileType::Dir {
-        assert_eq!(
-            file_stat.mode() as mode_t & ALLPERMS_SETBITS,
-            mode_without_setbits.bits()
-        );
-    }
+    assert_eq!(
+        file_stat.mode() as mode_t & ALLPERMS_SETBITS,
+        mode_without_setbits.bits()
+    );
     assert_eq!(file_stat.uid() as uid_t, user.uid.as_raw());
     assert_eq!(file_stat.gid() as gid_t, group.gid.as_raw());
-    if cfg!(not(target_os = "linux")) || ft != FileType::Dir {
-        assert_eq!(
-            follow_link_stat.mode() as mode_t & ALLPERMS_SETBITS,
-            mode_without_setbits.bits()
-        );
-    }
+    assert_eq!(
+        follow_link_stat.mode() as mode_t & ALLPERMS_SETBITS,
+        mode_without_setbits.bits()
+    );
     assert_eq!(follow_link_stat.uid() as uid_t, user.uid.as_raw());
     assert_eq!(follow_link_stat.gid() as gid_t, group.gid.as_raw());
 
@@ -698,15 +694,11 @@ fn user_remove_suid_sgid(ctx: &mut SerializedTestContext, ft: FileType) {
     let file_stat = metadata(&file).unwrap();
     let follow_link_stat = metadata(&link).unwrap();
     let actual_mode = file_stat.mode() as mode_t & ALLPERMS_SETBITS;
-    if cfg!(not(target_os = "linux")) || ft != FileType::Dir {
-        assert!(actual_mode == mode_without_setbits.bits() || actual_mode == mode.bits());
-    }
+    assert!(actual_mode == mode_without_setbits.bits() || actual_mode == mode.bits());
     assert_eq!(file_stat.uid() as uid_t, user.uid.as_raw());
     assert_eq!(file_stat.gid() as gid_t, group.gid.as_raw());
     let actual_mode = follow_link_stat.mode() as mode_t & ALLPERMS_SETBITS;
-    if cfg!(not(target_os = "linux")) || ft != FileType::Dir {
-        assert!(actual_mode == mode_without_setbits.bits() || actual_mode == mode.bits());
-    }
+    assert!(actual_mode == mode_without_setbits.bits() || actual_mode == mode.bits());
     assert_eq!(follow_link_stat.uid() as uid_t, user.uid.as_raw());
     assert_eq!(follow_link_stat.gid() as gid_t, group.gid.as_raw());
 
@@ -733,12 +725,10 @@ fn user_remove_suid_sgid(ctx: &mut SerializedTestContext, ft: FileType) {
     });
 
     let file_stat = metadata(&file).unwrap();
-    if cfg!(not(target_os = "linux")) || ft != FileType::Dir {
-        assert_eq!(
-            file_stat.mode() as mode_t & ALLPERMS_SETBITS,
-            mode_without_setbits.bits()
-        );
-    }
+    assert_eq!(
+        file_stat.mode() as mode_t & ALLPERMS_SETBITS,
+        mode_without_setbits.bits()
+    );
     assert_eq!(file_stat.uid() as uid_t, user.uid.as_raw());
     assert_eq!(file_stat.gid() as gid_t, other_group.gid.as_raw());
 
@@ -761,12 +751,10 @@ fn user_remove_suid_sgid(ctx: &mut SerializedTestContext, ft: FileType) {
         assert!(lchown(&file, None, Some(group.gid)).is_ok());
     });
     let file_stat = metadata(&file).unwrap();
-    if cfg!(not(target_os = "linux")) || ft != FileType::Dir {
-        assert_eq!(
-            file_stat.mode() as mode_t & ALLPERMS_SETBITS,
-            mode_without_setbits.bits()
-        );
-    }
+    assert_eq!(
+        file_stat.mode() as mode_t & ALLPERMS_SETBITS,
+        mode_without_setbits.bits()
+    );
     assert_eq!(file_stat.uid() as uid_t, user.uid.as_raw());
     assert_eq!(file_stat.gid() as gid_t, group.gid.as_raw());
 
