@@ -856,9 +856,6 @@ fn update_ctime_success(ctx: &mut SerializedTestContext, ft: FileType) {
     assert_ctime_changed(ctx, &file, || {
         assert!(chown(&file, Some(user.uid), Some(group.gid)).is_ok());
     });
-    let file_stat = metadata(&file).unwrap();
-    assert_eq!(file_stat.uid() as uid_t, user.uid.as_raw());
-    assert_eq!(file_stat.gid() as gid_t, group.gid.as_raw());
 
     assert_ctime_changed(ctx, &file, || {
         ctx.as_user(&user, Some(&[other_group.gid]), || {
