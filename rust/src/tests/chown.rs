@@ -500,7 +500,7 @@ fn root_remove_suid_sgid_symlink(ctx: &mut SerializedTestContext) {
 
     let (user, group) = ctx.get_new_entry();
     let (other_user, other_group) = ctx.get_new_entry();
-    let root = User::from_uid(Uid::effective()).unwrap().unwrap();
+    let root = User::from_name("root").unwrap().unwrap();
 
     assert!(lchown(&link, Some(user.uid), Some(group.gid)).is_ok());
 
