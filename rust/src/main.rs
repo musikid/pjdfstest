@@ -22,6 +22,7 @@ use strum::{EnumMessage, IntoEnumIterator};
 use tempfile::{tempdir_in, TempDir};
 
 mod config;
+mod features;
 mod flags;
 mod macros;
 mod runner;
@@ -146,7 +147,6 @@ fn run_test_cases(
     let is_root = Uid::current().is_root();
 
     let enabled_features: HashSet<_> = config.features.fs_features.keys().into_iter().collect();
-    let enabled_flags: HashSet<_> = config.features.file_flags.iter().collect();
 
     let entries: Vec<(User, Group)> = config
         .dummy_auth
@@ -197,23 +197,19 @@ fn run_test_cases(
             skip_message += "\n";
         }
 
-        let required_flags: HashSet<_> = test_case.required_file_flags.iter().collect();
-        let missing_flags: Vec<_> = required_flags.difference(&enabled_flags).collect();
-        if !missing_flags.is_empty() {
+        if test_case
+            .guards
+            .iter()
+            .any(|guard| guard(config, base_dir.path()).is_err())
+        {
             should_skip = true;
-
-            let flags = missing_flags
+            skip_message += &*test_case
+                .guards
                 .iter()
-                .map(|f| {
-                    let f = f.to_string();
-
-                    ["\"", &f, "\""].join("")
-                })
-                .collect::<Vec<_>>()
-                .join(", ");
-
-            skip_message += "requires flags: ";
-            skip_message += &flags;
+                .filter_map(|guard| guard(config, base_dir.path()).err())
+                .map(|err| err.to_string())
+                .collect::<Vec<String>>()
+                .join("\n");
             skip_message += "\n";
         }
 

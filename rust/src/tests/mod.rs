@@ -297,3 +297,153 @@ where
         .path(path, MTIME)
         .execute(ctx, false, f)
 }
+
+/// Guard to conditionally skip tests on platforms which do not support
+/// the required file flags.
+macro_rules! support_file_flags {
+    ($($flags: ident),*) => {
+        |config, _| {
+            let flags = &[ $(crate::flags::FileFlags::$flags),* ].iter().copied().collect();
+            if config.features.file_flags.is_superset(&flags) {
+                Ok(())
+            } else {
+                let unsupported_flags = flags.difference(&config.features.file_flags)
+                    .map(std::string::ToString::to_string)
+                    .collect::<Vec<_>>()
+                    .join(", ");
+
+                anyhow::bail!("file flags {unsupported_flags} aren't supported")
+            }
+        }
+    };
+}
+
+#[cfg(test)]
+mod t {
+    use crate::{config::Config, test::TestCase};
+
+    use super::*;
+
+    crate::test_case! {support_flags_empty; support_file_flags!()}
+    fn support_flags_empty(_: &mut TestContext) {}
+    #[test]
+    fn support_flags_test_empty() {
+        let config = Config::default();
+        let tc: &TestCase = inventory::iter::<TestCase>()
+            .find(|tc| tc.name == "pjdfstest::tests::t::support_flags_empty")
+            .unwrap();
+        assert_eq!(tc.guards.len(), 1);
+
+        let guard = &tc.guards[0];
+        assert!(guard(&config, Path::new("test")).is_ok());
+    }
+
+    #[cfg(any(
+        target_os = "openbsd",
+        target_os = "netbsd",
+        target_os = "freebsd",
+        target_os = "dragonfly",
+        target_os = "macos",
+        target_os = "ios",
+        target_os = "watchos",
+    ))]
+    crate::test_case! {support_flags_unique; support_file_flags!(SF_APPEND)}
+    #[cfg(any(
+        target_os = "openbsd",
+        target_os = "netbsd",
+        target_os = "freebsd",
+        target_os = "dragonfly",
+        target_os = "macos",
+        target_os = "ios",
+        target_os = "watchos",
+    ))]
+    fn support_flags_unique(_: &mut TestContext) {}
+    #[cfg(any(
+        target_os = "openbsd",
+        target_os = "netbsd",
+        target_os = "freebsd",
+        target_os = "dragonfly",
+        target_os = "macos",
+        target_os = "ios",
+        target_os = "watchos",
+    ))]
+    #[test]
+    fn support_flags_test_unique() {
+        use std::collections::HashSet;
+
+        use crate::flags::FileFlags;
+
+        let mut config = Config::default();
+        let tc: &TestCase = inventory::iter::<TestCase>()
+            .find(|tc| tc.name == "pjdfstest::tests::t::support_flags_unique")
+            .unwrap();
+        assert_eq!(tc.guards.len(), 1);
+
+        let guard = &tc.guards[0];
+        assert!(guard(&config, Path::new("test")).is_err());
+
+        config.features.file_flags = HashSet::from([FileFlags::SF_APPEND]);
+        assert!(guard(&config, Path::new("test")).is_ok());
+
+        config.features.file_flags = HashSet::from([FileFlags::SF_APPEND, FileFlags::UF_APPEND]);
+        assert!(guard(&config, Path::new("test")).is_ok());
+    }
+
+    #[cfg(any(
+        target_os = "openbsd",
+        target_os = "netbsd",
+        target_os = "freebsd",
+        target_os = "dragonfly",
+        target_os = "macos",
+        target_os = "ios",
+        target_os = "watchos",
+    ))]
+    crate::test_case! {support_flags_not_empty; support_file_flags!(SF_APPEND, UF_APPEND)}
+    #[cfg(any(
+        target_os = "openbsd",
+        target_os = "netbsd",
+        target_os = "freebsd",
+        target_os = "dragonfly",
+        target_os = "macos",
+        target_os = "ios",
+        target_os = "watchos",
+    ))]
+    fn support_flags_not_empty(_: &mut TestContext) {}
+    #[cfg(any(
+        target_os = "openbsd",
+        target_os = "netbsd",
+        target_os = "freebsd",
+        target_os = "dragonfly",
+        target_os = "macos",
+        target_os = "ios",
+        target_os = "watchos",
+    ))]
+    #[test]
+    fn support_flags_test_not_empty() {
+        use std::collections::HashSet;
+
+        use crate::flags::FileFlags;
+
+        let mut config = Config::default();
+        let tc: &TestCase = inventory::iter::<TestCase>()
+            .find(|tc| tc.name == "pjdfstest::tests::t::support_flags_not_empty")
+            .unwrap();
+        assert_eq!(tc.guards.len(), 1);
+
+        let guard = &tc.guards[0];
+        assert!(guard(&config, Path::new("test")).is_err());
+
+        config.features.file_flags = HashSet::from([FileFlags::SF_APPEND]);
+        assert!(guard(&config, Path::new("test")).is_err());
+
+        config.features.file_flags = HashSet::from([FileFlags::SF_APPEND, FileFlags::UF_APPEND]);
+        assert!(guard(&config, Path::new("test")).is_ok());
+
+        config.features.file_flags = HashSet::from([
+            FileFlags::SF_APPEND,
+            FileFlags::UF_APPEND,
+            FileFlags::SF_ARCHIVED,
+        ]);
+        assert!(guard(&config, Path::new("test")).is_ok());
+    }
+}
