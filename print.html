@@ -372,14 +372,36 @@ crate::test_case! {eperm_immutable_flag, FileSystemFeature::Chflags, FileSystemF
 <p>New features can be added to the <code>FileSystemFeature</code> enum.
 A description of the feature should be provided as documentation
 for both developers and users.</p>
-<h4 id="file-flags"><a class="header" href="#file-flags">File flags</a></h4>
-<p><strong>NOTE: This feature is not supported by all POSIX systems, 
-therefore its use needs a <code>#[cfg(target_os = ...)]</code> attribute specifying the relevant system(s).</strong></p>
-<p>It is possible to specify individual file flags for the tests which
-require it. They can be specified by appending <code>FileFlags</code> variants after a <code>;</code> separator,
+<h3 id="guards"><a class="header" href="#guards">Guards</a></h3>
+<p>It is possible to specify &quot;guards&quot;, which are functions which checks if a requirement
+is met and return an error if not, so the test is skipped.
+They can be specified by appending function names after a <code>;</code> separator,
 after potential <code>root</code> requirement and features.</p>
-<pre><code class="language-rust ignore">#[cfg(target_os = &quot;freebsd&quot;)]
-crate::test_case! {eperm_immutable_flag, root, FileSystemFeature::Chflags; FileFlags::SF_IMMUTABLE, FileFlags::UF_IMMUTABLE}
+<p>The function has to take a <code>&amp;Config</code> argument
+which contains the current configuration
+and a <code>&amp;Path</code> which represents the parent folder
+of the potential test context which would be created.</p>
+<h4 id="guard-signature"><a class="header" href="#guard-signature">Guard signature</a></h4>
+<pre><code class="language-rust ignore">/// Function which indicates if the test should be skipped by returning an error.
+pub type Guard = fn(&amp;Config, &amp;Path) -&gt; anyhow::Result&lt;()&gt;;
+</code></pre>
+<h4 id="example"><a class="header" href="#example">Example</a></h4>
+<pre><code class="language-rust ignore">fn has_reasonable_link_max(_: &amp;Config, base_path: &amp;Path) -&gt; anyhow::Result&lt;()&gt; {
+    let link_max = pathconf(base_path, nix::unistd::PathconfVar::LINK_MAX)?
+        .ok_or_else(|| anyhow::anyhow!(&quot;Failed to get LINK_MAX value&quot;))?;
+    
+    if link_max &gt;= LINK_MAX_LIMIT {
+        anyhow::bail!(&quot;LINK_MAX value is too high ({link_max}, expected smaller than {LINK_MAX_LIMIT}&quot;);
+    }
+
+    Ok(())
+}
+
+crate::test_case! {
+    /// link returns EMLINK if the link count of the file named by name1 would exceed {LINK_MAX}
+    link_count_max; has_reasonable_link_max
+}
+...
 </code></pre>
 <h3 id="root-privileges"><a class="header" href="#root-privileges">Root privileges</a></h3>
 <p>Some tests may need root privileges to run.
