@@ -58,7 +58,9 @@ impl DummyMnt {
         }
 
         let result = mount.arg(&from).arg(&path).output()?;
-        debug_assert!(result.status.success());
+        if !std::thread::panicking() {
+            assert!(result.status.success());
+        }
 
         Ok(Self { path })
     }
@@ -67,7 +69,9 @@ impl DummyMnt {
 impl Drop for DummyMnt {
     fn drop(&mut self) {
         let umount = Command::new("umount").arg(&self.path).output();
-        debug_assert!(matches!(umount, Ok(res) if res.status.success()));
+        if !std::thread::panicking() {
+            assert!(matches!(umount, Ok(res) if res.status.success()));
+        }
     }
 }
 
