@@ -1,8 +1,14 @@
-use std::{fs::metadata, path::PathBuf, process::Command};
+use std::{
+    fs::metadata,
+    path::{Path, PathBuf},
+    process::Command,
+};
 
-use nix::{errno::Errno, sys::stat::lstat};
+use nix::errno::Errno;
 
-use crate::{runner::context::TestContext, tests::assert_mtime_changed, utils::rmdir};
+use crate::{
+    config::Config, runner::context::TestContext, tests::assert_mtime_changed, utils::rmdir,
+};
 
 use super::{assert_ctime_changed, errors::enotdir::enotdir_comp_test_case};
 
@@ -65,9 +71,25 @@ impl Drop for DummyMnt {
     }
 }
 
+#[cfg(target_os = "linux")]
+fn has_mount_cap(_: &Config, _: &Path) -> anyhow::Result<()> {
+    use caps::{has_cap, CapSet, Capability};
+
+    if !has_cap(None, CapSet::Effective, Capability::CAP_SYS_ADMIN)? {
+        anyhow::bail!("process doesn't have the CAP_SYS_ADMIN cap to mount the dummy file system")
+    }
+
+    Ok(())
+}
+
+#[cfg(not(target_os = "linux"))]
+fn has_mount_cap(_: &Config, _: &Path) -> anyhow::Result<()> {
+    Ok(())
+}
+
 crate::test_case! {
     /// rmdir return EBUSY if the directory to be removed is the mount point for a mounted file system
-    ebusy, root
+    ebusy, root; has_mount_cap
 }
 fn ebusy(ctx: &mut TestContext) {
     let dummy_mount = DummyMnt::new(ctx).unwrap();
