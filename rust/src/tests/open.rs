@@ -127,7 +127,9 @@ crate::test_case! {
 }
 #[cfg(target_os = "freebsd")]
 fn open_nofollow(ctx: &mut TestContext) {
+    use crate::runner::context::FileType;
     use nix::{
+        errno::Errno,
         fcntl::{open, OFlag},
         sys::stat::Mode,
     };
