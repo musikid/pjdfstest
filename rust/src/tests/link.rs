@@ -152,28 +152,14 @@ enotdir_comp_either_test_case!(link);
 
 const LINK_MAX_LIMIT: i64 = 65535;
 
-// TODO: Some systems return bogus value, and testing directories
+// BUG: Some systems return bogus value, and testing directories
 // might give different result than trying directly on the file
-#[cfg(not(target_os = "linux"))]
 fn has_reasonable_link_max(_: &Config, base_path: &Path) -> anyhow::Result<()> {
     let link_max = pathconf(base_path, nix::unistd::PathconfVar::LINK_MAX)?
         .ok_or_else(|| anyhow::anyhow!("Failed to get LINK_MAX value"))?;
 
-    if link_max >= LINK_MAX_LIMIT {
-        anyhow::bail!(
-            "LINK_MAX value is too high ({link_max}, expected smaller than {LINK_MAX_LIMIT})"
-        );
-    }
-
-    Ok(())
-}
-
-#[cfg(target_os = "linux")]
-// pathconf(_PC_LINK_MAX) on Linux returns 127 (LINUX_LINK_MAX) if the filesystem limit is unknown...
-fn has_reasonable_link_max(_: &Config, base_path: &Path) -> anyhow::Result<()> {
-    let link_max = pathconf(base_path, nix::unistd::PathconfVar::LINK_MAX)?
-        .ok_or_else(|| anyhow::anyhow!("Failed to get LINK_MAX value"))?;
-
+    // pathconf(_PC_LINK_MAX) on Linux returns 127 (LINUX_LINK_MAX) if the filesystem limit is unknown...
+    #[cfg(target_os = "linux")]
     if link_max == 127 {
         anyhow::bail!("Cannot get value for LINK_MAX: filesystem limit is unknown");
     }
