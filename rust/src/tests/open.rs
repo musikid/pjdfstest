@@ -118,3 +118,42 @@ fn interact_2gb(ctx: &mut TestContext) {
     nix::sys::uio::pread(fd, &mut buf, offset).unwrap();
     assert_eq!(buf, DATA.as_bytes());
 }
+
+// POSIX states that open should return ELOOP, but FreeBSD returns EMLINK instead
+#[cfg(not(target_os = "freebsd"))]
+crate::test_case! {
+    /// open returns ELOOP when O_NOFOLLOW was specified and the target is a symbolic link
+    open_nofollow
+}
+#[cfg(target_os = "freebsd")]
+crate::test_case! {
+    /// open returns EMLINK when O_NOFOLLOW was specified and the target is a symbolic link
+    open_nofollow
+}
+fn open_nofollow(ctx: &mut TestContext) {
+    use crate::runner::context::FileType;
+    use nix::errno::Errno;
+
+    let link = ctx.create(FileType::Symlink(None)).unwrap();
+
+    assert!(matches!(
+        open(
+            &link,
+            OFlag::O_RDONLY | OFlag::O_CREAT | OFlag::O_NOFOLLOW,
+            Mode::empty()
+        ),
+        Err(Errno::EMLINK | Errno::ELOOP)
+    ));
+    assert!(matches!(
+        open(&link, OFlag::O_RDONLY | OFlag::O_NOFOLLOW, Mode::empty()),
+        Err(Errno::EMLINK | Errno::ELOOP)
+    ));
+    assert!(matches!(
+        open(&link, OFlag::O_RDONLY | OFlag::O_NOFOLLOW, Mode::empty()),
+        Err(Errno::EMLINK | Errno::ELOOP)
+    ));
+    assert!(matches!(
+        open(&link, OFlag::O_RDWR | OFlag::O_NOFOLLOW, Mode::empty()),
+        Err(Errno::EMLINK | Errno::ELOOP)
+    ));
+}
