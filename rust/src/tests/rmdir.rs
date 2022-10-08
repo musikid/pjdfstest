@@ -58,9 +58,7 @@ impl DummyMnt {
         }
 
         let result = mount.arg(&from).arg(&path).output()?;
-        if !std::thread::panicking() {
-            assert!(result.status.success());
-        }
+        assert!(result.status.success());
 
         Ok(Self { path })
     }
