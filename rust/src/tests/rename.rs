@@ -270,10 +270,10 @@ fn updates_link_parent(ctx: &mut TestContext) {
 // rename/12.t
 enotdir_comp_either_test_case!(rename);
 
-// rename/13.t
 crate::test_case! {
     /// rename returns ENOTDIR when the 'from' argument is a directory,
     /// but 'to' is not a directory
+    // rename/13.t
     enotdir_from_to => [Regular, Fifo, Block, Char, Socket]
 }
 fn enotdir_from_to(ctx: &mut TestContext, ft: FileType) {
@@ -285,3 +285,14 @@ fn enotdir_from_to(ctx: &mut TestContext, ft: FileType) {
 
 // rename/03.t
 enoent_either_named_file_test_case!(rename);
+
+crate::test_case! {
+    /// rename returns EISDIR when the 'to' argument is a directory, but 'from' is not a directory
+    // rename/14.t
+    eisdir_to_dir_from_not_dir => [Regular, Fifo, Block, Char, Socket, Symlink(None)]
+}
+fn eisdir_to_dir_from_not_dir(ctx: &mut TestContext, ft: FileType) {
+    let dir = ctx.create(FileType::Dir).unwrap();
+    let not_dir_file = ctx.create(ft).unwrap();
+    assert_eq!(rename(&not_dir_file, &dir), Err(Errno::EISDIR));
+}
