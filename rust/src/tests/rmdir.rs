@@ -84,14 +84,34 @@ fn has_mount_cap(_: &Config, _: &Path) -> anyhow::Result<()> {
     Ok(())
 }
 
-#[cfg(not(target_os = "linux"))]
+#[cfg(target_os = "freebsd")]
 fn has_mount_cap(_: &Config, _: &Path) -> anyhow::Result<()> {
+    use nix::unistd::Uid;
+    use sysctl::{Ctl, CtlValue, Sysctl};
+
+    const MOUNT_CTL: &str = "vfs.usermount";
+
+    let ctl = Ctl::new(MOUNT_CTL)?;
+
+    if !Uid::effective().is_root() && ctl.value()? == CtlValue::Int(0) {
+        anyhow::bail!("process doesn't have the rights to mount the dummy file system")
+    }
+
+    Ok(())
+}
+
+#[cfg(not(any(target_os = "linux", target_os = "freebsd")))]
+fn has_mount_cap(_: &Config, _: &Path) -> anyhow::Result<()> {
+    if !Uid::effective().is_root() {
+        anyhow::bail!("process is not root, cannot mount dummy file system")
+    }
+
     Ok(())
 }
 
 crate::test_case! {
     /// rmdir return EBUSY if the directory to be removed is the mount point for a mounted file system
-    ebusy, root; has_mount_cap
+    ebusy; has_mount_cap
 }
 fn ebusy(ctx: &mut TestContext) {
     let dummy_mount = DummyMnt::new(ctx).unwrap();
