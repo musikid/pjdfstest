@@ -1,13 +1,14 @@
-use std::fs::{metadata, symlink_metadata, FileType};
+use std::fs::{metadata, symlink_metadata, FileType as StdFileType};
 use std::os::unix::prelude::MetadataExt;
 use std::path::Path;
 
+use nix::errno::Errno;
 use nix::fcntl::{open, OFlag};
 use nix::sys::stat::Mode;
 use nix::sys::uio::pwrite;
 use nix::unistd::close;
 
-use crate::runner::context::{SerializedTestContext, TestContext};
+use crate::runner::context::{FileType, SerializedTestContext, TestContext};
 
 use super::mksyscalls::{assert_perms_from_mode_and_umask, assert_uid_gid};
 use super::{assert_times_changed, assert_times_unchanged, ATIME, CTIME, MTIME};
@@ -28,7 +29,7 @@ crate::test_case! {
     permission_bits_from_mode, serialized
 }
 fn permission_bits_from_mode(ctx: &mut SerializedTestContext) {
-    assert_perms_from_mode_and_umask(ctx, open_wrapper, FileType::is_file);
+    assert_perms_from_mode_and_umask(ctx, open_wrapper, StdFileType::is_file);
 }
 
 crate::test_case! {
@@ -66,9 +67,7 @@ crate::test_case! {
     exists_no_update
 }
 fn exists_no_update(ctx: &mut TestContext) {
-    let file = ctx
-        .create(crate::runner::context::FileType::Regular)
-        .unwrap();
+    let file = ctx.create(FileType::Regular).unwrap();
 
     assert_times_unchanged()
         .path(ctx.base_path(), CTIME | MTIME)
@@ -131,9 +130,6 @@ crate::test_case! {
     open_nofollow
 }
 fn open_nofollow(ctx: &mut TestContext) {
-    use crate::runner::context::FileType;
-    use nix::errno::Errno;
-
     let link = ctx.create(FileType::Symlink(None)).unwrap();
 
     assert!(matches!(
@@ -156,4 +152,45 @@ fn open_nofollow(ctx: &mut TestContext) {
         open(&link, OFlag::O_RDWR | OFlag::O_NOFOLLOW, Mode::empty()),
         Err(Errno::EMLINK | Errno::ELOOP)
     ));
+}
+
+// POSIX now states that returned error should be EOPNOTSUPP, but Linux returns ENXIO
+#[cfg(not(target_os = "linux"))]
+crate::test_case! {
+    /// open returns EOPNOTSUPP when trying to open UNIX domain socket
+    socket_error
+}
+#[cfg(target_os = "linux")]
+crate::test_case! {
+    /// open returns ENXIO when trying to open UNIX domain socket
+    socket_error
+}
+fn socket_error(ctx: &mut TestContext) {
+    let socket = ctx.create(FileType::Socket).unwrap();
+
+    assert!(matches!(
+        open(&socket, OFlag::O_RDONLY, Mode::empty()),
+        Err(Errno::EOPNOTSUPP | Errno::ENXIO)
+    ));
+    assert!(matches!(
+        open(&socket, OFlag::O_WRONLY, Mode::empty()),
+        Err(Errno::EOPNOTSUPP | Errno::ENXIO)
+    ));
+    assert!(matches!(
+        open(&socket, OFlag::O_RDWR, Mode::empty()),
+        Err(Errno::EOPNOTSUPP | Errno::ENXIO)
+    ));
+}
+
+crate::test_case! {
+    /// open returns ENXIO when O_NONBLOCK is set, the named file is a fifo, O_WRONLY is set,
+    /// and no process has the file open for reading
+    fifo_nonblock_wronly
+}
+fn fifo_nonblock_wronly(ctx: &mut TestContext) {
+    let fifo = ctx.create(FileType::Fifo).unwrap();
+    assert_eq!(
+        open(&fifo, OFlag::O_WRONLY | OFlag::O_NONBLOCK, Mode::empty()),
+        Err(Errno::ENXIO)
+    );
 }
