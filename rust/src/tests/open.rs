@@ -201,3 +201,33 @@ enoent_comp_test_case!(open(~path, OFlag::O_CREAT, Mode::from_bits_truncate(0o64
 
 // open/04.t
 enoent_named_file_test_case!(open(~path, OFlag::O_RDONLY, Mode::empty()));
+
+crate::test_case! {
+    /// open returns EISDIR if the named file is a directory
+    eisdir
+}
+fn eisdir(ctx: &mut TestContext) {
+    let path = ctx.create(FileType::Dir).unwrap();
+
+    // open/13.t
+    assert_eq!(
+        open(&path, OFlag::O_WRONLY, Mode::empty()),
+        Err(Errno::EISDIR)
+    );
+    assert_eq!(
+        open(&path, OFlag::O_RDWR, Mode::empty()),
+        Err(Errno::EISDIR)
+    );
+    assert_eq!(
+        open(&path, OFlag::O_RDONLY | OFlag::O_TRUNC, Mode::empty()),
+        Err(Errno::EISDIR)
+    );
+    assert_eq!(
+        open(&path, OFlag::O_WRONLY | OFlag::O_TRUNC, Mode::empty()),
+        Err(Errno::EISDIR)
+    );
+    assert_eq!(
+        open(&path, OFlag::O_RDWR | OFlag::O_TRUNC, Mode::empty()),
+        Err(Errno::EISDIR)
+    );
+}

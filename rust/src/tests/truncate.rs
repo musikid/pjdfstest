@@ -89,3 +89,13 @@ enotdir_comp_test_case!(truncate(~path, 0));
 // (f)truncate/04.t
 enoent_named_file_test_case!(truncate(~path, 0));
 enoent_comp_test_case!(truncate(~path, 0));
+
+crate::test_case! {
+    /// truncate returns EISDIR if the named file is a directory
+    // truncate/09.t
+    eisdir
+}
+fn eisdir(ctx: &mut TestContext) {
+    let path = ctx.create(FileType::Dir).unwrap();
+    assert_eq!(truncate(&path, 0), Err(Errno::EISDIR));
+}
