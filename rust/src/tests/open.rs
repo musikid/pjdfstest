@@ -231,3 +231,45 @@ fn eisdir(ctx: &mut TestContext) {
         Err(Errno::EISDIR)
     );
 }
+
+#[cfg(target_os = "freebsd")]
+crate::test_case! {
+    /// open returns EWOULDBLOCK when O_NONBLOCK and one of
+    /// O_SHLOCK or O_EXLOCK is specified and the file is locked
+    // open/18.t
+    locked
+}
+#[cfg(target_os = "freebsd")]
+fn locked(ctx: &mut TestContext) {
+    let file = ctx.create(FileType::Regular).unwrap();
+    let fd = open(&file, OFlag::O_RDONLY | OFlag::O_SHLOCK, Mode::empty()).unwrap();
+
+    // We open another file descriptor to test shared lock
+    assert!(open(
+        &file,
+        OFlag::O_RDONLY | OFlag::O_SHLOCK | OFlag::O_NONBLOCK,
+        Mode::empty()
+    )
+    .and_then(close)
+    .is_ok());
+
+    close(fd).unwrap();
+
+    // EWOULDBLOCK has the same value than EAGAIN on FreeBSD
+    fn assert_ewouldblock(file: &Path, lockflag_locked: OFlag, lockflag_nonblock: OFlag) {
+        let fd1 = open(file, OFlag::O_RDONLY | lockflag_locked, Mode::empty()).unwrap();
+        assert!(matches!(
+            open(
+                file,
+                OFlag::O_RDONLY | lockflag_nonblock | OFlag::O_NONBLOCK,
+                Mode::empty()
+            ),
+            Err(Errno::EWOULDBLOCK)
+        ));
+        close(fd1).unwrap();
+    }
+
+    assert_ewouldblock(&file, OFlag::O_EXLOCK, OFlag::O_EXLOCK);
+    assert_ewouldblock(&file, OFlag::O_SHLOCK, OFlag::O_EXLOCK);
+    assert_ewouldblock(&file, OFlag::O_EXLOCK, OFlag::O_SHLOCK);
+}
