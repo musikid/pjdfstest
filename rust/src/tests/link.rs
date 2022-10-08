@@ -13,6 +13,7 @@ use crate::{
     runner::context::{FileType, SerializedTestContext, TestContext},
     tests::{
         assert_times_changed, assert_times_unchanged,
+        errors::enoent::enoent_either_named_file_test_case,
         errors::enotdir::enotdir_comp_either_test_case, AsTimeInvariant,
     },
     utils::{chmod, link},
@@ -188,4 +189,19 @@ fn link_count_max(ctx: &mut TestContext) {
     }
 
     assert_eq!(link(&file, &ctx.gen_path()), Err(Errno::EMLINK));
+}
+
+// link/04.t
+enoent_either_named_file_test_case!(link);
+
+// link/09.t
+crate::test_case! {
+    /// link returns ENOENT if the source file does not exist
+    enoent_source_not_exists
+}
+fn enoent_source_not_exists(ctx: &mut TestContext) {
+    let source = ctx.gen_path();
+    let dest = ctx.gen_path();
+
+    assert_eq!(link(&source, &dest), Err(Errno::ENOENT));
 }

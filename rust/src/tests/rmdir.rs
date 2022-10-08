@@ -10,7 +10,10 @@ use crate::{
     config::Config, runner::context::TestContext, tests::assert_mtime_changed, utils::rmdir,
 };
 
-use super::{assert_ctime_changed, errors::enotdir::enotdir_comp_test_case};
+use super::{
+    assert_ctime_changed, errors::enoent::enoent_named_file_test_case,
+    errors::enotdir::enotdir_comp_test_case,
+};
 
 crate::test_case! {
     /// rmdir remove directory
@@ -117,3 +120,6 @@ fn ebusy(ctx: &mut TestContext) {
     let dummy_mount = DummyMnt::new(ctx).unwrap();
     assert_eq!(rmdir(&dummy_mount.path), Err(Errno::EBUSY));
 }
+
+// rmdir/04.t
+enoent_named_file_test_case!(rmdir);

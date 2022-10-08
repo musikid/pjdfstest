@@ -4,11 +4,9 @@ use std::{
     path::Path,
 };
 
-use nix::{errno::Errno, sys::stat::stat};
-
 use crate::{
     runner::context::{FileType, TestContext},
-    tests::{assert_times_changed, CTIME, MTIME},
+    tests::{assert_times_changed, errors::enoent::enoent_comp_test_case, CTIME, MTIME},
     utils::symlink,
 };
 
@@ -82,3 +80,6 @@ fn changed_parent_time_success(ctx: &mut TestContext) {
 
 // symlink/01.t
 enotdir_comp_test_case!(symlink(Path::new("test"), ~path));
+
+// symlink/04.t
+enoent_comp_test_case!(symlink(Path::new("test"), ~path));

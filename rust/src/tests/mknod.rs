@@ -5,6 +5,7 @@ use nix::sys::stat::{mknod, Mode, SFlag};
 
 use crate::runner::context::{FileType, SerializedTestContext, TestContext};
 
+use super::errors::enoent::enoent_comp_test_case;
 use super::errors::enotdir::enotdir_comp_test_case;
 use super::mksyscalls::{assert_perms_from_mode_and_umask, assert_uid_gid};
 use super::{assert_times_changed, ATIME, CTIME, MTIME};
@@ -186,3 +187,6 @@ fn create_old_new_device(ctx: &mut TestContext) {
         );
     }
 }
+
+// mknod/04.t
+enoent_comp_test_case!(mknod(~path, SFlag::S_IFIFO, Mode::empty(), 0));
