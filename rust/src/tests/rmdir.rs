@@ -1,8 +1,14 @@
-use std::fs::metadata;
+use std::{
+    fs::metadata,
+    path::{Path, PathBuf},
+    process::Command,
+};
 
-use nix::{errno::Errno, sys::stat::lstat};
+use nix::errno::Errno;
 
-use crate::{runner::context::TestContext, tests::assert_mtime_changed, utils::rmdir};
+use crate::{
+    config::Config, runner::context::TestContext, tests::assert_mtime_changed, utils::rmdir,
+};
 
 use super::{assert_ctime_changed, errors::enotdir::enotdir_comp_test_case};
 
@@ -29,5 +35,85 @@ fn changed_time_parent_success(ctx: &mut TestContext) {
         });
     });
 }
+
 // rmdir/01.t
 enotdir_comp_test_case!(rmdir);
+
+/// Dummy mountpoint to check that rmdir returns EBUSY when using it on a mountpoint.
+struct DummyMnt {
+    path: PathBuf,
+}
+
+impl DummyMnt {
+    fn new(ctx: &mut TestContext) -> anyhow::Result<Self> {
+        // We don't really care about a specific type of file system here, the directory just have to be a mount point
+        let from = ctx.create(crate::runner::context::FileType::Dir)?;
+        let path = ctx.create(crate::runner::context::FileType::Dir)?;
+        let mut mount = Command::new("mount");
+
+        if cfg!(target_os = "linux") {
+            mount.arg("--bind");
+        } else {
+            mount.args(["-t", "nullfs"]);
+        }
+
+        let result = mount.arg(&from).arg(&path).output()?;
+        assert!(result.status.success());
+
+        Ok(Self { path })
+    }
+}
+
+impl Drop for DummyMnt {
+    fn drop(&mut self) {
+        let umount = Command::new("umount").arg(&self.path).output();
+        if !std::thread::panicking() {
+            assert!(matches!(umount, Ok(res) if res.status.success()));
+        }
+    }
+}
+
+#[cfg(target_os = "linux")]
+fn has_mount_cap(_: &Config, _: &Path) -> anyhow::Result<()> {
+    use caps::{has_cap, CapSet, Capability};
+
+    if !has_cap(None, CapSet::Effective, Capability::CAP_SYS_ADMIN)? {
+        anyhow::bail!("process doesn't have the CAP_SYS_ADMIN cap to mount the dummy file system")
+    }
+
+    Ok(())
+}
+
+#[cfg(target_os = "freebsd")]
+fn has_mount_cap(_: &Config, _: &Path) -> anyhow::Result<()> {
+    use nix::unistd::Uid;
+    use sysctl::{Ctl, CtlValue, Sysctl};
+
+    const MOUNT_CTL: &str = "vfs.usermount";
+
+    let ctl = Ctl::new(MOUNT_CTL)?;
+
+    if !Uid::effective().is_root() && ctl.value()? == CtlValue::Int(0) {
+        anyhow::bail!("process doesn't have the rights to mount the dummy file system")
+    }
+
+    Ok(())
+}
+
+#[cfg(not(any(target_os = "linux", target_os = "freebsd")))]
+fn has_mount_cap(_: &Config, _: &Path) -> anyhow::Result<()> {
+    if !Uid::effective().is_root() {
+        anyhow::bail!("process is not root, cannot mount dummy file system")
+    }
+
+    Ok(())
+}
+
+crate::test_case! {
+    /// rmdir return EBUSY if the directory to be removed is the mount point for a mounted file system
+    ebusy; has_mount_cap
+}
+fn ebusy(ctx: &mut TestContext) {
+    let dummy_mount = DummyMnt::new(ctx).unwrap();
+    assert_eq!(rmdir(&dummy_mount.path), Err(Errno::EBUSY));
+}
