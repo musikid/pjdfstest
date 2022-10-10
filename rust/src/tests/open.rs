@@ -255,7 +255,7 @@ fn locked(ctx: &mut TestContext) {
 
     close(fd).unwrap();
 
-    // EWOULDBLOCK has the same value than EAGAIN on FreeBSD
+    // EWOULDBLOCK has the same value as EAGAIN on FreeBSD
     fn assert_ewouldblock(file: &Path, lockflag_locked: OFlag, lockflag_nonblock: OFlag) {
         let fd1 = open(file, OFlag::O_RDONLY | lockflag_locked, Mode::empty()).unwrap();
         assert!(matches!(
