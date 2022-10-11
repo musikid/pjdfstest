@@ -13,30 +13,16 @@ enotdir_comp_test_case!(chown, |ctx: &mut TestContext, path| {
 });
 
 // chown/04.t
-enoent_named_file_test_case!(
-    chown,
-    |ctx: &mut TestContext, path| {
-        let user = ctx.get_new_user();
-        chown(path, Some(user.uid), None)
-    },
-    |ctx: &mut TestContext, path| {
-        let user = ctx.get_new_user();
-        lchown(path, Some(user.uid), None)
-    }
-);
+enoent_named_file_test_case!(chown, |ctx: &mut TestContext, path| {
+    let user = ctx.get_new_user();
+    chown(path, Some(user.uid), None)
+});
 
 // chown/04.t
-enoent_comp_test_case!(
-    chown,
-    |ctx: &mut TestContext, path| {
-        let user = ctx.get_new_user();
-        chown(path, Some(user.uid), None)
-    },
-    |ctx: &mut TestContext, path| {
-        let user = ctx.get_new_user();
-        lchown(path, Some(user.uid), None)
-    }
-);
+enoent_comp_test_case!(chown, |ctx: &mut TestContext, path| {
+    let user = ctx.get_new_user();
+    chown(path, Some(user.uid), None)
+});
 
 // chown/04.t
 enoent_symlink_named_file_test_case!(chown, |ctx: &mut TestContext, path| {
@@ -53,6 +39,11 @@ mod lchown {
     });
 
     enoent_named_file_test_case!(lchown, |ctx: &mut TestContext, path| {
+        let user = ctx.get_new_user();
+        lchown(path, Some(user.uid), None)
+    });
+
+    enoent_comp_test_case!(lchown, |ctx: &mut TestContext, path| {
         let user = ctx.get_new_user();
         lchown(path, Some(user.uid), None)
     });

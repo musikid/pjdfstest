@@ -115,32 +115,10 @@ fn clear_isgid_bit(ctx: &mut SerializedTestContext) {
 
 // chmod/01.t
 enotdir_comp_test_case!(chmod(~path, Mode::empty()));
-#[cfg(any(target_os = "netbsd", target_os = "freebsd", target_os = "dragonfly"))]
-mod lchmod {
-    use super::*;
-
-    enotdir_comp_test_case!(lchmod(~path, Mode::empty()));
-}
 
 // chmod/04.t
-#[cfg(not(any(target_os = "netbsd", target_os = "freebsd", target_os = "dragonfly")))]
 enoent_named_file_test_case!(chmod(~path, Mode::empty()));
-#[cfg(not(any(target_os = "netbsd", target_os = "freebsd", target_os = "dragonfly")))]
 enoent_comp_test_case!(chmod(~path, Mode::empty()));
-
-#[cfg(any(target_os = "netbsd", target_os = "freebsd", target_os = "dragonfly"))]
-enoent_named_file_test_case!(
-    chmod,
-    |_: &mut TestContext, path| chmod(path, Mode::empty()),
-    |_: &mut TestContext, path| lchmod(path, Mode::empty())
-);
-#[cfg(any(target_os = "netbsd", target_os = "freebsd", target_os = "dragonfly"))]
-enoent_comp_test_case!(
-    chmod,
-    |_: &mut TestContext, path| chmod(path, Mode::empty()),
-    |_: &mut TestContext, path| lchmod(path, Mode::empty())
-);
-
 enoent_symlink_named_file_test_case!(chmod(~path, Mode::empty()));
 
 #[cfg(any(target_os = "freebsd", target_os = "dragonfly"))]
@@ -189,4 +167,13 @@ fn eftype(ctx: &mut SerializedTestContext, ft: FileType) {
 
     let file_stat = lstat(&file).unwrap();
     assert_eq!(file_stat.st_mode & ALLPERMS_STICKY, original_mode.bits());
+}
+
+#[cfg(any(target_os = "netbsd", target_os = "freebsd", target_os = "dragonfly"))]
+mod lchmod {
+    use super::*;
+
+    enotdir_comp_test_case!(lchmod(~path, Mode::empty()));
+    enoent_named_file_test_case!(lchmod(~path, Mode::empty()));
+    enoent_comp_test_case!(lchmod(~path, Mode::empty()));
 }
