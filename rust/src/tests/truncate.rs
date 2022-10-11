@@ -9,8 +9,11 @@ use crate::{
     tests::{assert_ctime_changed, assert_ctime_unchanged},
 };
 
-use super::errors::enoent::{enoent_comp_test_case, enoent_named_file_test_case};
 use super::errors::enotdir::enotdir_comp_test_case;
+use super::errors::{
+    enoent::{enoent_comp_test_case, enoent_named_file_test_case},
+    etxtbsy::etxtbsy_test_case,
+};
 
 // tests/truncate/00.t
 
@@ -99,3 +102,6 @@ fn eisdir(ctx: &mut TestContext) {
     let path = ctx.create(FileType::Dir).unwrap();
     assert_eq!(truncate(&path, 0), Err(Errno::EISDIR));
 }
+
+// (f)truncate/11.t
+etxtbsy_test_case!(truncate(~path, 123));
