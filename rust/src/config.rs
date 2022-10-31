@@ -3,10 +3,10 @@ use std::collections::HashSet;
 
 use crate::test::FileFlags;
 use crate::test::FileSystemFeature;
-use nix::unistd::Group;
-use nix::unistd::User;
-use serde::Deserialize;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
+
+mod auth;
+pub use auth::*;
 
 #[derive(Debug, Default, Serialize, Deserialize)]
 pub struct CommonFeatureConfig {}
@@ -41,32 +41,7 @@ const fn default_naptime() -> f64 {
     1.0
 }
 
-/// Auth entries, which are composed of a [`User`](nix::unistd::User) and its associated [`Group`](nix::unistd::Group).
-/// The user should be part of the associated group.
-#[derive(Debug, Serialize, Deserialize)]
-pub struct DummyAuthConfig {
-    pub entries: [(String, String); 3],
-}
-
-impl Default for DummyAuthConfig {
-    fn default() -> Self {
-        Self {
-            entries: [
-                (
-                    String::from("nobody"),
-                    Group::from_gid(User::from_name("nobody").unwrap().unwrap().gid)
-                        .unwrap()
-                        .unwrap()
-                        .name,
-                ),
-                (String::from("tests"), String::from("tests")),
-                (String::from("pjdfstest"), String::from("pjdfstest")),
-            ],
-        }
-    }
-}
-
-#[derive(Debug, Default, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Default)]
 pub struct Config {
     /// File-system features.
     pub features: FeaturesConfig,

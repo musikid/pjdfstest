@@ -14,7 +14,7 @@ use figment::{
 use gumdrop::Options;
 use nix::{
     sys::stat::{umask, Mode},
-    unistd::{Group, Uid, User},
+    unistd::Uid,
 };
 use once_cell::sync::OnceCell;
 use strum::{EnumMessage, IntoEnumIterator};
@@ -135,7 +135,7 @@ fn main() -> anyhow::Result<()> {
 /// Run provided test cases and filter according to features and flags availability.
 //TODO: Refactor this function
 fn run_test_cases(
-    test_cases: &Vec<&TestCase>,
+    test_cases: &[&TestCase],
     verbose: bool,
     config: &Config,
     base_dir: TempDir,
@@ -148,29 +148,7 @@ fn run_test_cases(
 
     let enabled_features: HashSet<_> = config.features.fs_features.keys().into_iter().collect();
 
-    let entries: Vec<(User, Group)> = config
-        .dummy_auth
-        .entries
-        .iter()
-        .map(|(username, groupname)| {
-            User::from_name(username)
-                .map_err(anyhow::Error::new)
-                .and_then(|user| {
-                    user.ok_or_else(|| anyhow::anyhow!("User {username} is not available"))
-                        .and_then(|user| {
-                            Group::from_name(groupname)
-                                .map_err(anyhow::Error::new)
-                                .and_then(|group| {
-                                    group
-                                        .ok_or_else(|| {
-                                            anyhow::anyhow!("Group {groupname} is not available")
-                                        })
-                                        .map(|group| (user, group))
-                                })
-                        })
-                })
-        })
-        .collect::<Result<_, _>>()?;
+    let entries = &config.dummy_auth.entries;
 
     for test_case in test_cases {
         //TODO: There's probably a better way to do this...
@@ -229,12 +207,12 @@ fn run_test_cases(
 
         let result = catch_unwind(|| match test_case.fun {
             TestFn::NonSerialized(fun) => {
-                let mut context = TestContext::new(config, &entries, base_dir.path());
+                let mut context = TestContext::new(config, entries, base_dir.path());
 
                 (fun)(&mut context)
             }
             TestFn::Serialized(fun) => {
-                let mut context = SerializedTestContext::new(config, &entries, base_dir.path());
+                let mut context = SerializedTestContext::new(config, entries, base_dir.path());
 
                 (fun)(&mut context)
             }

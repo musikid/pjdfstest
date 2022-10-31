@@ -84,7 +84,7 @@ fn unchanged_ctime_failed(ctx: &mut SerializedTestContext) {
     let user = ctx.get_new_user();
 
     assert_ctime_unchanged(ctx, &file, || {
-        ctx.as_user(&user, None, || {
+        ctx.as_user(user, None, || {
             assert_eq!(truncate(&file, 123), Err(Errno::EACCES));
         });
     });

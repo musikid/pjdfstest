@@ -77,7 +77,7 @@ fn failed_chmod_unchanged_ctime(ctx: &mut SerializedTestContext, f_type: FileTyp
     let path = ctx.create(f_type).unwrap();
     let user = ctx.get_new_user();
     assert_ctime_unchanged(ctx, &path, || {
-        ctx.as_user(&user, None, || {
+        ctx.as_user(user, None, || {
             assert!(chmod(&path, Mode::from_bits_truncate(0o111)).is_err());
         });
     });
@@ -99,7 +99,7 @@ fn clear_isgid_bit(ctx: &mut SerializedTestContext) {
     chown(&path, Some(user.uid), Some(user.gid)).unwrap();
 
     let expected_mode = Mode::from_bits_truncate(0o2755);
-    ctx.as_user(&user, None, || {
+    ctx.as_user(user, None, || {
         chmod(&path, expected_mode).unwrap();
     });
 
@@ -107,7 +107,7 @@ fn clear_isgid_bit(ctx: &mut SerializedTestContext) {
     assert_eq!(actual_mode & 0o7777, expected_mode.bits());
 
     let expected_mode = Mode::from_bits_truncate(0o0755);
-    ctx.as_user(&user, None, || {
+    ctx.as_user(user, None, || {
         assert!(chmod(&path, expected_mode).is_ok());
     });
 

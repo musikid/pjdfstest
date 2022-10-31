@@ -86,7 +86,7 @@ fn affected_only_create_flags(ctx: &mut SerializedTestContext) {
     chmod(&subdir, Mode::from_bits_truncate(0o0777)).unwrap();
 
     let user = ctx.get_new_user();
-    ctx.as_user(&user, None, || {
+    ctx.as_user(user, None, || {
         let path = subdir.join("test1");
         let file = open(&path, OFlag::O_CREAT | OFlag::O_RDWR, Mode::empty()).unwrap();
         assert!(posix_fallocate(file, 0, 1).is_ok());

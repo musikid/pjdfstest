@@ -12,8 +12,9 @@ use nix::{
 
 use rand::{distributions::Alphanumeric, thread_rng, Rng};
 use std::{
+    cell::Cell,
     fs::create_dir_all,
-    ops::{Deref, DerefMut},
+    ops::Deref,
     os::unix::prelude::RawFd,
     panic::{catch_unwind, resume_unwind, AssertUnwindSafe},
     path::{Path, PathBuf},
@@ -24,7 +25,7 @@ use strum_macros::EnumIter;
 use tempfile::{tempdir_in, TempDir};
 
 use crate::{
-    config::{Config, FeaturesConfig},
+    config::{Config, DummyAuthEntry, FeaturesConfig},
     utils::{chmod, lchmod, symlink},
 };
 
@@ -48,20 +49,26 @@ impl FileType {
 
 const NUM_RAND_CHARS: usize = 32;
 /// Auth entries which are composed of a [`User`] and its associated [`Group`].
-/// It works like a stack, with entries being popped and not kept.
 #[derive(Debug)]
-pub struct DummyAuthEntries {
-    entries: Vec<(User, Group)>,
+pub struct DummyAuthEntries<'a> {
+    entries: &'a [DummyAuthEntry],
+    index: Cell<usize>,
 }
 
-impl DummyAuthEntries {
-    pub fn new(entries: Vec<(User, Group)>) -> Self {
-        Self { entries }
+impl<'a> DummyAuthEntries<'a> {
+    pub fn new(entries: &'a [DummyAuthEntry]) -> Self {
+        Self {
+            entries,
+            index: Cell::new(0),
+        }
     }
 
     /// Returns a new entry.
-    pub fn get_new_entry(&mut self) -> (User, Group) {
-        self.entries.pop().unwrap()
+    pub fn get_new_entry(&self) -> (&User, &Group) {
+        let entry = self.entries.get(self.index.get()).unwrap();
+        self.index.set(self.index.get() + 1);
+
+        (&entry.user, &entry.group)
     }
 }
 
@@ -69,7 +76,7 @@ pub struct TestContext<'a> {
     naptime: Duration,
     temp_dir: TempDir,
     features_config: &'a FeaturesConfig,
-    auth_entries: DummyAuthEntries,
+    auth_entries: DummyAuthEntries<'a>,
 }
 
 pub struct SerializedTestContext<'a> {
@@ -84,14 +91,12 @@ impl<'a> Deref for SerializedTestContext<'a> {
     }
 }
 
-impl<'a> DerefMut for SerializedTestContext<'a> {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.ctx
-    }
-}
-
 impl<'a> SerializedTestContext<'a> {
-    pub fn new<P: AsRef<Path>>(config: &'a Config, entries: &[(User, Group)], base_dir: P) -> Self {
+    pub fn new<P: AsRef<Path>>(
+        config: &'a Config,
+        entries: &'a [DummyAuthEntry],
+        base_dir: P,
+    ) -> Self {
         Self {
             ctx: TestContext::new(config, entries, base_dir),
         }
@@ -154,7 +159,11 @@ impl<'a> Drop for SerializedTestContext<'a> {
 
 impl<'a> TestContext<'a> {
     /// Create a new test context.
-    pub fn new<P: AsRef<Path>>(config: &'a Config, entries: &[(User, Group)], base_dir: P) -> Self {
+    pub fn new<P: AsRef<Path>>(
+        config: &'a Config,
+        entries: &'a [DummyAuthEntry],
+        base_dir: P,
+    ) -> Self {
         let naptime = Duration::from_secs_f64(config.settings.naptime);
         let temp_dir = tempdir_in(base_dir).unwrap();
         // FIX: some tests need a 0o755 base dir
@@ -163,7 +172,7 @@ impl<'a> TestContext<'a> {
             naptime,
             temp_dir,
             features_config: &config.features,
-            auth_entries: DummyAuthEntries::new(entries.to_vec()),
+            auth_entries: DummyAuthEntries::new(entries),
         }
     }
 
@@ -277,19 +286,19 @@ impl<'a> TestContext<'a> {
     }
 
     /// Returns a new entry.
-    pub fn get_new_entry(&mut self) -> (User, Group) {
+    pub fn get_new_entry(&self) -> (&User, &Group) {
         self.auth_entries.get_new_entry()
     }
 
     /// Returns a new user.
     /// Alias of `get_new_entry`.
-    pub fn get_new_user(&mut self) -> User {
+    pub fn get_new_user(&self) -> &User {
         self.get_new_entry().0
     }
 
     /// Returns a new group.
     /// Alias of `get_new_entry`.
-    pub fn get_new_group(&mut self) -> Group {
+    pub fn get_new_group(&self) -> &Group {
         self.get_new_entry().1
     }
 
@@ -491,7 +500,7 @@ mod tests {
         ] {
             let config = Config::default();
             let tempdir = TempDir::new().unwrap();
-            let ctx = TestContext::new(&config, &Vec::new(), tempdir.path());
+            let ctx = TestContext::new(&config, &[], tempdir.path());
 
             assert!(ctx.temp_dir.path().starts_with(tempdir.path()));
 
@@ -549,7 +558,7 @@ mod tests {
     fn name_max() {
         let tmpdir = TempDir::new().unwrap();
         let config = Config::default();
-        let ctx = TestContext::new(&config, &Vec::new(), tmpdir.path());
+        let ctx = TestContext::new(&config, &[], tmpdir.path());
         let file = ctx.create_name_max(FileType::Regular).unwrap();
         let name_len = file.file_name().unwrap().to_string_lossy().len();
 
@@ -570,7 +579,7 @@ mod tests {
     fn path_max() {
         let tmpdir = TempDir::new().unwrap();
         let config = Config::default();
-        let ctx = TestContext::new(&config, &Vec::new(), &tmpdir.path());
+        let ctx = TestContext::new(&config, &[], &tmpdir.path());
         let file = ctx.create_path_max(FileType::Regular).unwrap();
         let path_len = file.to_string_lossy().len();
 
@@ -604,7 +613,7 @@ mod tests {
         ] {
             let tmpdir = TempDir::new().unwrap();
             let config = Config::default();
-            let ctx = TestContext::new(&config, &Vec::new(), &tmpdir.path());
+            let ctx = TestContext::new(&config, &[], &tmpdir.path());
             let name = "testing";
             let expected_mode = 0o725;
             let (path, _file) = ctx
@@ -626,7 +635,7 @@ mod tests {
     fn regular_unique_syscall() {
         let tmpdir = TempDir::new().unwrap();
         let config = Config::default();
-        let ctx = TestContext::new(&config, &Vec::new(), &tmpdir.path());
+        let ctx = TestContext::new(&config, &[], &tmpdir.path());
 
         assert!(ctx
             .new_file(FileType::Regular)

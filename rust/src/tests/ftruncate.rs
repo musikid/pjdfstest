@@ -103,7 +103,7 @@ fn affected_create_flags_only(ctx: &mut SerializedTestContext) {
 
     let user = ctx.get_new_user();
 
-    ctx.as_user(&user, None, || {
+    ctx.as_user(user, None, || {
         let file = open(&path, OFlag::O_CREAT | OFlag::O_RDWR, Mode::empty()).unwrap();
         assert!(ftruncate(file, 0).is_ok());
     });

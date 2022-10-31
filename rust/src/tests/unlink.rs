@@ -68,7 +68,7 @@ fn unchanged_ctime_failed(ctx: &mut SerializedTestContext, ft: FileType) {
 
     let user = ctx.get_new_user();
 
-    ctx.as_user(&user, None, || {
+    ctx.as_user(user, None, || {
         assert_ctime_unchanged(ctx, &link_path, || {
             assert!(unlink(&path).is_err());
         });

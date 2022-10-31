@@ -143,7 +143,7 @@ fn unchanged_ctime_fails(ctx: &mut SerializedTestContext, ft: FileType) {
         .path(&file, CTIME)
         .path(ctx.base_path(), CTIME | MTIME)
         .execute(ctx, false, || {
-            ctx.as_user(&user, None, || {
+            ctx.as_user(user, None, || {
                 assert!(matches!(
                     link(&file, &new_path),
                     Err(Errno::EPERM | Errno::EACCES)

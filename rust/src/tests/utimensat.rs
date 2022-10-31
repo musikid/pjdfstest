@@ -199,7 +199,7 @@ fn utime_now_nobody(ctx: &mut SerializedTestContext) {
     let path = ctx.create(FileType::Regular).unwrap();
     chmod(&path, mode).unwrap();
     let user = ctx.get_new_user();
-    ctx.as_user(&user, None, || {
+    ctx.as_user(user, None, || {
         assert_eq!(
             Err(Errno::EACCES),
             utimensat(None, &path, &UTIME_NOW, &UTIME_NOW, FollowSymlink)
@@ -241,7 +241,7 @@ fn utime_now_write_perm(ctx: &mut SerializedTestContext) {
     let path = ctx.create(FileType::Regular).unwrap();
     chmod(&path, mode).unwrap();
     let user = ctx.get_new_user();
-    ctx.as_user(&user, None, || {
+    ctx.as_user(user, None, || {
         assert!(utimensat(None, &path, &UTIME_OMIT, &UTIME_OMIT, FollowSymlink).is_ok());
     });
 }
@@ -258,7 +258,7 @@ fn nobody(ctx: &mut SerializedTestContext) {
     let path = ctx.create(FileType::Regular).unwrap();
     chmod(&path, mode).unwrap();
     let user = ctx.get_new_user();
-    ctx.as_user(&user, None, || {
+    ctx.as_user(user, None, || {
         assert_eq!(
             Err(Errno::EPERM),
             utimensat(None, &path, &UTIME_OMIT, &date2, FollowSymlink)
@@ -286,7 +286,7 @@ fn write_perm(ctx: &mut SerializedTestContext) {
     let path = ctx.create(FileType::Regular).unwrap();
     chmod(&path, mode).unwrap();
     let user = ctx.get_new_user();
-    ctx.as_user(&user, None, || {
+    ctx.as_user(user, None, || {
         assert_eq!(
             Err(Errno::EPERM),
             utimensat(None, &path, &UTIME_OMIT, &date2, FollowSymlink)
