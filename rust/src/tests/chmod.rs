@@ -9,7 +9,6 @@ use crate::{
 use crate::utils::lchmod;
 
 use nix::{
-    errno::Errno,
     libc::mode_t,
     sys::stat::{lstat, stat, Mode},
     unistd::chown,
@@ -131,6 +130,8 @@ crate::test_case! {
 }
 #[cfg(any(target_os = "freebsd", target_os = "dragonfly"))]
 fn eftype(ctx: &mut SerializedTestContext, ft: FileType) {
+    use nix::errno::Errno;
+
     let user = ctx.get_new_user();
 
     let original_mode = Mode::from_bits_truncate(0o640);

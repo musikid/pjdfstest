@@ -277,7 +277,7 @@ crate::test_case! {
     enotdir_from_to => [Regular, Fifo, Block, Char, Socket]
 }
 fn enotdir_from_to(ctx: &mut TestContext, ft: FileType) {
-    let path = ctx.create(ft.clone()).unwrap();
+    let path = ctx.create(ft).unwrap();
     let dir = ctx.create(FileType::Dir).unwrap();
 
     assert_eq!(rename(&dir, &path).unwrap_err(), Errno::ENOTDIR);

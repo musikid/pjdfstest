@@ -143,7 +143,7 @@ mod t {
         assert!(!tc.require_root);
         assert_eq!(
             tc.guards
-                .into_iter()
+                .iter()
                 .map(|&g| g as usize)
                 .collect::<Vec<_>>(),
             vec![guard_example as usize]
