@@ -237,7 +237,6 @@ dependencies = [
  "strum_macros",
  "sysctl",
  "tempfile",
- "thiserror",
  "walkdir",
 ]
 

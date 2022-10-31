@@ -1,19 +1,9 @@
-use std::fmt::Debug;
 use std::path::Path;
-
-use thiserror::Error;
 
 use crate::config::Config;
 pub use crate::features::*;
 pub use crate::flags::*;
 pub use crate::runner::context::{SerializedTestContext, TestContext};
-
-/// Error returned by a test function.
-#[derive(Error, Debug)]
-pub enum TestError {
-    #[error("error while calling syscall: {0}")]
-    Nix(#[from] nix::Error),
-}
 
 /// Function which indicates if the test should be skipped by returning an error.
 pub type Guard = fn(&Config, &Path) -> Result<(), anyhow::Error>;

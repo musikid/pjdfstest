@@ -8,7 +8,6 @@ exacl = "0.9.0"
 tempfile = "3.3.0"
 rand = { version = "0.8.5", features = ["min_const_gen"] }
 nix = { version = "0.25.0", features = ["fs", "socket"] }
-thiserror = "1.0.31"
 strum = { version = "0.24.0", features = ["derive"] }
 strum_macros = "0.24.0"
 anyhow = "1.0.57"

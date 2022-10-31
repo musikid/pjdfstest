@@ -22,11 +22,9 @@ use std::{
 };
 use strum_macros::EnumIter;
 use tempfile::{tempdir_in, TempDir};
-use thiserror::Error;
 
 use crate::{
     config::{Config, FeaturesConfig},
-    test::TestError,
     utils::{chmod, lchmod, symlink},
 };
 
@@ -49,13 +47,6 @@ impl FileType {
 }
 
 const NUM_RAND_CHARS: usize = 32;
-
-#[derive(Error, Debug)]
-pub enum ContextError {
-    #[error("nix error")]
-    Nix(#[from] nix::Error),
-}
-
 /// Auth entries which are composed of a [`User`] and its associated [`Group`].
 /// It works like a stack, with entries being popped and not kept.
 #[derive(Debug)]
@@ -201,7 +192,7 @@ impl<'a> TestContext<'a> {
         &self,
         oflag: OFlag,
         mode: Option<nix::sys::stat::mode_t>,
-    ) -> Result<(PathBuf, RawFd), TestError> {
+    ) -> Result<(PathBuf, RawFd), nix::Error> {
         let mut file = self.new_file(FileType::Regular);
         if let Some(mode) = mode {
             file = file.mode(mode);
@@ -215,12 +206,12 @@ impl<'a> TestContext<'a> {
     }
 
     /// Create a file with a random name.
-    pub fn create(&self, f_type: FileType) -> Result<PathBuf, TestError> {
+    pub fn create(&self, f_type: FileType) -> Result<PathBuf, nix::Error> {
         Ok(self.new_file(f_type).create()?)
     }
 
     /// Create a file whose name length is _PC_NAME_MAX.
-    pub fn create_name_max(&self, f_type: FileType) -> Result<PathBuf, TestError> {
+    pub fn create_name_max(&self, f_type: FileType) -> Result<PathBuf, nix::Error> {
         let max_name_len = pathconf(self.base_path(), nix::unistd::PathconfVar::NAME_MAX)?.unwrap();
 
         let file = self.new_file(f_type).name(
@@ -235,7 +226,7 @@ impl<'a> TestContext<'a> {
     }
 
     /// Create a file whose path length is _PC_PATH_MAX.
-    pub fn create_path_max(&self, f_type: FileType) -> Result<PathBuf, TestError> {
+    pub fn create_path_max(&self, f_type: FileType) -> Result<PathBuf, nix::Error> {
         let max_name_len =
             pathconf(self.base_path(), nix::unistd::PathconfVar::NAME_MAX)?.unwrap() as usize;
         let component_len = max_name_len / 2;
