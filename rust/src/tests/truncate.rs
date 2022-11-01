@@ -99,3 +99,24 @@ fn eisdir(ctx: &mut TestContext) {
     let path = ctx.create(FileType::Dir).unwrap();
     assert_eq!(truncate(&path, 0), Err(Errno::EISDIR));
 }
+
+crate::test_case! {
+    /// truncate must not change the file size if it fails with EFBIG or EINVAL
+    /// because the length argument was greater than the maximum file size
+    // (f)truncate/12.t
+    efbig
+}
+fn efbig(ctx: &mut TestContext) {
+    let file = ctx.create(FileType::Regular).unwrap();
+    let size = 999999999999999;
+    let res = truncate(&file, size);
+
+    let expected_size = match res {
+        Ok(_) => size,
+        Err(Errno::EFBIG | Errno::EINVAL) => 0,
+        Err(e) => panic!("truncate failed with {e}"),
+    };
+
+    let f_stat = lstat(&file).unwrap();
+    assert_eq!(f_stat.st_size, expected_size);
+}
