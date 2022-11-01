@@ -290,3 +290,23 @@ etxtbsy_test_case!(
     open_flag_wrapper(OFlag::O_RDWR),
     open_flag_wrapper(OFlag::O_RDONLY | OFlag::O_TRUNC)
 );
+
+crate::test_case! {
+    /// open may return EINVAL when an attempt was made to open a descriptor
+    /// with an illegal combination of O_RDONLY, O_WRONLY, and O_RDWR
+    // open/23.t
+    einval_invalid_combination
+}
+fn einval_invalid_combination(ctx: &mut TestContext) {
+    fn assert_einval_open(ctx: &mut TestContext, flags: OFlag) {
+        let path = ctx.create(FileType::Regular).unwrap();
+        assert!(matches!(
+            open(&path, flags, Mode::empty()),
+            Ok(_) | Err(Errno::EINVAL)
+        ));
+    }
+
+    assert_einval_open(ctx, OFlag::O_RDONLY | OFlag::O_RDWR);
+    assert_einval_open(ctx, OFlag::O_WRONLY | OFlag::O_RDWR);
+    assert_einval_open(ctx, OFlag::O_RDONLY | OFlag::O_WRONLY | OFlag::O_RDWR);
+}

@@ -300,3 +300,38 @@ fn eisdir_to_dir_from_not_dir(ctx: &mut TestContext, ft: FileType) {
     let not_dir_file = ctx.create(ft).unwrap();
     assert_eq!(rename(&not_dir_file, &dir), Err(Errno::EISDIR));
 }
+
+crate::test_case! {
+    /// rename returns EINVAL/EBUSY when an attempt is made to rename '.' or '..'
+    // rename/19.t
+    einval_ebusy_dot_dotdot
+}
+fn einval_ebusy_dot_dotdot(ctx: &mut TestContext) {
+    let subdir = ctx.create(FileType::Dir).unwrap();
+
+    assert!(matches!(
+        rename(&subdir.join("."), &ctx.gen_path()),
+        Err(Errno::EINVAL | Errno::EBUSY)
+    ));
+    assert!(matches!(
+        rename(&subdir.join(".."), &ctx.gen_path()),
+        Err(Errno::EINVAL | Errno::EBUSY)
+    ));
+}
+
+crate::test_case! {
+    /// rename returns EINVAL when the 'from' argument is a parent directory of 'to'
+    // rename/18.t
+    einval_parent_from_subdir_to
+}
+fn einval_parent_from_subdir_to(ctx: &mut TestContext) {
+    let subdir = ctx.create(FileType::Dir).unwrap();
+    let nested_subdir = ctx
+        .new_file(FileType::Dir)
+        .name(subdir.join("subsubdir"))
+        .create()
+        .unwrap();
+
+    assert_eq!(rename(ctx.base_path(), &subdir), Err(Errno::EINVAL));
+    assert_eq!(rename(ctx.base_path(), &nested_subdir), Err(Errno::EINVAL));
+}
