@@ -49,6 +49,7 @@ impl FileType {
 
 const NUM_RAND_CHARS: usize = 32;
 /// Auth entries which are composed of a [`User`] and its associated [`Group`].
+/// Allows to retrieve the auth entries.
 #[derive(Debug)]
 pub struct DummyAuthEntries<'a> {
     entries: &'a [DummyAuthEntry],
@@ -102,11 +103,11 @@ impl<'a> SerializedTestContext<'a> {
         }
     }
 
-    //TODO: Maybe better as a macro? unwrap?
     /// Execute the function as another user/group(s).
     /// If `groups` is set to `None`, only the default group associated to the user will be used
     /// and the effective [`Gid`] will be this one.
-    /// Otherwise, the first provided [`Gid`] will be the effective one and the other other will be added with `setgroups`.
+    /// Otherwise, the first provided [`Gid`] will be the effective one
+    /// and the others will be added with `setgroups`.
     pub fn as_user<F>(&self, user: &User, groups: Option<&[Gid]>, f: F)
     where
         F: FnOnce(),

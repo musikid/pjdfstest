@@ -51,10 +51,14 @@ impl<'de> Visitor<'de> for AuthEntryVisitor {
             .ok_or_else(|| serde::de::Error::invalid_length(0, &self))?;
         let user = User::from_name(&user)
             .map_err(|_| {
-                serde::de::Error::custom(AuthEntrySerdeError::UserNotFound(user.to_string()).to_string())
+                serde::de::Error::custom(
+                    AuthEntrySerdeError::UserNotFound(user.to_string()).to_string(),
+                )
             })?
             .ok_or_else(|| {
-                serde::de::Error::custom(AuthEntrySerdeError::UserNotFound(user.to_string()).to_string())
+                serde::de::Error::custom(
+                    AuthEntrySerdeError::UserNotFound(user.to_string()).to_string(),
+                )
             })?;
 
         let group: Cow<str> = seq
@@ -62,10 +66,14 @@ impl<'de> Visitor<'de> for AuthEntryVisitor {
             .ok_or_else(|| serde::de::Error::invalid_length(1, &self))?;
         let group = Group::from_name(&group)
             .map_err(|_| {
-                serde::de::Error::custom(AuthEntrySerdeError::GroupNotFound(group.to_string()).to_string())
+                serde::de::Error::custom(
+                    AuthEntrySerdeError::GroupNotFound(group.to_string()).to_string(),
+                )
             })?
             .ok_or_else(|| {
-                serde::de::Error::custom(AuthEntrySerdeError::GroupNotFound(group.to_string()).to_string())
+                serde::de::Error::custom(
+                    AuthEntrySerdeError::GroupNotFound(group.to_string()).to_string(),
+                )
             })?;
 
         if user.gid != group.gid {
@@ -99,10 +107,12 @@ impl Serialize for DummyAuthEntry {
     }
 }
 
-/// Auth entries, which are composed of a [`User`](nix::unistd::User) and its associated [`Group`](nix::unistd::Group).
-/// The user should be part of the associated group.
+/// Stores configuration for authentication.
 #[derive(Debug, Deserialize, Serialize)]
 pub struct DummyAuthConfig {
+/// Auth entries, which are composed of a [`User`](nix::unistd::User) and its associated [`Group`](nix::unistd::Group).
+/// The user should be part of the associated group.
+    /// They are used when a test requires switching to different users.
     pub entries: [DummyAuthEntry; 3],
 }
 
