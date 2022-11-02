@@ -142,10 +142,7 @@ mod t {
         assert_eq!(" description", tc.description);
         assert!(!tc.require_root);
         assert_eq!(
-            tc.guards
-                .iter()
-                .map(|&g| g as usize)
-                .collect::<Vec<_>>(),
+            tc.guards.iter().map(|&g| g as usize).collect::<Vec<_>>(),
             vec![guard_example as usize]
         );
         assert!(matches!(tc.fun, TestFn::NonSerialized(f) if f as usize == guard as usize));
