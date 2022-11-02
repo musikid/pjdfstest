@@ -7,7 +7,6 @@ edition = "2021"
 exacl = "0.9.0"
 tempfile = "3.3.0"
 rand = { version = "0.8.5", features = ["min_const_gen"] }
-nix = { version = "0.25.0", features = ["fs", "socket"] }
 strum = { version = "0.24.0", features = ["derive"] }
 strum_macros = "0.24.0"
 anyhow = "1.0.57"
@@ -19,6 +18,11 @@ serde = { version = "1.0.138", features = ["derive"] }
 inventory = "0.3.0"
 walkdir = "2.3.2"
 sysctl = "0.5.2"
+
+[dependencies.nix]
+rev = "20df092bd067908fba23e49120eed7ad62f29108"
+git = "https://github.com/nix-rust/nix.git"
+features = ["fs", "socket", "mount"]
 
 [target.'cfg(target_os = "linux")'.dependencies]
 caps = "0.5.4"

@@ -41,7 +41,7 @@ version = "0.5.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "938c50180feacea622ef3b8f4a496057c868dcf8ac7a64d781dd8f3f51a9c143"
 dependencies = [
- "libc",
+ "libc 0.2.137",
  "thiserror",
 ]
 
@@ -102,7 +102,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c05aeb6a22b8f62540c194aac980f2115af067bfe15a0734d7277a768d396b31"
 dependencies = [
  "cfg-if",
- "libc",
+ "libc 0.2.137",
  "wasi",
 ]
 
@@ -164,6 +164,11 @@ dependencies = [
 
 [[package]]
 name = "libc"
+version = "0.2.135"
+source = "git+https://github.com/rust-lang/libc?rev=cc19b6f0801#cc19b6f08018f6de68d5c60bedd74190d2229c03"
+
+[[package]]
+name = "libc"
 version = "0.2.137"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fc7fcc620a3bff7cdd7a365be3376c97191aeaccc2a603e600951e452615bf89"
@@ -189,13 +194,11 @@ dependencies = [
 [[package]]
 name = "nix"
 version = "0.25.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e322c04a9e3440c327fca7b6c8a63e6890a32fa2ad689db972425f07e0d22abb"
+source = "git+https://github.com/nix-rust/nix.git?rev=20df092bd067908fba23e49120eed7ad62f29108#20df092bd067908fba23e49120eed7ad62f29108"
 dependencies = [
- "autocfg",
  "bitflags",
  "cfg-if",
- "libc",
+ "libc 0.2.135",
  "memoffset",
  "pin-utils",
 ]
@@ -270,7 +273,7 @@ version = "0.8.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "34af8d1a0e25924bc5b7c43c079c942339d8f0a8b57c39049bef581b46327404"
 dependencies = [
- "libc",
+ "libc 0.2.137",
  "rand_chacha",
  "rand_core",
 ]
@@ -394,7 +397,7 @@ checksum = "f99d037b2bef227ab8963f4b0acc33ecbb1f9a2e7365add7789372b387ec19e1"
 dependencies = [
  "bitflags",
  "byteorder",
- "libc",
+ "libc 0.2.137",
  "thiserror",
  "walkdir",
 ]
@@ -407,7 +410,7 @@ checksum = "5cdb1ef4eaeeaddc8fbd371e5017057064af0911902ef36b39801f67cc6d79e4"
 dependencies = [
  "cfg-if",
  "fastrand",
- "libc",
+ "libc 0.2.137",
  "redox_syscall",
  "remove_dir_all",
  "winapi",
