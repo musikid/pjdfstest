@@ -14,6 +14,7 @@ use nix::{
     unistd::chown,
 };
 
+use super::errors::eloop::{eloop_comp_test_case, eloop_final_comp_test_case};
 use super::errors::enoent::{
     enoent_comp_test_case, enoent_named_file_test_case, enoent_symlink_named_file_test_case,
 };
@@ -120,6 +121,12 @@ enoent_named_file_test_case!(chmod(~path, Mode::empty()));
 enoent_comp_test_case!(chmod(~path, Mode::empty()));
 enoent_symlink_named_file_test_case!(chmod(~path, Mode::empty()));
 
+// chmod/06.t
+eloop_comp_test_case!(chmod(~path, Mode::empty()));
+
+// chmod/06.t
+eloop_final_comp_test_case!(chmod(~path, Mode::empty()));
+
 #[cfg(any(target_os = "freebsd", target_os = "dragonfly"))]
 crate::test_case! {
     /// chmod returns EFTYPE if the effective user ID is not the super-user,
@@ -177,4 +184,7 @@ mod lchmod {
     enotdir_comp_test_case!(lchmod(~path, Mode::empty()));
     enoent_named_file_test_case!(lchmod(~path, Mode::empty()));
     enoent_comp_test_case!(lchmod(~path, Mode::empty()));
+
+    // chmod/06.t#L25
+    eloop_comp_test_case!(lchmod(~path, Mode::empty()));
 }

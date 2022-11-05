@@ -10,6 +10,7 @@ use nix::unistd::close;
 
 use crate::runner::context::{FileType, SerializedTestContext, TestContext};
 
+use super::errors::eloop::eloop_comp_test_case;
 use super::errors::enoent::{enoent_comp_test_case, enoent_named_file_test_case};
 use super::errors::etxtbsy::etxtbsy_test_case;
 use super::mksyscalls::{assert_perms_from_mode_and_umask, assert_uid_gid};
@@ -202,6 +203,9 @@ enoent_comp_test_case!(open(~path, OFlag::O_CREAT, Mode::from_bits_truncate(0o64
 
 // open/04.t
 enoent_named_file_test_case!(open(~path, OFlag::O_RDONLY, Mode::empty()));
+
+// open/12.t
+eloop_comp_test_case!(open(~path, OFlag::empty(), Mode::empty()));
 
 crate::test_case! {
     /// open returns EISDIR if the named file is a directory

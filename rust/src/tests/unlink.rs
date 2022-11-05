@@ -7,8 +7,9 @@ use crate::{
 };
 
 use super::{
-    assert_mtime_changed, errors::enoent::enoent_named_file_test_case,
+    assert_mtime_changed,
     errors::enotdir::enotdir_comp_test_case,
+    errors::{eloop::eloop_comp_test_case, enoent::enoent_named_file_test_case},
 };
 
 crate::test_case! {
@@ -138,3 +139,6 @@ enotdir_comp_test_case!(unlink);
 
 // unlink/04.t
 enoent_named_file_test_case!(unlink);
+
+// unlink/07.t
+eloop_comp_test_case!(unlink);

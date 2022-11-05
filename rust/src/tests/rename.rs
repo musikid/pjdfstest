@@ -13,8 +13,9 @@ use crate::{
 };
 
 use super::{
-    assert_ctime_changed, errors::enoent::enoent_either_named_file_test_case,
+    assert_ctime_changed,
     errors::enotdir::enotdir_comp_either_test_case,
+    errors::{eloop::eloop_either_test_case, enoent::enoent_either_named_file_test_case},
 };
 
 crate::test_case! {
@@ -285,6 +286,9 @@ fn enotdir_from_to(ctx: &mut TestContext, ft: FileType) {
 
 // rename/03.t
 enoent_either_named_file_test_case!(rename);
+
+// reanme/11.t
+eloop_either_test_case!(rename);
 
 crate::test_case! {
     /// rename returns EISDIR when the 'to' argument is a directory, but 'from' is not a directory
