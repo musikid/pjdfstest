@@ -7,44 +7,36 @@ use super::errors::enoent::{
 };
 use super::errors::enotdir::enotdir_comp_test_case;
 
-enotdir_comp_test_case!(chown, |ctx: &mut TestContext, path| {
+fn chown_wrapper(ctx: &mut TestContext, path: &std::path::Path) -> nix::Result<()> {
     let user = ctx.get_new_user();
     chown(path, Some(user.uid), None)
-});
+}
+
+enotdir_comp_test_case!(chown, chown_wrapper);
 
 // chown/04.t
-enoent_named_file_test_case!(chown, |ctx: &mut TestContext, path| {
-    let user = ctx.get_new_user();
-    chown(path, Some(user.uid), None)
-});
+enoent_named_file_test_case!(chown, chown_wrapper);
 
 // chown/04.t
-enoent_comp_test_case!(chown, |ctx: &mut TestContext, path| {
-    let user = ctx.get_new_user();
-    chown(path, Some(user.uid), None)
-});
+enoent_comp_test_case!(chown, chown_wrapper);
 
 // chown/04.t
-enoent_symlink_named_file_test_case!(chown, |ctx: &mut TestContext, path| {
-    let user = ctx.get_new_user();
-    chown(path, Some(user.uid), None)
-});
+enoent_symlink_named_file_test_case!(chown, chown_wrapper);
 
 mod lchown {
+    use std::path::Path;
+
     use super::*;
 
-    enotdir_comp_test_case!(lchown, |ctx: &mut TestContext, path| {
+    fn lchown_wrapper<P: AsRef<Path>>(ctx: &mut TestContext, path: P) -> nix::Result<()> {
+        let path = path.as_ref();
         let user = ctx.get_new_user();
-        lchown(path, Some(user.uid), None)
-    });
+        lchown(path, Some(user.uid), Some(user.gid))
+    }
 
-    enoent_named_file_test_case!(lchown, |ctx: &mut TestContext, path| {
-        let user = ctx.get_new_user();
-        lchown(path, Some(user.uid), None)
-    });
+    enotdir_comp_test_case!(lchown, lchown_wrapper);
 
-    enoent_comp_test_case!(lchown, |ctx: &mut TestContext, path| {
-        let user = ctx.get_new_user();
-        lchown(path, Some(user.uid), None)
-    });
+    enoent_named_file_test_case!(lchown, lchown_wrapper);
+
+    enoent_comp_test_case!(lchown, lchown_wrapper);
 }
