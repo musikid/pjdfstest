@@ -11,6 +11,7 @@ use nix::unistd::close;
 use crate::runner::context::{FileType, SerializedTestContext, TestContext};
 
 use super::errors::eloop::eloop_comp_test_case;
+use super::errors::enametoolong::{enametoolong_comp_test_case, enametoolong_path_test_case};
 use super::errors::enoent::{enoent_comp_test_case, enoent_named_file_test_case};
 use super::errors::etxtbsy::etxtbsy_test_case;
 use super::mksyscalls::{assert_perms_from_mode_and_umask, assert_uid_gid};
@@ -197,6 +198,12 @@ fn fifo_nonblock_wronly(ctx: &mut TestContext) {
         Err(Errno::ENXIO)
     );
 }
+
+// open/02.t
+enametoolong_comp_test_case!(open(~path, OFlag::O_CREAT, Mode::empty()));
+
+// open/03.t
+enametoolong_path_test_case!(open(~path, OFlag::O_CREAT, Mode::empty()));
 
 // open/04.t
 enoent_comp_test_case!(open(~path, OFlag::O_CREAT, Mode::from_bits_truncate(0o644)));

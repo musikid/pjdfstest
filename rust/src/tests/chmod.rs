@@ -14,11 +14,14 @@ use nix::{
     unistd::chown,
 };
 
-use super::errors::eloop::{eloop_comp_test_case, eloop_final_comp_test_case};
-use super::errors::enoent::{
-    enoent_comp_test_case, enoent_named_file_test_case, enoent_symlink_named_file_test_case,
+use super::errors::{
+    eloop::{eloop_comp_test_case, eloop_final_comp_test_case},
+    enametoolong::enametoolong_comp_test_case,
+    enoent::{
+        enoent_comp_test_case, enoent_named_file_test_case, enoent_symlink_named_file_test_case,
+    },
 };
-use super::errors::enotdir::enotdir_comp_test_case;
+use super::errors::{enametoolong::enametoolong_path_test_case, enotdir::enotdir_comp_test_case};
 
 const ALLPERMS_STICKY: mode_t = ALLPERMS | Mode::S_ISVTX.bits();
 
@@ -116,6 +119,12 @@ fn clear_isgid_bit(ctx: &mut SerializedTestContext) {
 // chmod/01.t
 enotdir_comp_test_case!(chmod(~path, Mode::empty()));
 
+// chmod/02.t
+enametoolong_comp_test_case!(chmod(~path, Mode::empty()));
+
+// chmod/03.t
+enametoolong_path_test_case!(chmod(~path, Mode::empty()));
+
 // chmod/04.t
 enoent_named_file_test_case!(chmod(~path, Mode::empty()));
 enoent_comp_test_case!(chmod(~path, Mode::empty()));
@@ -187,4 +196,7 @@ mod lchmod {
 
     // chmod/06.t#L25
     eloop_comp_test_case!(lchmod(~path, Mode::empty()));
+
+    enametoolong_comp_test_case!(lchmod(~path, Mode::empty()));
+    enametoolong_path_test_case!(lchmod(~path, Mode::empty()));
 }

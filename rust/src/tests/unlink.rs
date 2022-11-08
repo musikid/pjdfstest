@@ -8,8 +8,9 @@ use crate::{
 
 use super::{
     assert_mtime_changed,
-    errors::enotdir::enotdir_comp_test_case,
-    errors::{eloop::eloop_comp_test_case, enoent::enoent_named_file_test_case},
+    errors::eloop::eloop_comp_test_case,
+    errors::{enametoolong::enametoolong_comp_test_case, enoent::enoent_named_file_test_case},
+    errors::{enametoolong::enametoolong_path_test_case, enotdir::enotdir_comp_test_case},
 };
 
 crate::test_case! {
@@ -136,6 +137,12 @@ fn open_file_not_freed(ctx: &mut TestContext) {
 
 // unlink/01.t
 enotdir_comp_test_case!(unlink);
+
+// unlink/02.t
+enametoolong_comp_test_case!(unlink);
+
+// unlink/03.t
+enametoolong_path_test_case!(unlink);
 
 // unlink/04.t
 enoent_named_file_test_case!(unlink);

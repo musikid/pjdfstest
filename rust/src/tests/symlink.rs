@@ -10,7 +10,10 @@ use crate::{
     utils::symlink,
 };
 
-use super::errors::enotdir::enotdir_comp_test_case;
+use super::errors::{
+    enametoolong::{enametoolong_comp_test_case, enametoolong_either_path_test_case},
+    enotdir::enotdir_comp_test_case,
+};
 
 crate::test_case! {
     /// symlink creates symbolic links
@@ -80,6 +83,13 @@ fn changed_parent_time_success(ctx: &mut TestContext) {
 
 // symlink/01.t
 enotdir_comp_test_case!(symlink(Path::new("test"), ~path));
+
+// symlink/02.t
+// TODO: Clarify that only path2 is checked
+enametoolong_comp_test_case!(symlink(Path::new("test"), ~path));
+
+// symlink/03.t
+enametoolong_either_path_test_case!(symlink);
 
 // symlink/04.t
 enoent_comp_test_case!(symlink(Path::new("test"), ~path));
