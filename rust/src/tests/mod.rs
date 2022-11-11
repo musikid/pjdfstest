@@ -258,6 +258,16 @@ where
         .execute(ctx, false, f)
 }
 
+/// Assert that a certain operation changes the ctime of a file without following symlinks.
+fn assert_symlink_ctime_changed<F>(ctx: &TestContext, path: &Path, f: F)
+where
+    F: FnOnce(),
+{
+    assert_times_changed()
+        .path(&path, CTIME)
+        .execute(ctx, true, f)
+}
+
 /// Assert that a certain operation changes the mtime of a file.
 fn assert_mtime_changed<F>(ctx: &TestContext, path: &Path, f: F)
 where
