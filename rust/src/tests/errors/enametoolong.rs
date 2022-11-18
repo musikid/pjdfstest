@@ -117,12 +117,12 @@ pub(crate) use enametoolong_either_comp_test_case;
 /// })
 /// ````
 macro_rules! enametoolong_path_test_case {
-    ($syscall: ident, $($f: expr),+) => {
+    ($syscall: ident, $($f: expr),+ $(; $attrs:tt )?) => {
         crate::test_case! {
             #[doc = concat!(stringify!($syscall),
                  " returns ENAMETOOLONG if an entire pathname",
                  " exceeded {PATH_MAX} characters")]
-            enametoolong_path
+            enametoolong_path $(, $attrs )?
         }
         fn enametoolong_path(ctx: &mut TestContext) {
             use $crate::runner::context::FileType;

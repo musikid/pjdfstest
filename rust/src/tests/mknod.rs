@@ -214,4 +214,7 @@ mod privileged {
 
     // mknod/02.t
     enametoolong_comp_test_case!(mknod, mknod_block_wrapper, mknod_char_wrapper; root);
+
+    // mknod/03.t
+    enametoolong_path_test_case!(mknod, mknod_block_wrapper, mknod_char_wrapper; root);
 }
