@@ -15,13 +15,14 @@ use nix::{
 };
 
 use super::errors::{
+    efault::efault_path_test_case,
     eloop::{eloop_comp_test_case, eloop_final_comp_test_case},
-    enametoolong::enametoolong_comp_test_case,
+    enametoolong::{enametoolong_comp_test_case, enametoolong_path_test_case},
     enoent::{
         enoent_comp_test_case, enoent_named_file_test_case, enoent_symlink_named_file_test_case,
     },
+    enotdir::enotdir_comp_test_case,
 };
-use super::errors::{enametoolong::enametoolong_path_test_case, enotdir::enotdir_comp_test_case};
 
 const ALLPERMS_STICKY: mode_t = ALLPERMS | Mode::S_ISVTX.bits();
 
@@ -136,6 +137,9 @@ eloop_comp_test_case!(chmod(~path, Mode::empty()));
 // chmod/06.t
 eloop_final_comp_test_case!(chmod(~path, Mode::empty()));
 
+// chmod/10.t
+efault_path_test_case!(chmod, |ptr| nix::libc::chmod(ptr, 0));
+
 #[cfg(any(target_os = "freebsd", target_os = "dragonfly"))]
 crate::test_case! {
     /// chmod returns EFTYPE if the effective user ID is not the super-user,
@@ -199,4 +203,14 @@ mod lchmod {
 
     enametoolong_comp_test_case!(lchmod(~path, Mode::empty()));
     enametoolong_path_test_case!(lchmod(~path, Mode::empty()));
+
+    // chmod/10.t
+    // TODO: lchmod is missing in libc
+    efault_path_test_case!(lchmod, |ptr| nix::libc::fchownat(
+        0,
+        ptr,
+        0,
+        0,
+        nix::libc::AT_SYMLINK_NOFOLLOW
+    ));
 }

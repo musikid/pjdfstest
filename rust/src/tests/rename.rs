@@ -15,6 +15,7 @@ use crate::{
 use super::{
     assert_ctime_changed,
     errors::{
+        efault::efault_either_test_case,
         eloop::eloop_either_test_case,
         enametoolong::{enametoolong_either_comp_test_case, enametoolong_either_path_test_case},
         enoent::enoent_either_named_file_test_case,
@@ -310,6 +311,9 @@ fn eisdir_to_dir_from_not_dir(ctx: &mut TestContext, ft: FileType) {
     let not_dir_file = ctx.create(ft).unwrap();
     assert_eq!(rename(&not_dir_file, &dir), Err(Errno::EISDIR));
 }
+
+// rename/17.t
+efault_either_test_case!(rename, nix::libc::rename);
 
 crate::test_case! {
     /// rename returns EINVAL/EBUSY when an attempt is made to rename '.' or '..'

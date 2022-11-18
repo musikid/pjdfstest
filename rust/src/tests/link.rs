@@ -7,11 +7,15 @@ use nix::{
 
 use std::path::Path;
 
-use super::errors::{
-    eloop::eloop_either_test_case,
-    enametoolong::{enametoolong_either_comp_test_case, enametoolong_either_path_test_case},
+use super::{
+    errors::{
+        efault::efault_either_test_case,
+        eloop::eloop_either_test_case,
+        enametoolong::{enametoolong_either_comp_test_case, enametoolong_either_path_test_case},
+    },
+    CTIME, MTIME,
 };
-use super::{CTIME, MTIME};
+
 use crate::config::Config;
 use crate::{
     runner::context::{FileType, SerializedTestContext, TestContext},
@@ -218,3 +222,6 @@ fn enoent_source_not_exists(ctx: &mut TestContext) {
 
     assert_eq!(link(&source, &dest), Err(Errno::ENOENT));
 }
+
+// link/17.t
+efault_either_test_case!(link, nix::libc::link);

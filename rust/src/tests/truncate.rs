@@ -10,13 +10,12 @@ use crate::{
 };
 
 use super::errors::{
+    efault::efault_path_test_case,
     eloop::eloop_comp_test_case,
-    enoent::{enoent_comp_test_case, enoent_named_file_test_case},
-    etxtbsy::etxtbsy_test_case,
-};
-use super::errors::{
     enametoolong::{enametoolong_comp_test_case, enametoolong_path_test_case},
+    enoent::{enoent_comp_test_case, enoent_named_file_test_case},
     enotdir::enotdir_comp_test_case,
+    etxtbsy::etxtbsy_test_case,
 };
 
 // tests/truncate/00.t
@@ -130,3 +129,6 @@ fn einval_negative_length(ctx: &mut TestContext) {
     assert_eq!(truncate(&path, -1), Err(Errno::EINVAL));
     assert_eq!(truncate(&path, nix::libc::off_t::MIN), Err(Errno::EINVAL));
 }
+
+// (f)truncate/14.t
+efault_path_test_case!(truncate, |ptr| nix::libc::truncate(ptr, 0));

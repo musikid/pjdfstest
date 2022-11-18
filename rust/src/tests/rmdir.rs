@@ -12,6 +12,7 @@ use crate::{
 
 use super::{
     assert_ctime_changed,
+    errors::efault::efault_path_test_case,
     errors::eloop::eloop_comp_test_case,
     errors::{enametoolong::enametoolong_comp_test_case, enoent::enoent_named_file_test_case},
     errors::{enametoolong::enametoolong_path_test_case, enotdir::enotdir_comp_test_case},
@@ -143,3 +144,6 @@ crate::test_case! {
 fn einval_dot(ctx: &mut TestContext) {
     assert_eq!(rmdir(&ctx.base_path().join(".")), Err(Errno::EINVAL));
 }
+
+// rmdir/15.t
+efault_path_test_case!(rmdir, nix::libc::rmdir);

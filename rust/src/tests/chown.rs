@@ -2,6 +2,7 @@ use nix::unistd::chown;
 
 use crate::{runner::context::TestContext, utils::lchown};
 
+use super::errors::efault::efault_path_test_case;
 use super::errors::eloop::{eloop_comp_test_case, eloop_final_comp_test_case};
 use super::errors::enametoolong::{enametoolong_comp_test_case, enametoolong_path_test_case};
 use super::errors::enoent::{
@@ -37,6 +38,9 @@ enametoolong_comp_test_case!(chown, chown_wrapper);
 // chown/03.t
 enametoolong_path_test_case!(chown, chown_wrapper);
 
+// chown/10.t
+efault_path_test_case!(chown, |ptr| nix::libc::chown(ptr, 0, 0));
+
 mod lchown {
     use std::path::Path;
 
@@ -57,4 +61,7 @@ mod lchown {
 
     enametoolong_comp_test_case!(lchown, lchown_wrapper);
     enametoolong_path_test_case!(lchown, lchown_wrapper);
+
+    // chown/10.t
+    efault_path_test_case!(lchown, |ptr| nix::libc::lchown(ptr, 0, 0));
 }
