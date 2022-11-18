@@ -38,7 +38,7 @@ pub fn create_loop_symlinks(ctx: &mut TestContext) -> (PathBuf, PathBuf) {
 ///
 /// - A more complex form which takes multiple functions
 ///   with the context and the path as arguments, for syscalls
-///   requring to compute other arguments.
+///   requiring to compute other arguments.
 ///
 /// ```
 /// eloop_comp_test_case!(chown, |ctx: &mut TestContext, path: &Path| {
