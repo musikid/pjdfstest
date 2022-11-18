@@ -225,16 +225,19 @@ impl<'a> TimeAssertion<'a> {
             })
             .collect();
 
-        let cmp = if self.equal {
-            std::cmp::PartialEq::eq
+        if self.equal {
+            assert!(metas_before
+                .iter()
+                .zip(metas_after.iter())
+                .all(|(mb, ma)| mb == ma),
+                "Timestamps changed but shouldn't have");
         } else {
-            std::cmp::PartialEq::ne
-        };
-
-        assert!(metas_before
-            .iter()
-            .zip(metas_after.iter())
-            .all(|(mb, ma)| cmp(mb, ma)));
+            assert!(metas_before
+                .iter()
+                .zip(metas_after.iter())
+                .all(|(mb, ma)| mb != ma),
+                "Timestamps did not change as expected");
+        }
     }
 }
 
