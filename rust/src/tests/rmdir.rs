@@ -134,3 +134,12 @@ enoent_named_file_test_case!(rmdir);
 
 // rmdir/05.t
 eloop_comp_test_case!(rmdir);
+
+crate::test_case! {
+    /// rmdir returns EINVAL if the last component of the path is '.'
+    // rmdir/12.t
+    einval_dot
+}
+fn einval_dot(ctx: &mut TestContext) {
+    assert_eq!(rmdir(&ctx.base_path().join(".")), Err(Errno::EINVAL));
+}

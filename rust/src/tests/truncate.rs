@@ -118,3 +118,15 @@ fn eisdir(ctx: &mut TestContext) {
 
 // (f)truncate/11.t
 etxtbsy_test_case!(truncate(~path, 123));
+
+crate::test_case! {
+    /// truncate returns EINVAL if the length argument was less than 0
+    // truncate/13.t
+    einval_negative_length
+}
+fn einval_negative_length(ctx: &mut TestContext) {
+    let path = ctx.create(FileType::Regular).unwrap();
+
+    assert_eq!(truncate(&path, -1), Err(Errno::EINVAL));
+    assert_eq!(truncate(&path, nix::libc::off_t::MIN), Err(Errno::EINVAL));
+}

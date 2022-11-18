@@ -15,8 +15,6 @@ use crate::{
     utils::chmod,
 };
 
-// tests/ftruncate/00.t
-
 crate::test_case! {
     /// ftruncate should extend a file, and shrink a sparse file
     extend_file_shrink_sparse
@@ -109,4 +107,18 @@ fn affected_create_flags_only(ctx: &mut SerializedTestContext) {
         let file = open(&path, OFlag::O_CREAT | OFlag::O_RDWR, Mode::empty()).unwrap();
         assert!(ftruncate(file, 0).is_ok());
     });
+}
+
+crate::test_case! {
+    /// ftruncate returns EINVAL if the length argument was less than 0
+    // ftruncate/13.t
+    einval_negative_length
+}
+fn einval_negative_length(ctx: &mut TestContext) {
+    let path = ctx.create(FileType::Regular).unwrap();
+
+    let file = open(&path, OFlag::O_RDWR, Mode::empty()).unwrap();
+    assert_eq!(ftruncate(file, -1), Err(Errno::EINVAL));
+    let file = open(&path, OFlag::O_WRONLY, Mode::empty()).unwrap();
+    assert_eq!(ftruncate(file, nix::libc::off_t::MIN), Err(Errno::EINVAL));
 }
