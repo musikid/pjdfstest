@@ -14,8 +14,12 @@ use crate::{
 
 use super::{
     assert_ctime_changed,
-    errors::enotdir::enotdir_comp_either_test_case,
-    errors::{eloop::eloop_either_test_case, enoent::enoent_either_named_file_test_case},
+    errors::{
+        eloop::eloop_either_test_case,
+        enametoolong::{enametoolong_either_comp_test_case, enametoolong_either_path_test_case},
+        enoent::enoent_either_named_file_test_case,
+        enotdir::enotdir_comp_either_test_case,
+    },
 };
 
 crate::test_case! {
@@ -283,6 +287,12 @@ fn enotdir_from_to(ctx: &mut TestContext, ft: FileType) {
 
     assert_eq!(rename(&dir, &path).unwrap_err(), Errno::ENOTDIR);
 }
+
+// rename/01.t
+enametoolong_either_comp_test_case!(rename);
+
+// rename/02.t
+enametoolong_either_path_test_case!(rename);
 
 // rename/03.t
 enoent_either_named_file_test_case!(rename);

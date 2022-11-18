@@ -9,11 +9,14 @@ use crate::{
     tests::{assert_ctime_changed, assert_ctime_unchanged},
 };
 
-use super::errors::enotdir::enotdir_comp_test_case;
 use super::errors::{
     eloop::eloop_comp_test_case,
     enoent::{enoent_comp_test_case, enoent_named_file_test_case},
     etxtbsy::etxtbsy_test_case,
+};
+use super::errors::{
+    enametoolong::{enametoolong_comp_test_case, enametoolong_path_test_case},
+    enotdir::enotdir_comp_test_case,
 };
 
 // tests/truncate/00.t
@@ -89,6 +92,12 @@ fn unchanged_ctime_failed(ctx: &mut SerializedTestContext) {
 
 // (f)truncate/01.t
 enotdir_comp_test_case!(truncate(~path, 0));
+
+// truncate/02.t
+enametoolong_comp_test_case!(truncate(~path, 0));
+
+// truncate/03.t
+enametoolong_path_test_case!(truncate(~path, 0));
 
 // (f)truncate/04.t
 enoent_named_file_test_case!(truncate(~path, 0));

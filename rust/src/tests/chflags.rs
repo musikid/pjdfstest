@@ -18,6 +18,7 @@ use crate::{
 use super::{
     assert_ctime_changed, assert_ctime_unchanged,
     errors::eloop::eloop_comp_test_case,
+    errors::enametoolong::{enametoolong_comp_test_case, enametoolong_path_test_case},
     errors::enoent::{enoent_comp_test_case, enoent_named_file_test_case},
     errors::enotdir::enotdir_comp_test_case,
 };
@@ -220,6 +221,10 @@ fn unchanged_ctime_failed(ctx: &mut SerializedTestContext, ft: FileType) {
 
 // chflags/01.t
 enotdir_comp_test_case!(chflags(~path, FileFlag::empty()));
+
+// chflags/02.t
+enametoolong_comp_test_case!(chflags(~path, FileFlag::empty()));
+enametoolong_path_test_case!(chflags(~path, FileFlag::empty()));
 
 // chflags/04.t
 enoent_named_file_test_case!(chflags(~path, FileFlag::empty()));

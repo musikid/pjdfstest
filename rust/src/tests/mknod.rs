@@ -6,6 +6,7 @@ use nix::sys::stat::{mknod, Mode, SFlag};
 use crate::runner::context::{FileType, SerializedTestContext, TestContext};
 
 use super::errors::eloop::eloop_comp_test_case;
+use super::errors::enametoolong::{enametoolong_comp_test_case, enametoolong_path_test_case};
 use super::errors::enoent::enoent_comp_test_case;
 use super::errors::enotdir::enotdir_comp_test_case;
 use super::mksyscalls::{assert_perms_from_mode_and_umask, assert_uid_gid};
@@ -189,8 +190,31 @@ fn create_old_new_device(ctx: &mut TestContext) {
     }
 }
 
+// mknod/02.t
+enametoolong_comp_test_case!(mknod(~path, SFlag::S_IFIFO, Mode::empty(), 0));
+
+// mknod/03.t
+enametoolong_path_test_case!(mknod(~path, SFlag::S_IFIFO, Mode::empty(), 0));
+
 // mknod/04.t
 enoent_comp_test_case!(mknod(~path, SFlag::S_IFIFO, Mode::empty(), 0));
 
 // mknod/07.t
 eloop_comp_test_case!(mknod(~path, SFlag::S_IFIFO, Mode::empty(), 0));
+mod privileged {
+    use super::*;
+
+    fn mknod_block_wrapper(_: &mut TestContext, path: &Path) -> nix::Result<()> {
+        mknod(path, SFlag::S_IFBLK, Mode::empty(), 0)
+    }
+
+    fn mknod_char_wrapper(_: &mut TestContext, path: &Path) -> nix::Result<()> {
+        mknod(path, SFlag::S_IFCHR, Mode::empty(), 0)
+    }
+
+    // mknod/02.t
+    enametoolong_comp_test_case!(mknod, mknod_block_wrapper, mknod_char_wrapper; root);
+
+    // mknod/03.t
+    enametoolong_path_test_case!(mknod, mknod_block_wrapper, mknod_char_wrapper; root);
+}
