@@ -11,8 +11,9 @@ use crate::{
 };
 
 use super::{
-    assert_ctime_changed, errors::enoent::enoent_named_file_test_case,
+    assert_ctime_changed,
     errors::enotdir::enotdir_comp_test_case,
+    errors::{eloop::eloop_comp_test_case, enoent::enoent_named_file_test_case},
 };
 
 crate::test_case! {
@@ -123,3 +124,6 @@ fn ebusy(ctx: &mut TestContext) {
 
 // rmdir/04.t
 enoent_named_file_test_case!(rmdir);
+
+// rmdir/05.t
+eloop_comp_test_case!(rmdir);

@@ -2,6 +2,7 @@ use nix::unistd::chown;
 
 use crate::{runner::context::TestContext, utils::lchown};
 
+use super::errors::eloop::{eloop_comp_test_case, eloop_final_comp_test_case};
 use super::errors::enoent::{
     enoent_comp_test_case, enoent_named_file_test_case, enoent_symlink_named_file_test_case,
 };
@@ -23,6 +24,12 @@ enoent_comp_test_case!(chown, chown_wrapper);
 // chown/04.t
 enoent_symlink_named_file_test_case!(chown, chown_wrapper);
 
+// chown/06.t
+eloop_comp_test_case!(chown, chown_wrapper);
+
+// chown/06.t
+eloop_final_comp_test_case!(chown, chown_wrapper);
+
 mod lchown {
     use std::path::Path;
 
@@ -39,4 +46,7 @@ mod lchown {
     enoent_named_file_test_case!(lchown, lchown_wrapper);
 
     enoent_comp_test_case!(lchown, lchown_wrapper);
+
+    // chown/06.t#L25
+    eloop_comp_test_case!(lchown, lchown_wrapper);
 }

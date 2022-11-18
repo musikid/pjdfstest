@@ -7,7 +7,7 @@ use nix::{
 
 use std::path::Path;
 
-use super::{CTIME, MTIME};
+use super::{errors::eloop::eloop_either_test_case, CTIME, MTIME};
 use crate::config::Config;
 use crate::{
     runner::context::{FileType, SerializedTestContext, TestContext},
@@ -193,6 +193,9 @@ fn link_count_max(ctx: &mut TestContext) {
 
 // link/04.t
 enoent_either_named_file_test_case!(link);
+
+// link/08.t
+eloop_either_test_case!(link);
 
 // link/09.t
 crate::test_case! {

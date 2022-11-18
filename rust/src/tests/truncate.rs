@@ -11,6 +11,7 @@ use crate::{
 
 use super::errors::enotdir::enotdir_comp_test_case;
 use super::errors::{
+    eloop::eloop_comp_test_case,
     enoent::{enoent_comp_test_case, enoent_named_file_test_case},
     etxtbsy::etxtbsy_test_case,
 };
@@ -92,6 +93,9 @@ enotdir_comp_test_case!(truncate(~path, 0));
 // (f)truncate/04.t
 enoent_named_file_test_case!(truncate(~path, 0));
 enoent_comp_test_case!(truncate(~path, 0));
+
+// truncate/07.t
+eloop_comp_test_case!(truncate(~path, 0));
 
 crate::test_case! {
     /// truncate returns EISDIR if the named file is a directory
