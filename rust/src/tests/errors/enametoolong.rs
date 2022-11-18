@@ -55,7 +55,7 @@ pub(crate) use enametoolong_comp_test_case;
 
 /// Create a test case which asserts that the sycall
 /// returns `ENAMETOOLONG` if a component of either pathname
-/// exceeded `{NAME_MAX}` characters.
+/// exceeds `{NAME_MAX}` characters.
 /// ```ignore
 /// // `rename` accepts two arguments.
 /// enametoolong_either_comp_test_case!(rename);
@@ -91,7 +91,7 @@ pub(crate) use enametoolong_either_comp_test_case;
 
 /// Create a test case which asserts that the sycall
 /// returns `ENAMETOOLONG` if an entire pathname
-/// exceeded `{PATH_MAX}` characters.
+/// exceeds `{PATH_MAX}` characters.
 /// There are multiple forms for this macro:
 ///
 /// - A basic form which takes the syscall, and optionally a `~path` argument
@@ -146,7 +146,7 @@ pub(crate) use enametoolong_path_test_case;
 
 /// Create a test case which asserts that the sycall
 /// returns `ENAMETOOLONG` if an entire pathname
-/// exceeded `{PATH_MAX}` characters.
+/// exceeds `{PATH_MAX}` characters.
 /// ```ignore
 /// // `rename` accepts two arguments.
 /// enametoolong_either_comp_test_case!(rename);
