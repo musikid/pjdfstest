@@ -195,7 +195,7 @@ impl<'a> TestContext<'a> {
         if let Some(mode) = mode {
             file = file.mode(mode);
         }
-        Ok(file.open(oflag)?)
+        file.open(oflag)
     }
 
     /// Return a file builder.
@@ -205,7 +205,7 @@ impl<'a> TestContext<'a> {
 
     /// Create a file with a random name.
     pub fn create(&self, f_type: FileType) -> Result<PathBuf, nix::Error> {
-        Ok(self.new_file(f_type).create()?)
+        self.new_file(f_type).create()
     }
 
     /// Create a file whose name length is _PC_NAME_MAX.
@@ -220,7 +220,7 @@ impl<'a> TestContext<'a> {
                 .collect::<String>(),
         );
 
-        Ok(file.create()?)
+        file.create()
     }
 
     /// Create a file whose path length is _PC_PATH_MAX.
@@ -543,7 +543,7 @@ mod tests {
     fn path_max() {
         let tmpdir = TempDir::new().unwrap();
         let config = Config::default();
-        let ctx = TestContext::new(&config, &[], &tmpdir.path());
+        let ctx = TestContext::new(&config, &[], tmpdir.path());
         let file = ctx.create_path_max(FileType::Regular).unwrap();
         let path_len = file.to_string_lossy().len();
 
@@ -577,7 +577,7 @@ mod tests {
         ] {
             let tmpdir = TempDir::new().unwrap();
             let config = Config::default();
-            let ctx = TestContext::new(&config, &[], &tmpdir.path());
+            let ctx = TestContext::new(&config, &[], tmpdir.path());
             let name = "testing";
             let expected_mode = 0o725;
             let (path, _file) = ctx
@@ -599,7 +599,7 @@ mod tests {
     fn regular_unique_syscall() {
         let tmpdir = TempDir::new().unwrap();
         let config = Config::default();
-        let ctx = TestContext::new(&config, &[], &tmpdir.path());
+        let ctx = TestContext::new(&config, &[], tmpdir.path());
 
         assert!(ctx
             .new_file(FileType::Regular)
