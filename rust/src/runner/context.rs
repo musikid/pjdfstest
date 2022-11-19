@@ -22,7 +22,6 @@ use std::{
     time::Duration,
 };
 use strum_macros::EnumIter;
-use tempfile::{tempdir_in, TempDir};
 
 use crate::{
     config::{Config, DummyAuthEntry, FeaturesConfig},
@@ -75,7 +74,7 @@ impl<'a> DummyAuthEntries<'a> {
 
 pub struct TestContext<'a> {
     naptime: Duration,
-    temp_dir: TempDir,
+    temp_dir: &'a Path,
     features_config: &'a FeaturesConfig,
     auth_entries: DummyAuthEntries<'a>,
 }
@@ -93,11 +92,7 @@ impl<'a> Deref for SerializedTestContext<'a> {
 }
 
 impl<'a> SerializedTestContext<'a> {
-    pub fn new<P: AsRef<Path>>(
-        config: &'a Config,
-        entries: &'a [DummyAuthEntry],
-        base_dir: P,
-    ) -> Self {
+    pub fn new(config: &'a Config, entries: &'a [DummyAuthEntry], base_dir: &'a Path) -> Self {
         Self {
             ctx: TestContext::new(config, entries, base_dir),
         }
@@ -160,15 +155,8 @@ impl<'a> Drop for SerializedTestContext<'a> {
 
 impl<'a> TestContext<'a> {
     /// Create a new test context.
-    pub fn new<P: AsRef<Path>>(
-        config: &'a Config,
-        entries: &'a [DummyAuthEntry],
-        base_dir: P,
-    ) -> Self {
+    pub fn new(config: &'a Config, entries: &'a [DummyAuthEntry], temp_dir: &'a Path) -> Self {
         let naptime = Duration::from_secs_f64(config.settings.naptime);
-        let temp_dir = tempdir_in(base_dir).unwrap();
-        // FIX: some tests need a 0o755 base dir
-        chmod(temp_dir.path(), Mode::from_bits_truncate(0o755)).unwrap();
         TestContext {
             naptime,
             temp_dir,
@@ -179,7 +167,7 @@ impl<'a> TestContext<'a> {
 
     /// Return the base path for this context.
     pub fn base_path(&self) -> &Path {
-        self.temp_dir.path()
+        self.temp_dir
     }
 
     pub fn features_config(&self) -> &FeaturesConfig {
@@ -503,35 +491,10 @@ mod tests {
             let tempdir = TempDir::new().unwrap();
             let ctx = TestContext::new(&config, &[], tempdir.path());
 
-            assert!(ctx.temp_dir.path().starts_with(tempdir.path()));
-
-            let parent_content = WalkDir::new(tempdir.path())
-                .min_depth(1)
-                .into_iter()
-                .collect::<Vec<_>>();
-            assert_eq!(parent_content.len(), 1);
-            assert!(parent_content[0].as_ref().unwrap().file_type().is_dir());
-            assert_eq!(
-                parent_content[0].as_ref().unwrap().path(),
-                ctx.temp_dir.path()
-            );
-            assert_eq!(
-                WalkDir::new(ctx.temp_dir.path())
-                    .min_depth(1)
-                    .into_iter()
-                    .count(),
-                0
-            );
+            assert!(ctx.base_path().starts_with(tempdir.path()));
 
             let file = ctx.create(ft.clone()).unwrap();
-            let parent_content = WalkDir::new(tempdir.path())
-                .min_depth(1)
-                .max_depth(1)
-                .into_iter()
-                .filter_map(|e| e.ok());
-            assert_eq!(parent_content.count(), 1);
-
-            let content: Vec<_> = WalkDir::new(ctx.temp_dir.path())
+            let content: Vec<_> = WalkDir::new(ctx.base_path())
                 .min_depth(1)
                 .max_depth(1)
                 .into_iter()
