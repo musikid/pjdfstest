@@ -31,7 +31,7 @@ macro_rules! etxtbsy_test_case {
                  " returns ETXTBSY when the file is a pure procedure (shared text) file that is being executed.")]
             etxtbsy; $crate::tests::errors::etxtbsy::exec_mounted
         }
-        fn etxtbsy (ctx: &mut crate::runner::context::TestContext) {
+        fn etxtbsy (ctx: &mut crate::context::TestContext) {
             use std::{fs::File, process::Command};
 
             use nix::{errno::Errno, sys::stat::Mode};

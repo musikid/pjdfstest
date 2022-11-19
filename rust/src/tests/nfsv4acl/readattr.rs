@@ -3,7 +3,7 @@ use nix::{errno::Errno, sys::stat::stat};
 
 use super::prependacl;
 use crate::{
-    runner::context::{FileType, SerializedTestContext},
+    context::{FileType, SerializedTestContext},
     test::FileSystemFeature,
 };
 

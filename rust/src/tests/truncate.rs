@@ -4,7 +4,7 @@ use nix::{errno::Errno, sys::stat::lstat, unistd::truncate};
 use rand::random;
 
 use crate::{
-    runner::context::{FileType, SerializedTestContext},
+    context::{FileType, SerializedTestContext},
     test::TestContext,
     tests::{assert_ctime_changed, assert_ctime_unchanged},
 };

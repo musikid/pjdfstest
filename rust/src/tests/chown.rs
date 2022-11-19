@@ -1,6 +1,6 @@
 use nix::unistd::chown;
 
-use crate::{runner::context::TestContext, utils::lchown};
+use crate::{context::TestContext, utils::lchown};
 
 use super::errors::eloop::{eloop_comp_test_case, eloop_final_comp_test_case};
 use super::errors::enametoolong::{enametoolong_comp_test_case, enametoolong_path_test_case};

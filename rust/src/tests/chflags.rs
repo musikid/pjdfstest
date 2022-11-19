@@ -11,7 +11,7 @@ use once_cell::sync::Lazy;
 #[cfg(any(target_os = "netbsd", target_os = "freebsd", target_os = "dragonfly"))]
 use crate::utils::lchflags;
 use crate::{
-    runner::context::{FileType, SerializedTestContext, TestContext},
+    context::{FileType, SerializedTestContext, TestContext},
     test::{FileFlags, FileSystemFeature},
 };
 

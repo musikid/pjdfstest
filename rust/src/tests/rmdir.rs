@@ -6,9 +6,7 @@ use std::{
 
 use nix::errno::Errno;
 
-use crate::{
-    config::Config, runner::context::TestContext, tests::assert_mtime_changed, utils::rmdir,
-};
+use crate::{config::Config, context::TestContext, tests::assert_mtime_changed, utils::rmdir};
 
 use super::{
     assert_ctime_changed,
@@ -22,7 +20,7 @@ crate::test_case! {
     remove_dir
 }
 fn remove_dir(ctx: &mut TestContext) {
-    let dir = ctx.create(crate::runner::context::FileType::Dir).unwrap();
+    let dir = ctx.create(crate::context::FileType::Dir).unwrap();
     assert!(metadata(&dir).unwrap().is_dir());
     assert!(rmdir(&dir).is_ok());
     assert!(!dir.exists());
@@ -33,7 +31,7 @@ crate::test_case! {
     changed_time_parent_success
 }
 fn changed_time_parent_success(ctx: &mut TestContext) {
-    let dir = ctx.create(crate::runner::context::FileType::Dir).unwrap();
+    let dir = ctx.create(crate::context::FileType::Dir).unwrap();
     assert_ctime_changed(ctx, ctx.base_path(), || {
         assert_mtime_changed(ctx, ctx.base_path(), || {
             assert!(rmdir(&dir).is_ok());
@@ -52,8 +50,8 @@ struct DummyMnt {
 impl DummyMnt {
     fn new(ctx: &mut TestContext) -> anyhow::Result<Self> {
         // We don't really care about a specific type of file system here, the directory just have to be a mount point
-        let from = ctx.create(crate::runner::context::FileType::Dir)?;
-        let path = ctx.create(crate::runner::context::FileType::Dir)?;
+        let from = ctx.create(crate::context::FileType::Dir)?;
+        let path = ctx.create(crate::context::FileType::Dir)?;
         let mut mount = Command::new("mount");
 
         if cfg!(target_os = "linux") {

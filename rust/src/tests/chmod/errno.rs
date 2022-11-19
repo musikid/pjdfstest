@@ -3,7 +3,7 @@ use nix::{
     sys::stat::{stat, Mode},
 };
 
-use crate::{runner::context::FileType, test::TestContext, utils::chmod};
+use crate::{context::FileType, test::TestContext, utils::chmod};
 
 crate::test_case! {
     /// Returns ENOTDIR if a component of the path prefix is not a directory

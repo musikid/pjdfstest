@@ -8,7 +8,7 @@ use nix::{sys::stat::stat, unistd::chown};
 
 use super::prependacl;
 use crate::{
-    runner::context::{FileType, SerializedTestContext},
+    context::{FileType, SerializedTestContext},
     test::FileSystemFeature,
 };
 

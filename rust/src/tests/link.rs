@@ -14,7 +14,7 @@ use super::errors::{
 use super::{CTIME, MTIME};
 use crate::config::Config;
 use crate::{
-    runner::context::{FileType, SerializedTestContext, TestContext},
+    context::{FileType, SerializedTestContext, TestContext},
     tests::{
         assert_times_changed, assert_times_unchanged,
         errors::enoent::enoent_either_named_file_test_case,

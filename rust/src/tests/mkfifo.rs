@@ -2,7 +2,7 @@ use std::{fs::FileType, os::unix::fs::FileTypeExt};
 
 use nix::{sys::stat::Mode, unistd::mkfifo};
 
-use crate::runner::context::{SerializedTestContext, TestContext};
+use crate::context::{SerializedTestContext, TestContext};
 
 use super::errors::eloop::eloop_comp_test_case;
 use super::errors::enametoolong::{enametoolong_comp_test_case, enametoolong_path_test_case};

@@ -6,7 +6,7 @@ use nix::{
 };
 
 use crate::{
-    runner::context::{FileType, SerializedTestContext, TestContext},
+    context::{FileType, SerializedTestContext, TestContext},
     test::FileSystemFeature,
     tests::{assert_symlink_ctime_unchanged, AsTimeInvariant, MetadataExt},
     utils::{link, rename},

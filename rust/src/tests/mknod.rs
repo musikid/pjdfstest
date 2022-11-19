@@ -3,7 +3,7 @@ use std::{fs::FileType as StdFileType, os::unix::fs::FileTypeExt, path::Path};
 use nix::errno::Errno;
 use nix::sys::stat::{mknod, Mode, SFlag};
 
-use crate::runner::context::{FileType, SerializedTestContext, TestContext};
+use crate::context::{FileType, SerializedTestContext, TestContext};
 
 use super::errors::eloop::eloop_comp_test_case;
 use super::errors::enametoolong::{enametoolong_comp_test_case, enametoolong_path_test_case};

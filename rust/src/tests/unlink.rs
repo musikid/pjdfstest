@@ -1,7 +1,7 @@
 use nix::{sys::stat::fstat, unistd::unlink};
 
 use crate::{
-    runner::context::{FileType, SerializedTestContext, TestContext},
+    context::{FileType, SerializedTestContext, TestContext},
     tests::{assert_ctime_changed, assert_ctime_unchanged},
     utils::link,
 };

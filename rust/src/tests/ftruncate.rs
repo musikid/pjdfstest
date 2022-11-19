@@ -9,7 +9,7 @@ use nix::{
 use rand::random;
 
 use crate::{
-    runner::context::FileType,
+    context::FileType,
     test::{SerializedTestContext, TestContext},
     tests::{assert_ctime_changed, assert_ctime_unchanged},
     utils::chmod,

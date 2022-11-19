@@ -8,7 +8,7 @@ use nix::sys::stat::Mode;
 use nix::sys::uio::pwrite;
 use nix::unistd::close;
 
-use crate::runner::context::{FileType, SerializedTestContext, TestContext};
+use crate::context::{FileType, SerializedTestContext, TestContext};
 
 use super::errors::eloop::eloop_comp_test_case;
 use super::errors::enametoolong::{enametoolong_comp_test_case, enametoolong_path_test_case};
@@ -85,9 +85,7 @@ crate::test_case! {
     open_trunc
 }
 fn open_trunc(ctx: &mut TestContext) {
-    let file = ctx
-        .create(crate::runner::context::FileType::Regular)
-        .unwrap();
+    let file = ctx.create(crate::context::FileType::Regular).unwrap();
     std::fs::write(&file, "data".as_bytes()).unwrap();
     assert_times_changed()
         .path(&file, CTIME | MTIME)

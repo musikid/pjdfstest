@@ -31,8 +31,8 @@ macro_rules! enotdir_comp_test_case {
                  " returns ENOTDIR if a component of the path prefix is not a directory")]
             enotdir_component => [Regular, Fifo, Block, Char, Socket]
         }
-        fn enotdir_component(ctx: &mut crate::runner::context::TestContext,
-                            ft: crate::runner::context::FileType) {
+        fn enotdir_component(ctx: &mut crate::context::TestContext,
+                            ft: crate::context::FileType) {
             let base_path = ctx.create(ft.clone()).unwrap();
             let path = base_path.join("previous_not_dir");
 
@@ -41,7 +41,7 @@ macro_rules! enotdir_comp_test_case {
     };
 
     ($syscall: ident $( ($( $($before:expr),* ,)? ~path $(, $($after:expr),*)?) )?) => {
-        enotdir_comp_test_case!($syscall, |_ctx: &mut crate::runner::context::TestContext,
+        enotdir_comp_test_case!($syscall, |_ctx: &mut crate::context::TestContext,
                                              path: &std::path::Path| {
                 $syscall($( $($($before),* ,)? )? path $( $(, $($after),*)? )?)
         });
@@ -62,8 +62,8 @@ macro_rules! enotdir_comp_either_test_case {
             enotdir_component_either => [Regular, Fifo, Block, Char, Socket]
         }
         fn enotdir_component_either(
-            ctx: &mut crate::runner::context::TestContext,
-            ft: crate::runner::context::FileType,
+            ctx: &mut crate::context::TestContext,
+            ft: crate::context::FileType,
         ) {
             let file = ctx.create(ft.clone()).unwrap();
             let path = file.join("previous_not_dir");

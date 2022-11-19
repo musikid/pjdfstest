@@ -5,7 +5,7 @@ use std::{
 };
 
 use crate::{
-    runner::context::{FileType, TestContext},
+    context::{FileType, TestContext},
     tests::{assert_times_changed, errors::enoent::enoent_comp_test_case, CTIME, MTIME},
     utils::symlink,
 };

@@ -7,7 +7,7 @@ use nix::{
 };
 
 use crate::{
-    runner::context::{FileType, SerializedTestContext},
+    context::{FileType, SerializedTestContext},
     test::{FileSystemFeature, TestContext},
     tests::{assert_ctime_changed, assert_ctime_unchanged},
     utils::chmod,

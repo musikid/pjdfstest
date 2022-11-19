@@ -3,7 +3,7 @@ use nix::{errno::Errno, unistd::unlink};
 
 use super::prependacl;
 use crate::{
-    runner::context::{FileBuilder, FileType, SerializedTestContext},
+    context::{FileBuilder, FileType, SerializedTestContext},
     test::FileSystemFeature,
     utils::{rename, rmdir},
 };

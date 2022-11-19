@@ -31,8 +31,8 @@ macro_rules! enoent_named_file_test_case {
                  " returns ENOENT if the named file does not exist")]
            enoent_named_file
         }
-        fn enoent_named_file(ctx: &mut crate::runner::context::TestContext) {
-            let dir = ctx.create(crate::runner::context::FileType::Dir).unwrap();
+        fn enoent_named_file(ctx: &mut crate::context::TestContext) {
+            let dir = ctx.create(crate::context::FileType::Dir).unwrap();
             let path = dir.join("not_existent");
 
             $( assert_eq!($f(ctx, &path).unwrap_err(), nix::errno::Errno::ENOENT) );+
@@ -40,7 +40,7 @@ macro_rules! enoent_named_file_test_case {
     };
 
     ($syscall: ident $( ($( $($before:expr),* ,)? ~path $(, $($after:expr),*)?) )?) => {
-        enoent_named_file_test_case!($syscall, |_ctx: &mut crate::runner::context::TestContext,
+        enoent_named_file_test_case!($syscall, |_ctx: &mut crate::context::TestContext,
                                              path: &std::path::Path| {
                 $syscall($( $($($before),* ,)? )? path $( $(, $($after),*)? )?)
         });
@@ -58,17 +58,13 @@ macro_rules! enoent_either_named_file_test_case {
     ($syscall: ident) => {
         $crate::tests::errors::enoent::enoent_named_file_test_case!(
             $syscall,
-            |ctx: &mut crate::runner::context::TestContext, path: &std::path::Path| {
-                let real_file = ctx
-                    .create(crate::runner::context::FileType::Regular)
-                    .unwrap();
+            |ctx: &mut crate::context::TestContext, path: &std::path::Path| {
+                let real_file = ctx.create(crate::context::FileType::Regular).unwrap();
                 let path = path.join("test");
                 $syscall(&path, &real_file)
             },
-            |ctx: &mut crate::runner::context::TestContext, path: &std::path::Path| {
-                let real_file = ctx
-                    .create(crate::runner::context::FileType::Regular)
-                    .unwrap();
+            |ctx: &mut crate::context::TestContext, path: &std::path::Path| {
+                let real_file = ctx.create(crate::context::FileType::Regular).unwrap();
                 let path = path.join("test");
                 $syscall(&*real_file, &path)
             }
@@ -111,11 +107,11 @@ macro_rules! enoent_symlink_named_file_test_case {
                  " returns ENOENT if the symlink target named file does not exist")]
            enoent_symlink
         }
-        fn enoent_symlink(ctx: &mut crate::runner::context::TestContext) {
-            let dir = ctx.create(crate::runner::context::FileType::Dir).unwrap();
+        fn enoent_symlink(ctx: &mut crate::context::TestContext) {
+            let dir = ctx.create(crate::context::FileType::Dir).unwrap();
             let path = dir.join("not_existent");
             let link = ctx
-                .create(crate::runner::context::FileType::Symlink(Some(path.to_path_buf())))
+                .create(crate::context::FileType::Symlink(Some(path.to_path_buf())))
                 .unwrap();
 
             assert_eq!($f(ctx, &link).unwrap_err(), nix::errno::Errno::ENOENT)
@@ -123,7 +119,7 @@ macro_rules! enoent_symlink_named_file_test_case {
     };
 
     ($syscall: ident $( ($( $($before:expr),* ,)? ~path $(, $($after:expr),*)?) )?) => {
-        enoent_symlink_named_file_test_case!($syscall, |_ctx: &mut crate::runner::context::TestContext,
+        enoent_symlink_named_file_test_case!($syscall, |_ctx: &mut crate::context::TestContext,
                                              path: &std::path::Path| {
                 $syscall($( $($($before),* ,)? )? path $( $(, $($after),*)? )?)
         });
@@ -165,8 +161,8 @@ macro_rules! enoent_comp_test_case {
                  " returns ENOENT if a component of the path prefix does not exist")]
            enoent_comp
         }
-        fn enoent_comp(ctx: &mut crate::runner::context::TestContext) {
-            let dir = ctx.create(crate::runner::context::FileType::Dir).unwrap();
+        fn enoent_comp(ctx: &mut crate::context::TestContext) {
+            let dir = ctx.create(crate::context::FileType::Dir).unwrap();
             let path = dir.join("not_existent").join("test");
 
             $( assert_eq!($f(ctx, &path).unwrap_err(), nix::errno::Errno::ENOENT) );+
@@ -174,7 +170,7 @@ macro_rules! enoent_comp_test_case {
     };
 
     ($syscall: ident $( ($( $($before:expr),* ,)? ~path $(, $($after:expr),*)?) )?) => {
-        enoent_comp_test_case!($syscall, |_ctx: &mut crate::runner::context::TestContext,
+        enoent_comp_test_case!($syscall, |_ctx: &mut crate::context::TestContext,
                                              path: &std::path::Path| {
                 $syscall($( $($($before),* ,)? )? path $( $(, $($after),*)? )?)
         });
