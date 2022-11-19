@@ -130,7 +130,7 @@ fn unchanged_ctime_failed(ctx: &mut SerializedTestContext, ft: FileType) {
     let file = ctx.new_file(ft).mode(0o600).create().unwrap();
     let other_path = ctx.gen_path();
     let user = ctx.get_new_user();
-    ctx.as_user(&user, None, || {
+    ctx.as_user(user, None, || {
         assert_symlink_ctime_unchanged(ctx, &file, || {
             assert!(rename(&file, &other_path).is_err());
         })
@@ -156,7 +156,7 @@ fn write_access_required_subdir(ctx: &mut SerializedTestContext) {
     let new_dir_subpath = new_dir.join("subpath");
 
     let user = ctx.get_new_user();
-    ctx.as_user(&user, None, || {
+    ctx.as_user(user, None, || {
         // Check that write permission on containing directory is enough
         // to rename subdirectory. If we rename directory write access
         // to this directory may also be required.
@@ -190,7 +190,7 @@ fn write_access_required_subdir(ctx: &mut SerializedTestContext) {
         .create()
         .unwrap();
 
-    ctx.as_user(&user, None, || {
+    ctx.as_user(user, None, || {
         let new_path = new_dir.join("file");
         assert!(rename(&file, &new_path).is_ok());
     })

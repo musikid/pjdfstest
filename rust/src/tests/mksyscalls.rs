@@ -111,10 +111,10 @@ where
     chown(ctx.base_path(), Some(user.uid), Some(user.gid)).unwrap();
 
     let (other_user, group) = ctx.get_new_entry();
-    doit(ctx, &user, Some(group.gid), &f);
+    doit(ctx, user, Some(group.gid), &f);
 
     chmod(ctx.base_path(), Mode::from_bits_truncate(ALLPERMS)).unwrap();
 
     let group = ctx.get_new_group();
-    doit(ctx, &other_user, Some(group.gid), f);
+    doit(ctx, other_user, Some(group.gid), f);
 }
