@@ -206,10 +206,9 @@ mod lchmod {
 
     // chmod/10.t
     // TODO: lchmod is missing in libc
-    efault_path_test_case!(lchmod, |ptr| nix::libc::fchownat(
+    efault_path_test_case!(lchmod, |ptr| nix::libc::fchmodat(
         0,
         ptr,
-        0,
         0,
         nix::libc::AT_SYMLINK_NOFOLLOW
     ));
