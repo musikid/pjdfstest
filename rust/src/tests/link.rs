@@ -220,8 +220,13 @@ fn enoent_source_not_exists(ctx: &mut TestContext) {
     assert_eq!(link(&source, &dest), Err(Errno::ENOENT));
 }
 
-// link/10.t
-eexist_file_exists_test_case!(link, |ctx: &mut TestContext, path| {
+crate::test_case! {
+    /// link returns EEXIST if the destination file exists
+    eexist_dest_exists => [Regular, Dir, Fifo, Block, Char, Socket, Symlink(None)]
+}
+fn eexist_dest_exists(ctx: &mut TestContext, ft: FileType) {
+    let path = ctx.create(ft).unwrap();
     let regular_file = ctx.create(FileType::Regular).unwrap();
-    link(&regular_file, path)
-});
+
+    assert_eq!(link(&regular_file, &path), Err(nix::errno::Errno::EEXIST));
+}
