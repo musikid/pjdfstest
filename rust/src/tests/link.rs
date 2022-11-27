@@ -8,6 +8,7 @@ use nix::{
 use std::path::Path;
 
 use super::errors::{
+    eexist::eexist_file_exists_test_case,
     eloop::eloop_either_test_case,
     enametoolong::{enametoolong_either_comp_test_case, enametoolong_either_path_test_case},
 };
@@ -218,3 +219,9 @@ fn enoent_source_not_exists(ctx: &mut TestContext) {
 
     assert_eq!(link(&source, &dest), Err(Errno::ENOENT));
 }
+
+// link/10.t
+eexist_file_exists_test_case!(link, |ctx: &mut TestContext, path| {
+    let regular_file = ctx.create(FileType::Regular).unwrap();
+    link(&regular_file, path)
+});

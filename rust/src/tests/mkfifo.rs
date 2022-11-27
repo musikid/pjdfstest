@@ -4,6 +4,7 @@ use nix::{sys::stat::Mode, unistd::mkfifo};
 
 use crate::context::{SerializedTestContext, TestContext};
 
+use super::errors::eexist::eexist_file_exists_test_case;
 use super::errors::eloop::eloop_comp_test_case;
 use super::errors::enametoolong::{enametoolong_comp_test_case, enametoolong_path_test_case};
 use super::errors::enoent::enoent_comp_test_case;
@@ -63,3 +64,6 @@ enoent_comp_test_case!(mkfifo(~path, Mode::empty()));
 
 // mkfifo/07.t
 eloop_comp_test_case!(mkfifo(~path, Mode::empty()));
+
+// mkfifo/09.t
+eexist_file_exists_test_case!(mkfifo(~path, Mode::empty()));

@@ -112,15 +112,6 @@ fn has_mount_cap(_: &Config, _: &Path) -> anyhow::Result<()> {
     Ok(())
 }
 
-crate::test_case! {
-    /// rmdir return EBUSY if the directory to be removed is the mount point for a mounted file system
-    ebusy; has_mount_cap
-}
-fn ebusy(ctx: &mut TestContext) {
-    let dummy_mount = DummyMnt::new(ctx).unwrap();
-    assert_eq!(rmdir(&dummy_mount.path), Err(Errno::EBUSY));
-}
-
 // rmdir/02.t
 enametoolong_comp_test_case!(rmdir);
 
@@ -134,10 +125,58 @@ enoent_named_file_test_case!(rmdir);
 eloop_comp_test_case!(rmdir);
 
 crate::test_case! {
+    /// rmdir returns EEXIST or ENOTEMPTY if the named directory
+    /// contains files other than '.' and '..' in it
+    // rmdir/06.t
+    eexist_enotempty_non_empty_dir => [Regular, Dir, Fifo, Block, Char, Socket, Symlink(None)]
+}
+fn eexist_enotempty_non_empty_dir(ctx: &mut TestContext, ft: crate::context::FileType) {
+    ctx.new_file(ft)
+        .name(ctx.base_path().join("file"))
+        .create()
+        .unwrap();
+
+    assert!(matches!(
+        rmdir(ctx.base_path()),
+        Err(Errno::EEXIST | Errno::ENOTEMPTY)
+    ));
+}
+
+crate::test_case! {
     /// rmdir returns EINVAL if the last component of the path is '.'
     // rmdir/12.t
     einval_dot
 }
 fn einval_dot(ctx: &mut TestContext) {
     assert_eq!(rmdir(&ctx.base_path().join(".")), Err(Errno::EINVAL));
+}
+
+crate::test_case! {
+    /// rmdir returns EEXIST or ENOTEMPTY if the last component of the path is '..'
+    // rmdir/12.t
+    eexist_enotempty_dotdot
+}
+fn eexist_enotempty_dotdot(ctx: &mut TestContext) {
+    // TODO: Not conforming to POSIX on FreeBSD
+    // According to POSIX: EEXIST or ENOTEMPTY:
+    // The path argument names a directory that is
+    // not an empty directory,
+    // or there are hard links to the directory other than dot or a single entry in dot-dot.
+    #[cfg(not(target_os = "freebsd"))]
+    {
+        assert!(matches!(
+            rmdir(&ctx.base_path().join("..")),
+            Err(Errno::ENOTEMPTY | Errno::EEXIST)
+        ));
+    }
+}
+
+crate::test_case! {
+    /// rmdir return EBUSY if the directory to be removed is the mount point for a mounted file system
+    // rmdir/13.t
+    ebusy; has_mount_cap
+}
+fn ebusy(ctx: &mut TestContext) {
+    let dummy_mount = DummyMnt::new(ctx).unwrap();
+    assert_eq!(rmdir(&dummy_mount.path), Err(Errno::EBUSY));
 }

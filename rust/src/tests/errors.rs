@@ -1,3 +1,4 @@
+pub(super) mod eexist;
 pub(super) mod eloop;
 pub(super) mod enametoolong;
 pub(super) mod enoent;
