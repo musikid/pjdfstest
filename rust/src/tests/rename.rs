@@ -18,7 +18,7 @@ use super::{
         eloop::eloop_either_test_case,
         enametoolong::{enametoolong_either_comp_test_case, enametoolong_either_path_test_case},
         enoent::enoent_either_named_file_test_case,
-        enotdir::enotdir_comp_either_test_case,
+        enotdir::enotdir_comp_either_test_case, exdev::exdev_target_test_case,
     },
 };
 
@@ -345,3 +345,6 @@ fn einval_parent_from_subdir_to(ctx: &mut TestContext) {
     assert_eq!(rename(ctx.base_path(), &subdir), Err(Errno::EINVAL));
     assert_eq!(rename(ctx.base_path(), &nested_subdir), Err(Errno::EINVAL));
 }
+
+// rename/15.t
+exdev_target_test_case!(rename);
