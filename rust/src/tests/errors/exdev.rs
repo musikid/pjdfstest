@@ -1,18 +1,17 @@
-use std::path::{Path};
+use std::path::Path;
 
-
-
-use crate::{
-    config::Config,
-};
-
+use crate::config::Config;
 
 /// Guard which checks if a secondary file system has been configured.
 pub(crate) fn secondary_fs_available(config: &Config, _: &Path) -> anyhow::Result<()> {
-    config
-        .features
-        .secondary_fs
-        .map_or_else(|| Err(anyhow::anyhow!("No secondary file-system has been configured.")), drop)
+    config.features.secondary_fs.map_or_else(
+        || {
+            Err(anyhow::anyhow!(
+                "No secondary file-system has been configured."
+            ))
+        },
+        |_| Ok(()),
+    )
 }
 
 /// Create a test-case for a syscall which returns `EXDEV` when the target is on a different file-system.
