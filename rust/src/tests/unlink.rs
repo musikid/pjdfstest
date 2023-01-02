@@ -8,9 +8,13 @@ use crate::{
 
 use super::{
     assert_mtime_changed,
-    errors::eloop::eloop_comp_test_case,
-    errors::{enametoolong::enametoolong_comp_test_case, enoent::enoent_named_file_test_case},
-    errors::{enametoolong::enametoolong_path_test_case, enotdir::enotdir_comp_test_case},
+    errors::{
+        efault::efault_path_test_case,
+        eloop::eloop_comp_test_case,
+        enametoolong::{enametoolong_comp_test_case, enametoolong_path_test_case},
+        enoent::enoent_named_file_test_case,
+        enotdir::enotdir_comp_test_case,
+    },
 };
 
 crate::test_case! {
@@ -149,3 +153,6 @@ enoent_named_file_test_case!(unlink);
 
 // unlink/07.t
 eloop_comp_test_case!(unlink);
+
+// unlink/13.t
+efault_path_test_case!(unlink, nix::libc::unlink);

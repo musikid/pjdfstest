@@ -7,12 +7,15 @@ use nix::{
 
 use std::path::Path;
 
-use super::errors::{
-    eexist::eexist_file_exists_test_case,
-    eloop::eloop_either_test_case,
-    enametoolong::{enametoolong_either_comp_test_case, enametoolong_either_path_test_case},
+use super::{
+    errors::{
+        efault::efault_either_test_case,
+        eloop::eloop_either_test_case,
+        enametoolong::{enametoolong_either_comp_test_case, enametoolong_either_path_test_case},
+    },
+    CTIME, MTIME,
 };
-use super::{CTIME, MTIME};
+
 use crate::config::Config;
 use crate::{
     context::{FileType, SerializedTestContext, TestContext},
@@ -230,3 +233,6 @@ fn eexist_dest_exists(ctx: &mut TestContext, ft: FileType) {
 
     assert_eq!(link(&regular_file, &path), Err(nix::errno::Errno::EEXIST));
 }
+
+// link/17.t
+efault_either_test_case!(link, nix::libc::link);

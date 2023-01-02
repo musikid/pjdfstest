@@ -11,6 +11,7 @@ use nix::unistd::close;
 use crate::context::{FileType, SerializedTestContext, TestContext};
 
 use super::errors::eexist::eexist_file_exists_test_case;
+use super::errors::efault::efault_path_test_case;
 use super::errors::eloop::eloop_comp_test_case;
 use super::errors::enametoolong::{enametoolong_comp_test_case, enametoolong_path_test_case};
 use super::errors::enoent::{enoent_comp_test_case, enoent_named_file_test_case};
@@ -299,6 +300,9 @@ etxtbsy_test_case!(
 
 // open/22.t
 eexist_file_exists_test_case!(open(~path, OFlag::O_CREAT | OFlag::O_EXCL, Mode::empty()));
+
+// open/21.t
+efault_path_test_case!(open, |ptr| nix::libc::open(ptr, nix::libc::O_RDONLY));
 
 crate::test_case! {
     /// open may return EINVAL when an attempt was made to open a descriptor
