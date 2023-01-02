@@ -4,7 +4,7 @@ use crate::config::Config;
 
 /// Guard which checks if a secondary file system has been configured.
 pub(crate) fn secondary_fs_available(config: &Config, _: &Path) -> anyhow::Result<()> {
-    config.features.secondary_fs.map_or_else(
+    config.features.secondary_fs.as_ref().map_or_else(
         || {
             Err(anyhow::anyhow!(
                 "No secondary file-system has been configured."
