@@ -15,7 +15,7 @@ macro_rules! efault_path_test_case {
             )]
             efault_path
         }
-        fn efault_path(_: &mut crate::runner::context::TestContext) {
+        fn efault_path(_: &mut crate::context::TestContext) {
             let f = |ptr| unsafe { $fn(ptr) };
 
             let null_ptr = std::ptr::null();
@@ -55,12 +55,10 @@ macro_rules! efault_either_test_case {
             )]
             efault_either
         }
-        fn efault_either(ctx: &mut crate::runner::context::TestContext) {
+        fn efault_either(ctx: &mut crate::context::TestContext) {
             use nix::NixPath;
 
-            let file = ctx
-                .create(crate::runner::context::FileType::Regular)
-                .unwrap();
+            let file = ctx.create(crate::context::FileType::Regular).unwrap();
 
             let null_ptr = std::ptr::null();
 
