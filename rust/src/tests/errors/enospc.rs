@@ -50,8 +50,6 @@ pub(crate) fn saturate_space(ctx: &SerializedTestContext) -> Result<()> {
     std::io::copy(&mut zero, &mut file)?;
 
     nix::unistd::sync();
-    // let stat = statvfs(ctx.base_path())?;
-    // debug_assert_eq!(stat.blocks_available(), 0);
 
     while let Ok(_) = ctx.create(FileType::Regular) {}
 
