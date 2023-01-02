@@ -12,9 +12,7 @@ pub(crate) fn secondary_fs_available(config: &Config, _: &Path) -> anyhow::Resul
     config
         .features
         .secondary_fs
-        .is_some()
-        .then_some(())
-        .ok_or_else(|| anyhow::anyhow!("No secondary file-system has been configured."))
+        .map_or_else(|| Err(anyhow::anyhow!("No secondary file-system has been configured.")), drop)
 }
 
 /// Create a test-case for a syscall which returns `EXDEV` when the target is on a different file-system.
