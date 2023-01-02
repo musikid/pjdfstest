@@ -34,7 +34,7 @@ macro_rules! enametoolong_comp_test_case {
             enametoolong_component $(, $attrs )?
         }
         fn enametoolong_component(ctx: &mut TestContext) {
-            use $crate::runner::context::FileType;
+            use $crate::context::FileType;
             use nix::errno::Errno;
 
             let mut invalid_path = ctx.create_name_max(FileType::Regular).unwrap();
@@ -44,7 +44,7 @@ macro_rules! enametoolong_comp_test_case {
     };
 
     ($syscall: ident $( ($( $($before:expr),* ,)? ~path $(, $($after:expr),*)?) )?) => {
-        enametoolong_comp_test_case!($syscall, |_ctx: &mut crate::runner::context::TestContext,
+        enametoolong_comp_test_case!($syscall, |_ctx: &mut crate::context::TestContext,
                                              path: &std::path::Path| {
                 $syscall($( $($($before),* ,)? )? path $( $(, $($after),*)? )?)
         });
@@ -70,7 +70,7 @@ macro_rules! enametoolong_either_comp_test_case {
         }
         fn enametoolong_component(ctx: &mut TestContext) {
             use nix::errno::Errno;
-            use $crate::runner::context::FileType;
+            use $crate::context::FileType;
 
             let mut invalid_path = ctx.create_name_max(FileType::Regular).unwrap();
             invalid_path.set_extension("x");
@@ -125,7 +125,7 @@ macro_rules! enametoolong_path_test_case {
             enametoolong_path $(, $attrs )?
         }
         fn enametoolong_path(ctx: &mut TestContext) {
-            use $crate::runner::context::FileType;
+            use $crate::context::FileType;
             use nix::errno::Errno;
 
             let mut invalid_path = ctx.create_path_max(FileType::Regular).unwrap();
@@ -135,7 +135,7 @@ macro_rules! enametoolong_path_test_case {
     };
 
     ($syscall: ident $( ($( $($before:expr),* ,)? ~path $(, $($after:expr),*)?) )?) => {
-        enametoolong_path_test_case!($syscall, |_ctx: &mut crate::runner::context::TestContext,
+        enametoolong_path_test_case!($syscall, |_ctx: &mut crate::context::TestContext,
                                              path: &std::path::Path| {
                 $syscall($( $($($before),* ,)? )? path $( $(, $($after),*)? )?)
         });
@@ -161,7 +161,7 @@ macro_rules! enametoolong_either_path_test_case {
         }
         fn enametoolong_path(ctx: &mut TestContext) {
             use nix::errno::Errno;
-            use $crate::runner::context::FileType;
+            use $crate::context::FileType;
 
             let mut invalid_path = ctx.create_path_max(FileType::Regular).unwrap();
             invalid_path.set_extension("x");

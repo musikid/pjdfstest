@@ -22,15 +22,17 @@ use strum::{EnumMessage, IntoEnumIterator};
 use tempfile::{tempdir_in, TempDir};
 
 mod config;
+mod context;
 mod features;
 mod flags;
 mod macros;
-mod runner;
 mod test;
 mod tests;
 mod utils;
 
 use test::{FileSystemFeature, SerializedTestContext, TestCase, TestContext, TestFn};
+
+use crate::utils::chmod;
 
 struct PanicLocation(u32, u32, String);
 
@@ -175,10 +177,14 @@ fn run_test_cases(
             skip_message += "\n";
         }
 
+        let temp_dir = tempdir_in(base_dir.path()).unwrap();
+        // FIX: some tests need a 0o755 base dir
+        chmod(temp_dir.path(), Mode::from_bits_truncate(0o755)).unwrap();
+
         if test_case
             .guards
             .iter()
-            .any(|guard| guard(config, base_dir.path()).is_err())
+            .any(|guard| guard(config, temp_dir.path()).is_err())
         {
             should_skip = true;
             skip_message += &*test_case
@@ -207,12 +213,12 @@ fn run_test_cases(
 
         let result = catch_unwind(|| match test_case.fun {
             TestFn::NonSerialized(fun) => {
-                let mut context = TestContext::new(config, entries, base_dir.path());
+                let mut context = TestContext::new(config, entries, temp_dir.path());
 
                 (fun)(&mut context)
             }
             TestFn::Serialized(fun) => {
-                let mut context = SerializedTestContext::new(config, entries, base_dir.path());
+                let mut context = SerializedTestContext::new(config, entries, temp_dir.path());
 
                 (fun)(&mut context)
             }

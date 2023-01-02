@@ -5,7 +5,7 @@ use nix::sys::{statfs::statfs, statvfs::statvfs};
 
 use crate::{
     config::Config,
-    runner::context::{FileType, SerializedTestContext},
+    context::{FileType, SerializedTestContext},
 };
 
 /// Guard to check that the file system is smaller than the fixed limit.
@@ -99,7 +99,7 @@ macro_rules! enospc_no_free_inodes_test_case {
     };
 
     ($syscall: ident $( ($( $($before:expr),* ,)? ~path $(, $($after:expr),*)?) )?) => {
-        enospc_no_free_inodes_test_case!($syscall, |_ctx: &crate::runner::context::TestContext,
+        enospc_no_free_inodes_test_case!($syscall, |_ctx: &crate::context::TestContext,
                                              path: &std::path::Path| {
                 $syscall($( $($($before),* ,)? )? path $( $(, $($after),*)? )?)
         });

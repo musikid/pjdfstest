@@ -2,8 +2,9 @@ use std::{fs::FileType, os::unix::fs::FileTypeExt};
 
 use nix::{sys::stat::Mode, unistd::mkfifo};
 
-use crate::runner::context::{SerializedTestContext, TestContext};
+use crate::context::{SerializedTestContext, TestContext};
 
+use super::errors::efault::efault_path_test_case;
 use super::errors::eloop::eloop_comp_test_case;
 use super::errors::enametoolong::{enametoolong_comp_test_case, enametoolong_path_test_case};
 use super::errors::enoent::enoent_comp_test_case;
@@ -67,3 +68,6 @@ eloop_comp_test_case!(mkfifo(~path, Mode::empty()));
 
 // mkfifo/11.t
 enospc_no_free_inodes_test_case!(mkfifo(~path, Mode::empty()));
+
+// mkfifo/12.t
+efault_path_test_case!(mkfifo, |ptr| nix::libc::mkfifo(ptr, 0o644));

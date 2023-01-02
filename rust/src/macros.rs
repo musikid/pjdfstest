@@ -40,8 +40,8 @@ macro_rules! test_case {
                         description: $desc,
                         required_features: $features,
                         guards: $guards,
-                        require_root: $require_root || $crate::runner::context::FileType::$file_type $( ($ft_args) )?.privileged(),
-                        fun: $crate::test::TestFn::Serialized(|ctx| $f(ctx, $crate::runner::context::FileType::$file_type $( ($ft_args) )?)),
+                        require_root: $require_root || $crate::context::FileType::$file_type $( ($ft_args) )?.privileged(),
+                        fun: $crate::test::TestFn::Serialized(|ctx| $f(ctx, $crate::context::FileType::$file_type $( ($ft_args) )?)),
                     }
                 }
             }
@@ -69,8 +69,8 @@ macro_rules! test_case {
                         description: $desc,
                         required_features: $features,
                         guards: $guards,
-                        require_root: $require_root || $crate::runner::context::FileType::$file_type $( ($ft_args) )?.privileged(),
-                        fun: $crate::test::TestFn::NonSerialized(|ctx| $f(ctx, $crate::runner::context::FileType::$file_type $( ($ft_args) )?)),
+                        require_root: $require_root || $crate::context::FileType::$file_type $( ($ft_args) )?.privileged(),
+                        fun: $crate::test::TestFn::NonSerialized(|ctx| $f(ctx, $crate::context::FileType::$file_type $( ($ft_args) )?)),
                     }
                 }
             }
@@ -80,7 +80,7 @@ macro_rules! test_case {
 
 #[cfg(test)]
 mod t {
-    use crate::runner::context::FileType;
+    use crate::context::FileType;
     use crate::test::FileSystemFeature;
     use crate::{SerializedTestContext, TestCase, TestContext, TestFn};
     use std::path::Path;

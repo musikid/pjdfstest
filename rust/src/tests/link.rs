@@ -7,18 +7,23 @@ use nix::{
 
 use std::path::Path;
 
-use super::errors::{
-    eloop::eloop_either_test_case,
-    enametoolong::{enametoolong_either_comp_test_case, enametoolong_either_path_test_case},
+use super::{
+    errors::{
+        efault::efault_either_test_case,
+        eloop::eloop_either_test_case,
+        enametoolong::{enametoolong_either_comp_test_case, enametoolong_either_path_test_case},
+    },
+    CTIME, MTIME,
 };
-use super::{CTIME, MTIME};
+
 use crate::{
     config::Config,
     tests::errors::enospc::{is_small, saturate_space},
     utils::as_unprivileged_user,
 };
+
 use crate::{
-    runner::context::{FileType, SerializedTestContext, TestContext},
+    context::{FileType, SerializedTestContext, TestContext},
     tests::{
         assert_times_changed, assert_times_unchanged,
         errors::enoent::enoent_either_named_file_test_case,
@@ -238,3 +243,6 @@ fn enospc_no_space(ctx: &mut SerializedTestContext) {
         assert_eq!(link(&file, &path), Err(Errno::ENOSPC));
     });
 }
+
+// link/17.t
+efault_either_test_case!(link, nix::libc::link);

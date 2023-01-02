@@ -226,17 +226,21 @@ impl<'a> TimeAssertion<'a> {
             .collect();
 
         if self.equal {
-            assert!(metas_before
-                .iter()
-                .zip(metas_after.iter())
-                .all(|(mb, ma)| mb == ma),
-                "Timestamps changed but shouldn't have");
+            assert!(
+                metas_before
+                    .iter()
+                    .zip(metas_after.iter())
+                    .all(|(mb, ma)| mb == ma),
+                "Timestamps changed but shouldn't have"
+            );
         } else {
-            assert!(metas_before
-                .iter()
-                .zip(metas_after.iter())
-                .all(|(mb, ma)| mb != ma),
-                "Timestamps did not change as expected");
+            assert!(
+                metas_before
+                    .iter()
+                    .zip(metas_after.iter())
+                    .all(|(mb, ma)| mb != ma),
+                "Timestamps did not change as expected"
+            );
         }
     }
 }

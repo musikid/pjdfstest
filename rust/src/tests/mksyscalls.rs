@@ -12,7 +12,7 @@ use nix::{
 };
 
 use crate::{
-    runner::context::SerializedTestContext,
+    context::SerializedTestContext,
     utils::{chmod, ALLPERMS},
 };
 

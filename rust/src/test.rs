@@ -1,9 +1,9 @@
 use std::path::Path;
 
 use crate::config::Config;
+pub use crate::context::{SerializedTestContext, TestContext};
 pub use crate::features::*;
 pub use crate::flags::*;
-pub use crate::runner::context::{SerializedTestContext, TestContext};
 
 /// Function which indicates if the test should be skipped by returning an error.
 pub type Guard = fn(&Config, &Path) -> Result<(), anyhow::Error>;

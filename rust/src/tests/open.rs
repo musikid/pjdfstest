@@ -8,8 +8,9 @@ use nix::sys::stat::Mode;
 use nix::sys::uio::pwrite;
 use nix::unistd::close;
 
-use crate::runner::context::{FileType, SerializedTestContext, TestContext};
+use crate::context::{FileType, SerializedTestContext, TestContext};
 
+use super::errors::efault::efault_path_test_case;
 use super::errors::eloop::eloop_comp_test_case;
 use super::errors::enametoolong::{enametoolong_comp_test_case, enametoolong_path_test_case};
 use super::errors::enoent::{enoent_comp_test_case, enoent_named_file_test_case};
@@ -86,9 +87,7 @@ crate::test_case! {
     open_trunc
 }
 fn open_trunc(ctx: &mut TestContext) {
-    let file = ctx
-        .create(crate::runner::context::FileType::Regular)
-        .unwrap();
+    let file = ctx.create(crate::context::FileType::Regular).unwrap();
     std::fs::write(&file, "data".as_bytes()).unwrap();
     assert_times_changed()
         .path(&file, CTIME | MTIME)
@@ -301,6 +300,9 @@ etxtbsy_test_case!(
     open_flag_wrapper(OFlag::O_RDWR),
     open_flag_wrapper(OFlag::O_RDONLY | OFlag::O_TRUNC)
 );
+
+// open/21.t
+efault_path_test_case!(open, |ptr| nix::libc::open(ptr, nix::libc::O_RDONLY));
 
 crate::test_case! {
     /// open may return EINVAL when an attempt was made to open a descriptor

@@ -10,7 +10,7 @@ use nix::{
     },
 };
 
-use rand::{distributions::Alphanumeric, thread_rng, Rng};
+use rand::distributions::{Alphanumeric, DistString};
 use std::{
     cell::Cell,
     fs::create_dir_all,
@@ -22,7 +22,6 @@ use std::{
     time::Duration,
 };
 use strum_macros::EnumIter;
-use tempfile::{tempdir_in, TempDir};
 
 use crate::{
     config::{Config, DummyAuthEntry, FeaturesConfig},
@@ -75,7 +74,7 @@ impl<'a> DummyAuthEntries<'a> {
 
 pub struct TestContext<'a> {
     naptime: Duration,
-    temp_dir: TempDir,
+    temp_dir: &'a Path,
     features_config: &'a FeaturesConfig,
     auth_entries: DummyAuthEntries<'a>,
 }
@@ -93,11 +92,7 @@ impl<'a> Deref for SerializedTestContext<'a> {
 }
 
 impl<'a> SerializedTestContext<'a> {
-    pub fn new<P: AsRef<Path>>(
-        config: &'a Config,
-        entries: &'a [DummyAuthEntry],
-        base_dir: P,
-    ) -> Self {
+    pub fn new(config: &'a Config, entries: &'a [DummyAuthEntry], base_dir: &'a Path) -> Self {
         Self {
             ctx: TestContext::new(config, entries, base_dir),
         }
@@ -160,15 +155,8 @@ impl<'a> Drop for SerializedTestContext<'a> {
 
 impl<'a> TestContext<'a> {
     /// Create a new test context.
-    pub fn new<P: AsRef<Path>>(
-        config: &'a Config,
-        entries: &'a [DummyAuthEntry],
-        base_dir: P,
-    ) -> Self {
+    pub fn new(config: &'a Config, entries: &'a [DummyAuthEntry], temp_dir: &'a Path) -> Self {
         let naptime = Duration::from_secs_f64(config.settings.naptime);
-        let temp_dir = tempdir_in(base_dir).unwrap();
-        // FIX: some tests need a 0o755 base dir
-        chmod(temp_dir.path(), Mode::from_bits_truncate(0o755)).unwrap();
         TestContext {
             naptime,
             temp_dir,
@@ -179,7 +167,7 @@ impl<'a> TestContext<'a> {
 
     /// Return the base path for this context.
     pub fn base_path(&self) -> &Path {
-        self.temp_dir.path()
+        self.temp_dir
     }
 
     pub fn features_config(&self) -> &FeaturesConfig {
@@ -188,13 +176,8 @@ impl<'a> TestContext<'a> {
 
     /// Generate a random path.
     pub fn gen_path(&self) -> PathBuf {
-        self.base_path().join(
-            thread_rng()
-                .sample_iter(&Alphanumeric)
-                .take(NUM_RAND_CHARS)
-                .map(char::from)
-                .collect::<String>(),
-        )
+        self.base_path()
+            .join(Alphanumeric.sample_string(&mut rand::thread_rng(), NUM_RAND_CHARS))
     }
 
     /// Create a regular file and open it.
@@ -207,7 +190,7 @@ impl<'a> TestContext<'a> {
         if let Some(mode) = mode {
             file = file.mode(mode);
         }
-        Ok(file.open(oflag)?)
+        file.open(oflag)
     }
 
     /// Return a file builder.
@@ -217,22 +200,19 @@ impl<'a> TestContext<'a> {
 
     /// Create a file with a random name.
     pub fn create(&self, f_type: FileType) -> Result<PathBuf, nix::Error> {
-        Ok(self.new_file(f_type).create()?)
+        self.new_file(f_type).create()
     }
 
     /// Create a file whose name length is _PC_NAME_MAX.
     pub fn create_name_max(&self, f_type: FileType) -> Result<PathBuf, nix::Error> {
-        let max_name_len = pathconf(self.base_path(), nix::unistd::PathconfVar::NAME_MAX)?.unwrap();
+        let max_name_len =
+            pathconf(self.base_path(), nix::unistd::PathconfVar::NAME_MAX)?.unwrap() as usize;
 
-        let file = self.new_file(f_type).name(
-            thread_rng()
-                .sample_iter(&Alphanumeric)
-                .take(max_name_len as usize)
-                .map(char::from)
-                .collect::<String>(),
-        );
+        let file = self
+            .new_file(f_type)
+            .name(Alphanumeric.sample_string(&mut rand::thread_rng(), max_name_len));
 
-        Ok(file.create()?)
+        file.create()
     }
 
     /// Create a file whose path length is _PC_PATH_MAX.
@@ -251,13 +231,7 @@ impl<'a> TestContext<'a> {
 
         let parts: Vec<_> = (0..remaining_chars / component_len)
             .into_iter()
-            .map(|_| {
-                thread_rng()
-                    .sample_iter(&Alphanumeric)
-                    .take(component_len - 1)
-                    .map(char::from)
-                    .collect::<String>()
-            })
+            .map(|_| Alphanumeric.sample_string(&mut rand::thread_rng(), component_len - 1))
             .collect();
 
         let remaining_chars = remaining_chars % component_len - 1;
@@ -266,13 +240,7 @@ impl<'a> TestContext<'a> {
 
             create_dir_all(&path).unwrap();
 
-            path.push(
-                thread_rng()
-                    .sample_iter(&Alphanumeric)
-                    .take(remaining_chars)
-                    .map(char::from)
-                    .collect::<String>(),
-            );
+            path.push(Alphanumeric.sample_string(&mut rand::thread_rng(), remaining_chars));
         } else {
             path.extend(&parts[..parts.len() - 1]);
 
@@ -385,13 +353,8 @@ impl FileBuilder {
     /// [`Take`](std::mem::take) and return the path final form.
     fn final_path(&mut self) -> PathBuf {
         if self.random_name {
-            self.path.push(
-                thread_rng()
-                    .sample_iter(&Alphanumeric)
-                    .take(NUM_RAND_CHARS)
-                    .map(char::from)
-                    .collect::<String>(),
-            )
+            self.path
+                .push(Alphanumeric.sample_string(&mut rand::thread_rng(), NUM_RAND_CHARS))
         }
 
         std::mem::take(&mut self.path)
@@ -503,35 +466,10 @@ mod tests {
             let tempdir = TempDir::new().unwrap();
             let ctx = TestContext::new(&config, &[], tempdir.path());
 
-            assert!(ctx.temp_dir.path().starts_with(tempdir.path()));
-
-            let parent_content = WalkDir::new(tempdir.path())
-                .min_depth(1)
-                .into_iter()
-                .collect::<Vec<_>>();
-            assert_eq!(parent_content.len(), 1);
-            assert!(parent_content[0].as_ref().unwrap().file_type().is_dir());
-            assert_eq!(
-                parent_content[0].as_ref().unwrap().path(),
-                ctx.temp_dir.path()
-            );
-            assert_eq!(
-                WalkDir::new(ctx.temp_dir.path())
-                    .min_depth(1)
-                    .into_iter()
-                    .count(),
-                0
-            );
+            assert!(ctx.base_path().starts_with(tempdir.path()));
 
             let file = ctx.create(ft.clone()).unwrap();
-            let parent_content = WalkDir::new(tempdir.path())
-                .min_depth(1)
-                .max_depth(1)
-                .into_iter()
-                .filter_map(|e| e.ok());
-            assert_eq!(parent_content.count(), 1);
-
-            let content: Vec<_> = WalkDir::new(ctx.temp_dir.path())
+            let content: Vec<_> = WalkDir::new(ctx.base_path())
                 .min_depth(1)
                 .max_depth(1)
                 .into_iter()
@@ -580,7 +518,7 @@ mod tests {
     fn path_max() {
         let tmpdir = TempDir::new().unwrap();
         let config = Config::default();
-        let ctx = TestContext::new(&config, &[], &tmpdir.path());
+        let ctx = TestContext::new(&config, &[], tmpdir.path());
         let file = ctx.create_path_max(FileType::Regular).unwrap();
         let path_len = file.to_string_lossy().len();
 
@@ -614,7 +552,7 @@ mod tests {
         ] {
             let tmpdir = TempDir::new().unwrap();
             let config = Config::default();
-            let ctx = TestContext::new(&config, &[], &tmpdir.path());
+            let ctx = TestContext::new(&config, &[], tmpdir.path());
             let name = "testing";
             let expected_mode = 0o725;
             let (path, _file) = ctx
@@ -636,11 +574,11 @@ mod tests {
     fn regular_unique_syscall() {
         let tmpdir = TempDir::new().unwrap();
         let config = Config::default();
-        let ctx = TestContext::new(&config, &[], &tmpdir.path());
+        let ctx = TestContext::new(&config, &[], tmpdir.path());
 
         assert!(ctx
             .new_file(FileType::Regular)
-            .mode(0o444)
+            .mode(0o000)
             .open(OFlag::O_RDWR)
             .is_ok());
     }

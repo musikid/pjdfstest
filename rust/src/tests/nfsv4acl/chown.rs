@@ -9,7 +9,7 @@ use nix::{
 
 use super::prependacl;
 use crate::{
-    runner::context::{FileType, SerializedTestContext},
+    context::{FileType, SerializedTestContext},
     test::FileSystemFeature,
     utils::chmod,
     Mode,

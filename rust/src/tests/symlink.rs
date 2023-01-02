@@ -5,12 +5,13 @@ use std::{
 };
 
 use crate::{
-    runner::context::{FileType, TestContext},
+    context::{FileType, TestContext},
     tests::{assert_times_changed, errors::enoent::enoent_comp_test_case, CTIME, MTIME},
     utils::symlink,
 };
 
 use super::errors::{
+    efault::efault_either_test_case,
     enametoolong::{enametoolong_comp_test_case, enametoolong_either_path_test_case},
     enospc::enospc_no_free_inodes_test_case,
     enotdir::enotdir_comp_test_case,
@@ -97,3 +98,6 @@ enoent_comp_test_case!(symlink(Path::new("test"), ~path));
 
 // symlink/11.t
 enospc_no_free_inodes_test_case!(symlink(Path::new("test"), ~path));
+
+// symlink/13.t
+efault_either_test_case!(symlink, nix::libc::symlink);

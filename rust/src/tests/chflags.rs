@@ -11,12 +11,13 @@ use once_cell::sync::Lazy;
 #[cfg(any(target_os = "netbsd", target_os = "freebsd", target_os = "dragonfly"))]
 use crate::utils::lchflags;
 use crate::{
-    runner::context::{FileType, SerializedTestContext, TestContext},
+    context::{FileType, SerializedTestContext, TestContext},
     test::{FileFlags, FileSystemFeature},
 };
 
 use super::{
     assert_ctime_changed, assert_ctime_unchanged,
+    errors::efault::efault_path_test_case,
     errors::eloop::eloop_comp_test_case,
     errors::enametoolong::{enametoolong_comp_test_case, enametoolong_path_test_case},
     errors::enoent::{enoent_comp_test_case, enoent_named_file_test_case},
@@ -234,3 +235,6 @@ enoent_comp_test_case!(chflags(~path, FileFlag::empty()));
 
 // chflags/06.t
 eloop_comp_test_case!(chflags(~path, FileFlag::empty()));
+
+// chflags/13.t
+efault_path_test_case!(chflags, |ptr| nix::libc::chflags(ptr, 0));

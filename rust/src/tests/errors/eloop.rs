@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use crate::runner::context::{FileType, TestContext};
+use crate::context::{FileType, TestContext};
 
 /// Create a loop between two symbolic links and return them.
 pub fn create_loop_symlinks(ctx: &mut TestContext) -> (PathBuf, PathBuf) {
@@ -55,7 +55,7 @@ macro_rules! eloop_comp_test_case {
             " which is not the last one")]
             eloop_comp
         }
-        fn eloop_comp(ctx: &mut crate::runner::context::TestContext) {
+        fn eloop_comp(ctx: &mut crate::context::TestContext) {
             let (mut loop1, mut loop2) = $crate::tests::errors::eloop::create_loop_symlinks(ctx);
             loop1.push("test");
             loop2.push("test");
@@ -68,7 +68,7 @@ macro_rules! eloop_comp_test_case {
     };
 
     ($syscall: ident $( ($( $($before:expr),* ,)? ~path $(, $($after:expr),*)?) )?) => {
-        eloop_comp_test_case!($syscall, |_: &mut $crate::runner::context::TestContext,
+        eloop_comp_test_case!($syscall, |_: &mut $crate::context::TestContext,
             path: &std::path::Path| {
             $syscall($( $($($before),* ,)? )? path $( $(, $($after),*)? )?)
         });
@@ -92,13 +92,11 @@ macro_rules! eloop_either_test_case {
             " which is not the last one")]
             eloop_comp
         }
-        fn eloop_comp(ctx: &mut crate::runner::context::TestContext) {
+        fn eloop_comp(ctx: &mut crate::context::TestContext) {
             let (mut loop1, mut loop2) = $crate::tests::errors::eloop::create_loop_symlinks(ctx);
             loop1.push("test");
             loop2.push("test");
-            let valid_path = ctx
-                .create(crate::runner::context::FileType::Regular)
-                .unwrap();
+            let valid_path = ctx.create(crate::context::FileType::Regular).unwrap();
 
             assert_eq!(
                 $syscall(&loop1.join("test"), &valid_path).unwrap_err(),
@@ -158,7 +156,7 @@ macro_rules! eloop_final_comp_test_case {
             " the last component of the pathname")]
             eloop_final_comp
         }
-        fn eloop_final_comp(ctx: &mut crate::runner::context::TestContext) {
+        fn eloop_final_comp(ctx: &mut crate::context::TestContext) {
             let (loop1, loop2) = $crate::tests::errors::eloop::create_loop_symlinks(ctx);
 
             $(
@@ -169,7 +167,7 @@ macro_rules! eloop_final_comp_test_case {
     };
 
     ($syscall: ident $( ($( $($before:expr),* ,)? ~path $(, $($after:expr),*)?) )?) => {
-        eloop_final_comp_test_case!($syscall, |_: &mut $crate::runner::context::TestContext,
+        eloop_final_comp_test_case!($syscall, |_: &mut $crate::context::TestContext,
             path: &std::path::Path| {
             $syscall($( $($($before),* ,)? )? path $( $(, $($after),*)? )?)
         });
