@@ -17,7 +17,7 @@ when executing the runner with `-l` argument.
 
 For example, with `posix_fallocate`:
 
- ```toml
+```toml
 [features]
 posix_fallocate = {}
 
@@ -31,7 +31,7 @@ TODO
 
 #### file_flags
 
-Some tests are related to file flags. 
+Some tests are related to file flags.
 However, not all file systems and operating systems support all flags.
 To give a sufficient level of granularity, each supported flag can be
 specified in the configuration with the `file_flags` array.
@@ -40,6 +40,18 @@ specified in the configuration with the `file_flags` array.
 [features]
 posix_fallocate = {}
 file_flags = ["UF_IMMUTABLE"]
+```
+
+#### secondary_fs
+
+Some tests require a secondary file system.
+This can be specified in the configuration with the `secondary_fs` key,
+but also with the `secondary_fs` argument.
+The argument takes precedence over the configuration.
+
+```toml
+[features]
+secondary_fs = "/mnt/ISO"
 ```
 
 ### [dummy_auth]
@@ -57,7 +69,7 @@ entries = [
 ]
 ```
 
-* `entries` - An entry is composed of a username and its associated group. 
+- `entries` - An entry is composed of a username and its associated group.
   Exactly 3 entries need to be specified if the runner default ones cannot be used.
 
 ### [settings]
@@ -67,6 +79,6 @@ entries = [
 naptime = 0.001
 ```
 
-* `naptime` - The duration for a "short" sleep.  It should be greater than the
-  timestamp granularity of the file system under test.  The default value is 1
+- `naptime` - The duration for a "short" sleep. It should be greater than the
+  timestamp granularity of the file system under test. The default value is 1
   second.

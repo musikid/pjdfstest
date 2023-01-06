@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use std::collections::HashSet;
+use std::path::PathBuf;
 
 use crate::test::FileFlags;
 use crate::test::FileSystemFeature;
@@ -17,6 +18,8 @@ pub struct CommonFeatureConfig {}
 pub struct FeaturesConfig {
     #[serde(default)]
     pub file_flags: HashSet<FileFlags>,
+    #[serde(default)]
+    pub secondary_fs: Option<PathBuf>,
     #[serde(flatten)]
     pub fs_features: HashMap<FileSystemFeature, CommonFeatureConfig>,
 }

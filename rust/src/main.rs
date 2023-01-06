@@ -60,6 +60,9 @@ struct ArgOptions {
 
     #[options(free, help = "Filter test names")]
     test_patterns: Vec<String>,
+
+    #[options(help = "Path to a secondary file system")]
+    secondary_fs: Option<PathBuf>,
 }
 
 fn main() -> anyhow::Result<()> {
@@ -73,12 +76,14 @@ fn main() -> anyhow::Result<()> {
     }
 
     let config: Config = {
-        let mut config = Figment::from(Serialized::defaults(Config::default()));
+        let mut figment = Figment::from(Serialized::defaults(Config::default()));
         if let Some(path) = args.configuration_file.as_deref() {
-            config = config.merge(Toml::file(path))
+            figment = figment.merge(Toml::file(path))
         }
 
-        config.extract()?
+        let mut config: Config = figment.extract()?;
+        config.features.secondary_fs = args.secondary_fs;
+        config
     };
 
     let path = args

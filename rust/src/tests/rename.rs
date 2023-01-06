@@ -19,7 +19,7 @@ use super::{
         eloop::eloop_either_test_case,
         enametoolong::{enametoolong_either_comp_test_case, enametoolong_either_path_test_case},
         enoent::enoent_either_named_file_test_case,
-        enotdir::enotdir_comp_either_test_case,
+        enotdir::enotdir_comp_either_test_case, exdev::exdev_target_test_case,
     },
 };
 
@@ -365,3 +365,6 @@ fn eexist_enotempty_to_non_empty(ctx: &mut TestContext, ft: FileType) {
         Err(Errno::EEXIST | Errno::ENOTEMPTY)
     ));
 }
+
+// rename/15.t
+exdev_target_test_case!(rename);

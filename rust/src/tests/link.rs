@@ -12,6 +12,7 @@ use super::{
         efault::efault_either_test_case,
         eloop::eloop_either_test_case,
         enametoolong::{enametoolong_either_comp_test_case, enametoolong_either_path_test_case},
+        exdev::exdev_target_test_case,
     },
     CTIME, MTIME,
 };
@@ -233,6 +234,9 @@ fn eexist_dest_exists(ctx: &mut TestContext, ft: FileType) {
 
     assert_eq!(link(&regular_file, &path), Err(nix::errno::Errno::EEXIST));
 }
+
+// link/14.t
+exdev_target_test_case!(link);
 
 // link/17.t
 efault_either_test_case!(link, nix::libc::link);
