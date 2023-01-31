@@ -15,6 +15,7 @@ use super::errors::{
     enametoolong::{enametoolong_comp_test_case, enametoolong_path_test_case},
     enoent::{enoent_comp_test_case, enoent_named_file_test_case},
     enotdir::enotdir_comp_test_case,
+    erofs::erofs_named_test_case,
     etxtbsy::etxtbsy_test_case,
 };
 
@@ -117,6 +118,9 @@ fn eisdir(ctx: &mut TestContext) {
 
 // (f)truncate/11.t
 etxtbsy_test_case!(truncate(~path, 123));
+
+// (f)truncate/12.t
+erofs_named_test_case!(truncate(~path, 123));
 
 crate::test_case! {
     /// truncate returns EINVAL if the length argument was less than 0

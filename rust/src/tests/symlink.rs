@@ -14,6 +14,7 @@ use super::errors::{
     efault::efault_either_test_case,
     enametoolong::{enametoolong_comp_test_case, enametoolong_either_path_test_case},
     enotdir::enotdir_comp_test_case,
+    erofs::erofs_new_file_test_case,
 };
 
 crate::test_case! {
@@ -94,6 +95,9 @@ enametoolong_either_path_test_case!(symlink);
 
 // symlink/04.t
 enoent_comp_test_case!(symlink(Path::new("test"), ~path));
+
+// symlink/10.t
+erofs_new_file_test_case!(symlink(Path::new("test"), ~path));
 
 // symlink/13.t
 efault_either_test_case!(symlink, nix::libc::symlink);

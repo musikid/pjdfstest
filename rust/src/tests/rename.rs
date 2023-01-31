@@ -19,7 +19,9 @@ use super::{
         eloop::eloop_either_test_case,
         enametoolong::{enametoolong_either_comp_test_case, enametoolong_either_path_test_case},
         enoent::enoent_either_named_file_test_case,
-        enotdir::enotdir_comp_either_test_case, exdev::exdev_target_test_case,
+        enotdir::enotdir_comp_either_test_case,
+        erofs::erofs_named_test_case,
+        exdev::exdev_target_test_case,
     },
 };
 
@@ -311,6 +313,12 @@ fn eisdir_to_dir_from_not_dir(ctx: &mut TestContext, ft: FileType) {
     let not_dir_file = ctx.create(ft).unwrap();
     assert_eq!(rename(&not_dir_file, &dir), Err(Errno::EISDIR));
 }
+
+// rename/16.t
+erofs_named_test_case!(rename, |ctx: &mut TestContext, file| {
+    let path = ctx.gen_path();
+    rename(file, &path)
+});
 
 // rename/17.t
 efault_either_test_case!(rename, nix::libc::rename);

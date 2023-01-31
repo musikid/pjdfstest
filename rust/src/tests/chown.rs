@@ -9,6 +9,7 @@ use super::errors::enoent::{
     enoent_comp_test_case, enoent_named_file_test_case, enoent_symlink_named_file_test_case,
 };
 use super::errors::enotdir::enotdir_comp_test_case;
+use super::errors::erofs::erofs_named_test_case;
 
 fn chown_wrapper(ctx: &mut TestContext, path: &std::path::Path) -> nix::Result<()> {
     let user = ctx.get_new_user();
@@ -38,6 +39,9 @@ enametoolong_comp_test_case!(chown, chown_wrapper);
 // chown/03.t
 enametoolong_path_test_case!(chown, chown_wrapper);
 
+// chown/09.t
+erofs_named_test_case!(chown, chown_wrapper);
+
 // chown/10.t
 efault_path_test_case!(chown, |ptr| nix::libc::chown(ptr, 0, 0));
 
@@ -61,6 +65,9 @@ mod lchown {
 
     enametoolong_comp_test_case!(lchown, lchown_wrapper);
     enametoolong_path_test_case!(lchown, lchown_wrapper);
+
+    // chown/09.t
+    erofs_named_test_case!(lchown, lchown_wrapper);
 
     // chown/10.t
     efault_path_test_case!(lchown, |ptr| nix::libc::lchown(ptr, 0, 0));
