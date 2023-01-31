@@ -5,6 +5,7 @@ use nix::sys::stat::{mknod, Mode, SFlag};
 
 use crate::context::{FileType, SerializedTestContext, TestContext};
 
+use super::errors::eexist::eexist_file_exists_test_case;
 use super::errors::efault::efault_path_test_case;
 use super::errors::eloop::eloop_comp_test_case;
 use super::errors::enametoolong::{enametoolong_comp_test_case, enametoolong_path_test_case};
@@ -203,6 +204,9 @@ enoent_comp_test_case!(mknod(~path, SFlag::S_IFIFO, Mode::empty(), 0));
 // mknod/07.t
 eloop_comp_test_case!(mknod(~path, SFlag::S_IFIFO, Mode::empty(), 0));
 
+// mknod/08.t
+eexist_file_exists_test_case!(mknod(~path, SFlag::S_IFIFO, Mode::empty(), 0));
+
 // mknod/10.t
 efault_path_test_case!(mknod, |ptr| nix::libc::mknod(
     ptr,
@@ -226,4 +230,7 @@ mod privileged {
 
     // mknod/03.t
     enametoolong_path_test_case!(mknod, mknod_block_wrapper, mknod_char_wrapper; root);
+
+    // mknod/08.t
+    eexist_file_exists_test_case!(mknod, mknod_block_wrapper, mknod_char_wrapper; root);
 }

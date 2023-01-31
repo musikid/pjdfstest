@@ -4,6 +4,7 @@ use nix::{sys::stat::Mode, unistd::mkdir};
 
 use crate::context::{SerializedTestContext, TestContext};
 
+use super::errors::eexist::eexist_file_exists_test_case;
 use super::errors::efault::efault_path_test_case;
 use super::errors::eloop::eloop_comp_test_case;
 use super::errors::enametoolong::{enametoolong_comp_test_case, enametoolong_path_test_case};
@@ -62,6 +63,9 @@ enoent_comp_test_case!(mkdir(~path, Mode::empty()));
 
 // mkdir/07.t
 eloop_comp_test_case!(mkdir(~path, Mode::empty()));
+
+// mkdir/10.t
+eexist_file_exists_test_case!(mkdir(~path, Mode::empty()));
 
 // mkdir/12.t
 efault_path_test_case!(mkdir, |ptr| nix::libc::mkdir(ptr, 0o755));

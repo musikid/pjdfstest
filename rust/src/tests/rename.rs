@@ -316,6 +316,23 @@ fn eisdir_to_dir_from_not_dir(ctx: &mut TestContext, ft: FileType) {
 efault_either_test_case!(rename, nix::libc::rename);
 
 crate::test_case! {
+    /// rename returns EINVAL when the 'from' argument is a parent directory of 'to'
+    // rename/18.t
+    einval_parent_from_subdir_to
+}
+fn einval_parent_from_subdir_to(ctx: &mut TestContext) {
+    let subdir = ctx.create(FileType::Dir).unwrap();
+    let nested_subdir = ctx
+        .new_file(FileType::Dir)
+        .name(subdir.join("subsubdir"))
+        .create()
+        .unwrap();
+
+    assert_eq!(rename(ctx.base_path(), &subdir), Err(Errno::EINVAL));
+    assert_eq!(rename(ctx.base_path(), &nested_subdir), Err(Errno::EINVAL));
+}
+
+crate::test_case! {
     /// rename returns EINVAL/EBUSY when an attempt is made to rename '.' or '..'
     // rename/19.t
     einval_ebusy_dot_dotdot
@@ -334,20 +351,19 @@ fn einval_ebusy_dot_dotdot(ctx: &mut TestContext) {
 }
 
 crate::test_case! {
-    /// rename returns EINVAL when the 'from' argument is a parent directory of 'to'
-    // rename/18.t
-    einval_parent_from_subdir_to
+    /// rename returns EEXIST or ENOTEMPTY if the 'to' argument is a directory and is not empty
+    // rename/20.t
+    eexist_enotempty_to_non_empty => [Regular, Dir, Fifo, Block, Char, Socket, Symlink(None)]
 }
-fn einval_parent_from_subdir_to(ctx: &mut TestContext) {
-    let subdir = ctx.create(FileType::Dir).unwrap();
-    let nested_subdir = ctx
-        .new_file(FileType::Dir)
-        .name(subdir.join("subsubdir"))
-        .create()
-        .unwrap();
+fn eexist_enotempty_to_non_empty(ctx: &mut TestContext, ft: FileType) {
+    let from_dir = ctx.create(FileType::Dir).unwrap();
+    let to_dir = ctx.create(FileType::Dir).unwrap();
+    ctx.new_file(ft).name(to_dir.join("test")).create().unwrap();
 
-    assert_eq!(rename(ctx.base_path(), &subdir), Err(Errno::EINVAL));
-    assert_eq!(rename(ctx.base_path(), &nested_subdir), Err(Errno::EINVAL));
+    assert!(matches!(
+        rename(&from_dir, &to_dir),
+        Err(Errno::EEXIST | Errno::ENOTEMPTY)
+    ));
 }
 
 // rename/15.t
