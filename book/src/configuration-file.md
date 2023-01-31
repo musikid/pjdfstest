@@ -77,8 +77,12 @@ entries = [
 ```toml
 [settings]
 naptime = 0.001
+allow_erofs = false
 ```
 
 - `naptime` - The duration for a "short" sleep. It should be greater than the
   timestamp granularity of the file system under test. The default value is 1
   second.
+- `allow_erofs` - If set to `true`, the runner will run the EROFS tests,
+  which require to remount the file system on which
+  pjdsfstest is run as read-only.
