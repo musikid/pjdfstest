@@ -30,14 +30,14 @@ pub struct FeaturesConfig {
 pub struct SettingsConfig {
     #[serde(default = "default_naptime")]
     pub naptime: f64,
-    pub allow_erofs: bool,
+    pub allow_remount: bool,
 }
 
 impl Default for SettingsConfig {
     fn default() -> Self {
         SettingsConfig {
             naptime: default_naptime(),
-            allow_erofs: false,
+            allow_remount: false,
         }
     }
 }

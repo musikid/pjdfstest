@@ -19,7 +19,7 @@ posix_fallocate = {}
 naptime = 0.001
 # Allow to run the EROFS tests, which require to remount the file system on which
 # pjdsfstest is run as read-only.
-allow_erofs = false
+allow_remount = false
 
 # This section allows to modify the mecanism for switching users, which is required by some tests.
 # [dummy_auth]

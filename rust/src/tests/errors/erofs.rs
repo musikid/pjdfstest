@@ -13,7 +13,7 @@ enum RemountOptions {
 
 /// Guard to allow execution of this test only if it's allowed to run.
 pub(crate) fn can_run_erofs(conf: &crate::config::Config, _: &Path) -> anyhow::Result<()> {
-    if !conf.settings.allow_erofs {
+    if !conf.settings.allow_remount {
         anyhow::bail!("EROFS is not enabled in the configuration file")
     }
 
