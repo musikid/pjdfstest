@@ -12,6 +12,7 @@ use super::{
         efault::efault_either_test_case,
         eloop::eloop_either_test_case,
         enametoolong::{enametoolong_either_comp_test_case, enametoolong_either_path_test_case},
+        exdev::exdev_target_test_case,
     },
     CTIME, MTIME,
 };
@@ -229,6 +230,17 @@ fn enoent_source_not_exists(ctx: &mut TestContext) {
 }
 
 crate::test_case! {
+    /// link returns EEXIST if the destination file exists
+    eexist_dest_exists => [Regular, Dir, Fifo, Block, Char, Socket, Symlink(None)]
+}
+fn eexist_dest_exists(ctx: &mut TestContext, ft: FileType) {
+    let path = ctx.create(ft).unwrap();
+    let regular_file = ctx.create(FileType::Regular).unwrap();
+
+    assert_eq!(link(&regular_file, &path), Err(nix::errno::Errno::EEXIST));
+}
+
+crate::test_case! {
     /// link returns ENOSPC if the directory in which the entry for the new link is being placed
     /// cannot be extended because there is no space left on the file system containing the directory
     // link/15.t
@@ -243,6 +255,9 @@ fn enospc_no_space(ctx: &mut SerializedTestContext) {
         assert_eq!(link(&file, &path), Err(Errno::ENOSPC));
     });
 }
+
+// link/14.t
+exdev_target_test_case!(link);
 
 // link/17.t
 efault_either_test_case!(link, nix::libc::link);

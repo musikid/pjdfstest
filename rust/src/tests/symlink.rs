@@ -11,6 +11,7 @@ use crate::{
 };
 
 use super::errors::{
+    eexist::eexist_file_exists_test_case,
     efault::efault_either_test_case,
     enametoolong::{enametoolong_comp_test_case, enametoolong_either_path_test_case},
     enospc::enospc_no_free_inodes_test_case,
@@ -95,6 +96,9 @@ enametoolong_either_path_test_case!(symlink);
 
 // symlink/04.t
 enoent_comp_test_case!(symlink(Path::new("test"), ~path));
+
+// symlink/08.t
+eexist_file_exists_test_case!(symlink(Path::new("test"), ~path));
 
 // symlink/11.t
 enospc_no_free_inodes_test_case!(symlink(Path::new("test"), ~path));
