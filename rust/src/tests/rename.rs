@@ -1,3 +1,5 @@
+mod sticky;
+
 use std::fs::symlink_metadata;
 
 use nix::{
