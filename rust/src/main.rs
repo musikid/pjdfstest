@@ -1,9 +1,11 @@
 use std::{
+    backtrace::{Backtrace, BacktraceStatus},
     collections::HashSet,
     env::current_dir,
     io::{stdout, Write},
     panic::{catch_unwind, set_hook},
     path::PathBuf,
+    sync::Mutex
 };
 
 use config::Config;
@@ -36,7 +38,7 @@ use crate::utils::chmod;
 
 struct PanicLocation(u32, u32, String);
 
-static PANIC_LOCATION: OnceCell<PanicLocation> = OnceCell::new();
+static BACKTRACE: Mutex<Option<Backtrace>> = Mutex::new(None);
 
 #[derive(Debug, Options)]
 struct ArgOptions {
@@ -92,16 +94,8 @@ fn main() -> anyhow::Result<()> {
         .or_else(|_| current_dir())?;
     let base_dir = tempdir_in(&path)?;
 
-    set_hook(Box::new(|ctx| {
-        if let Some(location) = ctx.location() {
-            let _ = PANIC_LOCATION.set(PanicLocation(
-                location.line(),
-                location.column(),
-                location.file().into(),
-            ));
-        } else {
-            unimplemented!()
-        }
+    set_hook(Box::new(|_| {
+        *BACKTRACE.lock().unwrap() = Some(Backtrace::capture());
     }));
 
     let test_cases = inventory::iter::<TestCase>;
@@ -235,17 +229,21 @@ fn run_test_cases(
                 succeeded_tests_count += 1;
             }
             Err(e) => {
-                let location = PANIC_LOCATION.get().unwrap();
-                println!(
-                    "error: {}, located in file {} at {}:{}",
-                    e.downcast_ref::<String>()
-                        .cloned()
-                        .or_else(|| e.downcast_ref::<&str>().map(|&s| s.to_string()))
-                        .unwrap_or_default(),
-                    location.2,
-                    location.0,
-                    location.1
-                );
+                let backtrace = BACKTRACE.lock().unwrap()
+                    .take()
+                    .filter(|bt| bt.status() == BacktraceStatus::Captured);
+                let panic_information = match e.downcast::<String>() {
+                    Ok(v) => *v,
+                    Err(e) => match e.downcast::<&str>() {
+                        Ok(v) => v.to_string(),
+                        _ => "Unknown Source of Error".to_owned()
+                    }
+                };
+                if let Some(backtrace) = backtrace {
+                    println!("{}\nBacktrace:\n{}", panic_information, backtrace);
+                } else {
+                    println!("{}", panic_information);
+                }
                 failed_tests_count += 1;
             }
         }
