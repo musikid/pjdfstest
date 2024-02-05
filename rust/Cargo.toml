@@ -5,7 +5,7 @@ edition = "2021"
 
 [dependencies]
 exacl = "0.9.0"
-tempfile = "3.3.0"
+tempfile = "3.4.0"
 rand = { version = "0.8.5", features = ["min_const_gen"] }
 strum = { version = "0.24.0", features = ["derive"] }
 strum_macros = "0.24.0"
