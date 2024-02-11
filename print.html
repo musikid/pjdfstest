@@ -216,7 +216,7 @@ However, not all tests can be completed without privileges,
 therefore the coverage will be incomplete.
 For example, tests which need to switch users will not be run.</p>
 <h2 id="dummy-usersgroups"><a class="header" href="#dummy-usersgroups">Dummy users/groups</a></h2>
-<p>The test suite needs dummy users and groups to be set up. 
+<p>The test suite needs dummy users and groups to be set up.
 This should be handled automatically when installing it via a package,
 but they need to be created otherwise.
 By default, the users (with the same name for the group associated to each of them) to create are:</p>
@@ -266,7 +266,7 @@ To give a sufficient level of granularity, each supported flag can be
 specified in the configuration with the <code>file_flags</code> array.</p>
 <pre><code class="language-toml">[features]
 posix_fallocate = {}
-file_flags = [&quot;UF_IMMUTABLE&quot;]
+file_flags = ["UF_IMMUTABLE"]
 </code></pre>
 <h4 id="secondary_fs"><a class="header" href="#secondary_fs">secondary_fs</a></h4>
 <p>Some tests require a secondary file system.
@@ -274,17 +274,17 @@ This can be specified in the configuration with the <code>secondary_fs</code> ke
 but also with the <code>secondary_fs</code> argument.
 The argument takes precedence over the configuration.</p>
 <pre><code class="language-toml">[features]
-secondary_fs = &quot;/mnt/ISO&quot;
+secondary_fs = "/mnt/ISO"
 </code></pre>
 <h3 id="dummy_auth"><a class="header" href="#dummy_auth">[dummy_auth]</a></h3>
 <p>This section allows to modify the mecanism for switching users, which is required by some tests.</p>
 <pre><code class="language-toml">[dummy_auth]
 entries = [
-  [&quot;nobody&quot;, &quot;nobody&quot;],
+  ["nobody", "nobody"],
   # nogroup instead for some Linux distros
-  # [&quot;nobody&quot;, &quot;nogroup&quot;],
-  [&quot;tests&quot;, &quot;tests&quot;],
-  [&quot;pjdfstest&quot;, &quot;pjdfstest&quot;],
+  # ["nobody", "nogroup"],
+  ["tests", "tests"],
+  ["pjdfstest", "pjdfstest"],
 ]
 </code></pre>
 <ul>
@@ -296,7 +296,7 @@ Exactly 3 entries need to be specified if the runner default ones cannot be used
 naptime = 0.001
 </code></pre>
 <ul>
-<li><code>naptime</code> - The duration for a &quot;short&quot; sleep. It should be greater than the
+<li><code>naptime</code> - The duration for a "short" sleep. It should be greater than the
 timestamp granularity of the file system under test. The default value is 1
 second.</li>
 </ul>
@@ -334,13 +334,13 @@ TC2 --&gt; TC2F2[Test case]
 <pre><code class="language-rust ignore">pub mod chmod;</code></pre>
 <h2 id="syscall-module"><a class="header" href="#syscall-module">Syscall module</a></h2>
 <p>A syscall module contains test cases related to a specific syscall.
-Its declaration should be in the <code>mod.rs</code> file 
+Its declaration should be in the <code>mod.rs</code> file
 of the relevant folder (<code>chmod/</code> in our case).
 Common syscall-specific helpers can go here.</p>
 <h3 id="aspect"><a class="header" href="#aspect">Aspect</a></h3>
 <p>An optional aspect module contains test cases that all relate to a common
 aspect of the syscall.
-Here &quot;aspect&quot; is a subjective area of related functionality.
+Here "aspect" is a subjective area of related functionality.
 The aspect module may be either:</p>
 <ul>
 <li>in a single file, which contains all the test functions,</li>
@@ -367,11 +367,11 @@ fn ctime(ctx: &amp;mut TestContext, f_type: FileType) {
 <p>The test runner has to run the tests, and provide a command-line interface to allow the user to modify how the tests should be run.
 It takes the tests from the specified test groups.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="test-declaration"><a class="header" href="#test-declaration">Test declaration</a></h1>
-<p>Test cases have the same structure than usual Rust tests, 
+<p>Test cases have the same structure than usual Rust tests,
 that is <code>unwrap</code>ing <code>Result</code>s and using assertion macros (<code>assert</code> and <code>assert_eq</code>),
 the exception being that it should take a <code>&amp;mut TestContext</code> parameter.
 It might also take a <code>FileType</code> argument if required.
-It also needs an additional declaration with the <code>test_case!</code> macro alongside the function, 
+It also needs an additional declaration with the <code>test_case!</code> macro alongside the function,
 with the function name being the only mandatory argument.</p>
 <p>For example:</p>
 <pre><code class="language-rust ignore">// chmod/00.t:L58
@@ -408,14 +408,14 @@ A variant of the <code>FileSystemFeature</code> enum corresponding to this featu
 should be specified after potential <code>root</code> requirement and before file flags.
 Multiple features can be specified, separated by a comma <code>,</code>.</p>
 <p>For example:</p>
-<pre><code class="language-rust ignore">#[cfg(target_os = &quot;freebsd&quot;)]
+<pre><code class="language-rust ignore">#[cfg(target_os = "freebsd")]
 crate::test_case! {eperm_immutable_flag, FileSystemFeature::Chflags, FileSystemFeature::PosixFallocate ...}</code></pre>
 <h4 id="adding-features"><a class="header" href="#adding-features">Adding features</a></h4>
 <p>New features can be added to the <code>FileSystemFeature</code> enum.
 A description of the feature should be provided as documentation
 for both developers and users.</p>
 <h3 id="guards"><a class="header" href="#guards">Guards</a></h3>
-<p>It is possible to specify &quot;guards&quot;, which are functions which checks if a requirement
+<p>It is possible to specify "guards", which are functions which checks if a requirement
 is met and return an error if not, so the test is skipped.
 They can be specified by appending function names after a <code>;</code> separator,
 after potential <code>root</code> requirement and features.</p>
@@ -429,10 +429,10 @@ pub type Guard = fn(&amp;Config, &amp;Path) -&gt; anyhow::Result&lt;()&gt;;</cod
 <h4 id="example"><a class="header" href="#example">Example</a></h4>
 <pre><code class="language-rust ignore">fn has_reasonable_link_max(_: &amp;Config, base_path: &amp;Path) -&gt; anyhow::Result&lt;()&gt; {
     let link_max = pathconf(base_path, nix::unistd::PathconfVar::LINK_MAX)?
-        .ok_or_else(|| anyhow::anyhow!(&quot;Failed to get LINK_MAX value&quot;))?;
+        .ok_or_else(|| anyhow::anyhow!("Failed to get LINK_MAX value"))?;
     
     if link_max &gt;= LINK_MAX_LIMIT {
-        anyhow::bail!(&quot;LINK_MAX value is too high ({link_max}, expected smaller than {LINK_MAX_LIMIT}&quot;);
+        anyhow::bail!("LINK_MAX value is too high ({link_max}, expected smaller than {LINK_MAX_LIMIT}");
     }
 
     Ok(())
@@ -445,7 +445,7 @@ crate::test_case! {
 ...</code></pre>
 <h3 id="root-privileges"><a class="header" href="#root-privileges">Root privileges</a></h3>
 <p>Some tests may need root privileges to run.
-To declare that a test function require such privileges, 
+To declare that a test function require such privileges,
 <code>root</code> should be added to its declaration.
 For example:</p>
 <pre><code class="language-rust ignore">crate::test_case!{change_perm, root}</code></pre>
@@ -466,7 +466,7 @@ When a test make use of such function, it is possible to restrain its compilatio
 to the supported operating systems, with the attribute <code>#[cfg(target_os = ...)]</code>.
 It is also possible to apply this attribute on an aspect, or even on a syscall module.
 For example:</p>
-<pre><code class="language-rust ignore">#[cfg(target_os = &quot;freebsd&quot;)]
+<pre><code class="language-rust ignore">#[cfg(target_os = "freebsd")]
 mod lchmod;</code></pre>
 <h2 id="serialized-test-cases"><a class="header" href="#serialized-test-cases">Serialized test cases</a></h2>
 <p>Some test cases need functions only available when they are run serialized, especially when they affect the whole process.
@@ -482,7 +482,7 @@ parameter in place of <code>TestContext</code> and the <code>serialized</code> k
 }
 fn affected_only_create_flags(ctx: &amp;mut SerializedTestContext) {
     ctx.as_user(Some(Uid::from_raw(65534)), None, || {
-        let path = subdir.join(&quot;test1&quot;);
+        let path = subdir.join("test1");
         let file = open(&amp;path, OFlag::O_CREAT | OFlag::O_RDWR, Mode::empty()).unwrap();
         assert!(posix_fallocate(file, 0, 1).is_ok());
     });

@@ -174,11 +174,11 @@
                 <div id="content" class="content">
                     <main>
                         <h1 id="test-declaration"><a class="header" href="#test-declaration">Test declaration</a></h1>
-<p>Test cases have the same structure than usual Rust tests, 
+<p>Test cases have the same structure than usual Rust tests,
 that is <code>unwrap</code>ing <code>Result</code>s and using assertion macros (<code>assert</code> and <code>assert_eq</code>),
 the exception being that it should take a <code>&amp;mut TestContext</code> parameter.
 It might also take a <code>FileType</code> argument if required.
-It also needs an additional declaration with the <code>test_case!</code> macro alongside the function, 
+It also needs an additional declaration with the <code>test_case!</code> macro alongside the function,
 with the function name being the only mandatory argument.</p>
 <p>For example:</p>
 <pre><code class="language-rust ignore">// chmod/00.t:L58
@@ -215,14 +215,14 @@ A variant of the <code>FileSystemFeature</code> enum corresponding to this featu
 should be specified after potential <code>root</code> requirement and before file flags.
 Multiple features can be specified, separated by a comma <code>,</code>.</p>
 <p>For example:</p>
-<pre><code class="language-rust ignore">#[cfg(target_os = &quot;freebsd&quot;)]
+<pre><code class="language-rust ignore">#[cfg(target_os = "freebsd")]
 crate::test_case! {eperm_immutable_flag, FileSystemFeature::Chflags, FileSystemFeature::PosixFallocate ...}</code></pre>
 <h4 id="adding-features"><a class="header" href="#adding-features">Adding features</a></h4>
 <p>New features can be added to the <code>FileSystemFeature</code> enum.
 A description of the feature should be provided as documentation
 for both developers and users.</p>
 <h3 id="guards"><a class="header" href="#guards">Guards</a></h3>
-<p>It is possible to specify &quot;guards&quot;, which are functions which checks if a requirement
+<p>It is possible to specify "guards", which are functions which checks if a requirement
 is met and return an error if not, so the test is skipped.
 They can be specified by appending function names after a <code>;</code> separator,
 after potential <code>root</code> requirement and features.</p>
@@ -236,10 +236,10 @@ pub type Guard = fn(&amp;Config, &amp;Path) -&gt; anyhow::Result&lt;()&gt;;</cod
 <h4 id="example"><a class="header" href="#example">Example</a></h4>
 <pre><code class="language-rust ignore">fn has_reasonable_link_max(_: &amp;Config, base_path: &amp;Path) -&gt; anyhow::Result&lt;()&gt; {
     let link_max = pathconf(base_path, nix::unistd::PathconfVar::LINK_MAX)?
-        .ok_or_else(|| anyhow::anyhow!(&quot;Failed to get LINK_MAX value&quot;))?;
+        .ok_or_else(|| anyhow::anyhow!("Failed to get LINK_MAX value"))?;
     
     if link_max &gt;= LINK_MAX_LIMIT {
-        anyhow::bail!(&quot;LINK_MAX value is too high ({link_max}, expected smaller than {LINK_MAX_LIMIT}&quot;);
+        anyhow::bail!("LINK_MAX value is too high ({link_max}, expected smaller than {LINK_MAX_LIMIT}");
     }
 
     Ok(())
@@ -252,7 +252,7 @@ crate::test_case! {
 ...</code></pre>
 <h3 id="root-privileges"><a class="header" href="#root-privileges">Root privileges</a></h3>
 <p>Some tests may need root privileges to run.
-To declare that a test function require such privileges, 
+To declare that a test function require such privileges,
 <code>root</code> should be added to its declaration.
 For example:</p>
 <pre><code class="language-rust ignore">crate::test_case!{change_perm, root}</code></pre>
@@ -273,7 +273,7 @@ When a test make use of such function, it is possible to restrain its compilatio
 to the supported operating systems, with the attribute <code>#[cfg(target_os = ...)]</code>.
 It is also possible to apply this attribute on an aspect, or even on a syscall module.
 For example:</p>
-<pre><code class="language-rust ignore">#[cfg(target_os = &quot;freebsd&quot;)]
+<pre><code class="language-rust ignore">#[cfg(target_os = "freebsd")]
 mod lchmod;</code></pre>
 <h2 id="serialized-test-cases"><a class="header" href="#serialized-test-cases">Serialized test cases</a></h2>
 <p>Some test cases need functions only available when they are run serialized, especially when they affect the whole process.
@@ -289,7 +289,7 @@ parameter in place of <code>TestContext</code> and the <code>serialized</code> k
 }
 fn affected_only_create_flags(ctx: &amp;mut SerializedTestContext) {
     ctx.as_user(Some(Uid::from_raw(65534)), None, || {
-        let path = subdir.join(&quot;test1&quot;);
+        let path = subdir.join("test1");
         let file = open(&amp;path, OFlag::O_CREAT | OFlag::O_RDWR, Mode::empty()).unwrap();
         assert!(posix_fallocate(file, 0, 1).is_ok());
     });
