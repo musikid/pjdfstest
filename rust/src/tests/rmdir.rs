@@ -1,5 +1,7 @@
 use std::{
+    ffi::OsStr,
     fs::metadata,
+    os::unix::ffi::OsStrExt,
     path::{Path, PathBuf},
     process::Command,
 };
@@ -62,7 +64,8 @@ impl DummyMnt {
         }
 
         let result = mount.arg(&from).arg(&path).output()?;
-        assert!(result.status.success());
+        let stderr = OsStr::from_bytes(&result.stderr).to_string_lossy();
+        assert!(result.status.success(), "{}", stderr);
 
         Ok(Self { path })
     }
@@ -99,6 +102,13 @@ fn has_mount_cap(_: &Config, _: &Path) -> anyhow::Result<()> {
 
     if !Uid::effective().is_root() && ctl.value()? == CtlValue::Int(0) {
         anyhow::bail!("process doesn't have the rights to mount the dummy file system")
+    }
+    if !Uid::effective().is_root() &&
+        !OsStr::from_bytes(&Command::new("lsvfs").output().unwrap().stdout)
+            .to_string_lossy()
+            .contains("nullfs")
+    {
+        anyhow::bail!("nullfs module is not loaded")
     }
 
     Ok(())
