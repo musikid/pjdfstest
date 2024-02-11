@@ -1,5 +1,6 @@
 use std::error::Error;
 use std::{borrow::Cow, fmt::Display};
+use std::process::exit;
 
 use nix::unistd::{Group, User};
 use serde::{de::Visitor, ser::SerializeTuple, Deserialize, Serialize};
@@ -110,23 +111,45 @@ pub struct DummyAuthConfig {
 
 impl Default for DummyAuthConfig {
     fn default() -> Self {
+        let unobody = User::from_name("nobody").unwrap().unwrap_or_else(|| {
+            eprintln!("error: nobody: no such user");
+            exit(1);
+        });
+        let gnobody = Group::from_gid(unobody.gid).unwrap().unwrap_or_else(|| {
+            eprintln!("error: {}: no such group", unobody.gid);
+            exit(1);
+        });
+        let upjdfstest = User::from_name("pjdfstest").unwrap().unwrap_or_else(|| {
+            eprintln!("error: pjdfstest: no such user");
+            exit(1);
+        });
+        let gpjdfstest = Group::from_gid(upjdfstest.gid).unwrap().unwrap_or_else(|| {
+            eprintln!("error: {}: no such group", upjdfstest.gid);
+            exit(1);
+        });
+        let utests = User::from_name("tests").unwrap().unwrap_or_else(|| {
+            eprintln!("error: tests: no such user");
+            exit(1);
+        });
+        let gtests = Group::from_gid(utests.gid).unwrap().unwrap_or_else(|| {
+            eprintln!("error: {}: no such group", utests.gid);
+            exit(1);
+        });
         Self {
             entries: [
                 {
-                    let user = User::from_name("nobody").unwrap().unwrap();
-                    let gid = user.gid;
                     DummyAuthEntry {
-                        user,
-                        group: Group::from_gid(gid).unwrap().unwrap(),
+                        user: unobody,
+                        group: gnobody,
                     }
                 },
                 DummyAuthEntry {
-                    user: User::from_name("pjdfstest").unwrap().unwrap(),
-                    group: Group::from_name("pjdfstest").unwrap().unwrap(),
+                    user: upjdfstest,
+                    group: gpjdfstest
                 },
                 DummyAuthEntry {
-                    user: User::from_name("tests").unwrap().unwrap(),
-                    group: Group::from_name("tests").unwrap().unwrap(),
+                    user: utests,
+                    group: gtests
                 },
             ],
         }
