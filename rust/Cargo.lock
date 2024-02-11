@@ -47,7 +47,7 @@ version = "0.5.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "938c50180feacea622ef3b8f4a496057c868dcf8ac7a64d781dd8f3f51a9c143"
 dependencies = [
- "libc 0.2.153",
+ "libc",
  "thiserror",
 ]
 
@@ -73,7 +73,7 @@ version = "0.3.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a258e46cdc063eb8519c00b9fc845fc47bcfca4130e2f08e88665ceda8474245"
 dependencies = [
- "libc 0.2.153",
+ "libc",
  "windows-sys",
 ]
 
@@ -115,7 +115,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c05aeb6a22b8f62540c194aac980f2115af067bfe15a0734d7277a768d396b31"
 dependencies = [
  "cfg-if",
- "libc 0.2.153",
+ "libc",
  "wasi",
 ]
 
@@ -168,11 +168,6 @@ dependencies = [
 
 [[package]]
 name = "libc"
-version = "0.2.135"
-source = "git+https://github.com/rust-lang/libc?rev=cc19b6f0801#cc19b6f08018f6de68d5c60bedd74190d2229c03"
-
-[[package]]
-name = "libc"
 version = "0.2.153"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9c198f91728a82281a64e1f4f9eeb25d82cb32a5de251c6bd1b5154d63a8e7bd"
@@ -194,21 +189,22 @@ dependencies = [
 
 [[package]]
 name = "memoffset"
-version = "0.6.5"
+version = "0.7.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5aa361d4faea93603064a027415f07bd8e1d5c88c9fbf68bf56a285428fd79ce"
+checksum = "5de893c32cde5f383baa4c04c5d6dbdd735cfd4a794b0debdb2bb1b421da5ff4"
 dependencies = [
  "autocfg",
 ]
 
 [[package]]
 name = "nix"
-version = "0.25.0"
-source = "git+https://github.com/nix-rust/nix.git?rev=20df092bd067908fba23e49120eed7ad62f29108#20df092bd067908fba23e49120eed7ad62f29108"
+version = "0.26.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "598beaf3cc6fdd9a5dfb1630c2800c7acd31df7aaf0f565796fba2b53ca1af1b"
 dependencies = [
  "bitflags 1.3.2",
  "cfg-if",
- "libc 0.2.135",
+ "libc",
  "memoffset",
  "pin-utils",
 ]
@@ -283,7 +279,7 @@ version = "0.8.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "34af8d1a0e25924bc5b7c43c079c942339d8f0a8b57c39049bef581b46327404"
 dependencies = [
- "libc 0.2.153",
+ "libc",
  "rand_chacha",
  "rand_core",
 ]
@@ -324,7 +320,7 @@ checksum = "6ea3e1a662af26cd7a3ba09c0297a31af215563ecf42817c98df621387f4e949"
 dependencies = [
  "bitflags 2.4.2",
  "errno",
- "libc 0.2.153",
+ "libc",
  "linux-raw-sys",
  "windows-sys",
 ]
@@ -411,7 +407,7 @@ checksum = "f99d037b2bef227ab8963f4b0acc33ecbb1f9a2e7365add7789372b387ec19e1"
 dependencies = [
  "bitflags 1.3.2",
  "byteorder",
- "libc 0.2.153",
+ "libc",
  "thiserror",
  "walkdir",
 ]
