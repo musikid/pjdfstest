@@ -116,11 +116,11 @@ fn eisdir(ctx: &mut TestContext) {
     assert_eq!(truncate(&path, 0), Err(Errno::EISDIR));
 }
 
+// (f)truncate/10.t
+erofs_named_test_case!(truncate(~path, 123));
+
 // (f)truncate/11.t
 etxtbsy_test_case!(truncate(~path, 123));
-
-// (f)truncate/12.t
-erofs_named_test_case!(truncate(~path, 123));
 
 crate::test_case! {
     /// truncate returns EINVAL if the length argument was less than 0
