@@ -236,5 +236,43 @@ enoent_comp_test_case!(chflags(~path, FileFlag::empty()));
 // chflags/06.t
 eloop_comp_test_case!(chflags(~path, FileFlag::empty()));
 
+// chflags/09.t
+#[cfg(target_os = "freebsd")]
+crate::test_case! {
+    /// chflags returns EPERM when one of SF_IMMUTABLE, SF_APPEND, or SF_NOUNLINK is set and
+    /// securelevel is greater than 0
+    securelevel, root, FileSystemFeature::Chflags =>
+        [Regular, Dir, Fifo, Block, Char, Socket, Symlink(None)]
+}
+#[cfg(target_os = "freebsd")]
+fn securelevel(ctx: &mut TestContext, ft: FileType) {
+    use jail::process::Jailed;
+    use std::ffi::OsStr;
+    use std::os::unix::ffi::OsStrExt;
+
+    let jail = jail::StoppedJail::new("/")
+        .name("pjdfstest_chflags_securelevel")
+        .param("allow.chflags", jail::param::Value::Int(1))
+        .param("securelevel", jail::param::Value::Int(1));
+    let jail = jail.start().unwrap();
+    ctx.set_jail(jail);
+
+    for flag in [FileFlags::SF_IMMUTABLE, FileFlags::SF_APPEND, FileFlags::SF_NOUNLINK] {
+        let file = ctx.create(ft.clone()).unwrap();
+        lchflags(&file, flag.into()).unwrap();
+
+        // Since this is a multithreaded application, we can't simply fork and chflags().  Instead,
+        // execute a child process to test the operation.
+        let r = std::process::Command::new("/bin/chflags")
+            .args(["-h", "0"])
+            .arg(ctx.base_path().join(&file))
+            .jail(&jail)
+            .output()
+            .unwrap();
+        assert!(!r.status.success());
+        assert!(OsStr::from_bytes(&r.stderr).to_string_lossy().contains("Operation not permitted"));
+    }
+}
+
 // chflags/13.t
 efault_path_test_case!(chflags, |ptr| nix::libc::chflags(ptr, 0));

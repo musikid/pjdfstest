@@ -77,6 +77,8 @@ pub struct TestContext<'a> {
     temp_dir: &'a Path,
     features_config: &'a FeaturesConfig,
     auth_entries: DummyAuthEntries<'a>,
+    #[cfg(target_os = "freebsd")]
+    jail: Option<jail::RunningJail>
 }
 
 pub struct SerializedTestContext<'a> {
@@ -162,6 +164,8 @@ impl<'a> TestContext<'a> {
             temp_dir,
             features_config: &config.features,
             auth_entries: DummyAuthEntries::new(entries),
+            #[cfg(target_os = "freebsd")]
+            jail: None
         }
     }
 
@@ -275,6 +279,12 @@ impl<'a> TestContext<'a> {
     pub fn nap(&self) {
         thread::sleep(self.naptime)
     }
+
+    /// Set this Context's jail, so it will be destroyed during teardown.
+    #[cfg(target_os = "freebsd")]
+    pub fn set_jail(&mut self, jail: jail::RunningJail) {
+        self.jail = Some(jail)
+    }
 }
 
 // We implement Drop to circumvent the errors which arise from unlinking a directory for which
@@ -324,6 +334,12 @@ impl<'a> Drop for TestContext<'a> {
                     if file_stat.st_flags != FileFlag::empty().bits() as fflags_t {
                         let _ = lchflags(entry.path(), FileFlag::empty());
                     }
+                }
+
+                // Shut down any jails
+                #[cfg(target_os = "freebsd")]
+                if let Some(jail) = self.jail.take() {
+                    let _ = jail.kill();
                 }
             }
         }
