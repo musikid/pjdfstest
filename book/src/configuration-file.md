@@ -77,7 +77,7 @@ entries = [
 ```toml
 [settings]
 naptime = 0.001
-allow_erofs = false
+allow_remount = false
 ```
 
 - `naptime` - The duration for a "short" sleep. It should be greater than the
