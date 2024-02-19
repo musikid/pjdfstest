@@ -17,7 +17,12 @@ use super::{
     CTIME, MTIME,
 };
 
-use crate::config::Config;
+use crate::{
+    config::Config,
+    tests::errors::enospc::{is_small, saturate_space},
+    utils::as_unprivileged_user,
+};
+
 use crate::{
     context::{FileType, SerializedTestContext, TestContext},
     tests::{
@@ -233,6 +238,22 @@ fn eexist_dest_exists(ctx: &mut TestContext, ft: FileType) {
     let regular_file = ctx.create(FileType::Regular).unwrap();
 
     assert_eq!(link(&regular_file, &path), Err(nix::errno::Errno::EEXIST));
+}
+
+crate::test_case! {
+    /// link returns ENOSPC if the directory in which the entry for the new link is being placed
+    /// cannot be extended because there is no space left on the file system containing the directory
+    // link/15.t
+    enospc_no_space, serialized; is_small
+}
+fn enospc_no_space(ctx: &mut SerializedTestContext) {
+    as_unprivileged_user!(ctx, {
+        let file = ctx.create(FileType::Regular).unwrap();
+        let path = ctx.gen_path();
+        saturate_space(ctx).unwrap();
+
+        assert_eq!(link(&file, &path), Err(Errno::ENOSPC));
+    });
 }
 
 // link/14.t

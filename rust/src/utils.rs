@@ -59,3 +59,18 @@ pub fn lchflags<P: ?Sized + nix::NixPath>(
 
     Errno::result(res).map(drop)
 }
+
+/// Execute as unprivileged user.
+macro_rules! as_unprivileged_user {
+    ($ctx: ident, $fn: block) => {
+        if nix::unistd::Uid::effective().is_root() {
+            let user = $ctx.get_new_user();
+            nix::unistd::chown($ctx.base_path(), Some(user.uid), Some(user.gid)).unwrap();
+            $ctx.as_user(&user, None, || $fn);
+        } else {
+            $fn
+        }
+    };
+}
+
+pub(crate) use as_unprivileged_user;
