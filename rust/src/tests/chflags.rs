@@ -1,4 +1,4 @@
-use std::{collections::HashSet, iter::once};
+use std::{collections::HashSet, iter::once, sync::OnceLock};
 
 use nix::{
     errno::Errno,
@@ -6,7 +6,6 @@ use nix::{
     sys::stat::{lstat, stat, FileFlag},
     unistd::chflags,
 };
-use once_cell::sync::Lazy;
 
 #[cfg(any(target_os = "netbsd", target_os = "freebsd", target_os = "dragonfly"))]
 use crate::utils::lchflags;
@@ -26,8 +25,9 @@ use super::{
 
 //TODO: Split tests with unprivileged tests for user flags
 
-const USER_FLAGS: Lazy<HashSet<FileFlags>> = Lazy::new(|| {
-    HashSet::from([
+fn get_flags(ctx: &TestContext) -> (FileFlag, FileFlag, FileFlag) {
+    static USER_FLAGS: OnceLock<HashSet<FileFlags>> = OnceLock::new();
+    USER_FLAGS.get_or_init(|| HashSet::from([
         FileFlags::UF_NODUMP,
         FileFlags::UF_IMMUTABLE,
         FileFlags::UF_APPEND,
@@ -35,20 +35,16 @@ const USER_FLAGS: Lazy<HashSet<FileFlags>> = Lazy::new(|| {
         FileFlags::UF_NOUNLINK,
         #[cfg(any(target_os = "freebsd", target_os = "dragonfly"))]
         FileFlags::UF_OPAQUE,
-    ])
-});
-
-const SYSTEM_FLAGS: Lazy<HashSet<FileFlags>> = Lazy::new(|| {
-    HashSet::from([
+    ]));
+    static SYSTEM_FLAGS: OnceLock<HashSet<FileFlags>> = OnceLock::new();
+    SYSTEM_FLAGS.get_or_init(|| HashSet::from([
         FileFlags::SF_ARCHIVED,
         FileFlags::SF_IMMUTABLE,
         FileFlags::SF_APPEND,
         #[cfg(any(target_os = "freebsd", target_os = "dragonfly"))]
         FileFlags::SF_NOUNLINK,
-    ])
-});
+    ]));
 
-fn get_flags(ctx: &TestContext) -> (FileFlag, FileFlag, FileFlag) {
     let allflags: FileFlag = ctx
         .features_config()
         .file_flags
@@ -60,7 +56,7 @@ fn get_flags(ctx: &TestContext) -> (FileFlag, FileFlag, FileFlag) {
     let user_flags: FileFlag = ctx
         .features_config()
         .file_flags
-        .intersection(&USER_FLAGS)
+        .intersection(USER_FLAGS.get().unwrap())
         .copied()
         .map(Into::into)
         .collect();
@@ -68,7 +64,7 @@ fn get_flags(ctx: &TestContext) -> (FileFlag, FileFlag, FileFlag) {
     let system_flags: FileFlag = ctx
         .features_config()
         .file_flags
-        .intersection(&SYSTEM_FLAGS)
+        .intersection(SYSTEM_FLAGS.get().unwrap())
         .copied()
         .map(Into::into)
         .collect();
