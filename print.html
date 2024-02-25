@@ -294,11 +294,15 @@ Exactly 3 entries need to be specified if the runner default ones cannot be used
 <h3 id="settings"><a class="header" href="#settings">[settings]</a></h3>
 <pre><code class="language-toml">[settings]
 naptime = 0.001
+allow_remount = false
 </code></pre>
 <ul>
 <li><code>naptime</code> - The duration for a "short" sleep. It should be greater than the
 timestamp granularity of the file system under test. The default value is 1
 second.</li>
+<li><code>allow_remount</code> - If set to <code>true</code>, the runner will run the EROFS tests,
+which require to remount the file system on which
+pjdsfstest is run as read-only.</li>
 </ul>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="structure"><a class="header" href="#structure">Structure</a></h1>
 <p>The package is made of the tests, and a test runner to launch them.</p>
