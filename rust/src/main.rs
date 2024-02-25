@@ -110,6 +110,15 @@ fn main() -> anyhow::Result<()> {
                         case.name.contains(pat)
                     }
                 })
+        }).map(|tc: &TestCase| TestCase {
+            // Ideally trim_start_matches could be done in test_case!, but only
+            // const functions are allowed there.
+            name: tc.name.trim_start_matches("pjdfstest::tests::"),
+            description: tc.description,
+            require_root: tc.require_root,
+            fun: tc.fun,
+            required_features: tc.required_features,
+            guards: tc.guards,
         })
         .collect();
 
@@ -136,7 +145,7 @@ fn main() -> anyhow::Result<()> {
 /// Run provided test cases and filter according to features and flags availability.
 //TODO: Refactor this function
 fn run_test_cases(
-    test_cases: &[&TestCase],
+    test_cases: &[TestCase],
     verbose: bool,
     config: &Config,
     base_dir: TempDir,
@@ -154,10 +163,10 @@ fn run_test_cases(
     for test_case in test_cases {
         //TODO: There's probably a better way to do this...
         let mut should_skip = test_case.require_root && !is_root;
-        let mut skip_message = String::new();
+        let mut skip_reasons = Vec::<String>::new();
 
         if should_skip {
-            skip_message += "requires root privileges\n";
+            skip_reasons.push(String::from("requires root privileges"));
         }
 
         let features: HashSet<_> = test_case.required_features.iter().collect();
@@ -171,9 +180,7 @@ fn run_test_cases(
                 .collect::<Vec<_>>()
                 .join(", ");
 
-            skip_message += "requires features: ";
-            skip_message += features;
-            skip_message += "\n";
+            skip_reasons.push(format!("requires features: {}", features));
         }
 
         let temp_dir = tempdir_in(base_dir.path()).unwrap();
@@ -186,18 +193,14 @@ fn run_test_cases(
             .any(|guard| guard(config, temp_dir.path()).is_err())
         {
             should_skip = true;
-            skip_message += &*test_case
+            skip_reasons.extend(test_case
                 .guards
                 .iter()
                 .filter_map(|guard| guard(config, base_dir.path()).err())
-                .map(|err| err.to_string())
-                .collect::<Vec<String>>()
-                .join("\n");
-            skip_message += "\n";
+                .map(|err| err.to_string()));
         }
 
-        print!("{}\t", test_case.name);
-
+        // TODO: ;decide what to do about verbose
         if verbose && !test_case.description.is_empty() {
             print!("\n\t{}\t\t", test_case.description);
         }
@@ -205,7 +208,10 @@ fn run_test_cases(
         stdout().lock().flush()?;
 
         if should_skip {
-            println!("skipped\n{}", skip_message);
+            println!("{:72} skipped", test_case.name);
+            for reason in &skip_reasons {
+                println!("\t{}", reason);
+            }
             skipped_tests_count += 1;
             continue;
         }
@@ -225,7 +231,7 @@ fn run_test_cases(
 
         match result {
             Ok(_) => {
-                println!("success");
+                println!("{:77} ok", test_case.name);
                 succeeded_tests_count += 1;
             }
             Err(e) => {
@@ -239,10 +245,9 @@ fn run_test_cases(
                         _ => "Unknown Source of Error".to_owned()
                     }
                 };
+                println!("{:73} FAILED\n\t{}", test_case.name, panic_information);
                 if let Some(backtrace) = backtrace {
-                    println!("{}\nBacktrace:\n{}", panic_information, backtrace);
-                } else {
-                    println!("{}", panic_information);
+                    println!("Backtrace:\n{}", backtrace);
                 }
                 failed_tests_count += 1;
             }
