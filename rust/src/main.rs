@@ -1,3 +1,6 @@
+// https://github.com/rust-lang/rust-clippy/issues/1553
+#![allow(clippy::redundant_closure_call)]
+
 use std::{
     backtrace::{Backtrace, BacktraceStatus},
     collections::HashSet,
@@ -18,7 +21,6 @@ use nix::{
     sys::stat::{umask, Mode},
     unistd::Uid,
 };
-use once_cell::sync::OnceCell;
 use strum::{EnumMessage, IntoEnumIterator};
 
 use tempfile::{tempdir_in, TempDir};
@@ -35,8 +37,6 @@ mod utils;
 use test::{FileSystemFeature, SerializedTestContext, TestCase, TestContext, TestFn};
 
 use crate::utils::chmod;
-
-struct PanicLocation(u32, u32, String);
 
 static BACKTRACE: Mutex<Option<Backtrace>> = Mutex::new(None);
 

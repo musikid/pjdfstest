@@ -120,8 +120,8 @@ fn device_files(ctx: &mut TestContext, ft: FileType) {
 
     let stat = symlink_metadata(&file).unwrap();
     assert_eq!(stat.permissions().mode() as mode_t & ALLPERMS, mode);
-    assert_eq!(major(stat.rdev()) as u64, major_num);
-    assert_eq!(minor(stat.rdev()) as u64, minor_num);
+    assert_eq!(major(stat.rdev()), major_num);
+    assert_eq!(minor(stat.rdev()), minor_num);
     assert!(check(&stat.file_type()));
 }
 
