@@ -22,6 +22,7 @@ use super::{
     errors::enametoolong::{enametoolong_comp_test_case, enametoolong_path_test_case},
     errors::enoent::{enoent_comp_test_case, enoent_named_file_test_case},
     errors::enotdir::enotdir_comp_test_case,
+    errors::erofs::erofs_named_test_case,
 };
 
 //TODO: Split tests with unprivileged tests for user flags
@@ -276,3 +277,6 @@ fn securelevel(ctx: &mut TestContext, ft: FileType) {
 
 // chflags/13.t
 efault_path_test_case!(chflags, |ptr| nix::libc::chflags(ptr, 0));
+
+// chflags/12.t
+erofs_named_test_case!(chflags(~path, FileFlag::empty()));

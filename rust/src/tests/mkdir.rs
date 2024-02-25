@@ -9,6 +9,7 @@ use super::errors::efault::efault_path_test_case;
 use super::errors::eloop::eloop_comp_test_case;
 use super::errors::enametoolong::{enametoolong_comp_test_case, enametoolong_path_test_case};
 use super::errors::enoent::enoent_comp_test_case;
+use super::errors::erofs::erofs_new_file_test_case;
 use super::mksyscalls::{assert_perms_from_mode_and_umask, assert_uid_gid};
 use super::{assert_times_changed, errors::enotdir::enotdir_comp_test_case, ATIME, CTIME, MTIME};
 
@@ -63,6 +64,9 @@ enoent_comp_test_case!(mkdir(~path, Mode::empty()));
 
 // mkdir/07.t
 eloop_comp_test_case!(mkdir(~path, Mode::empty()));
+
+// mkdir/09.t
+erofs_new_file_test_case!(mkdir(~path, Mode::empty()));
 
 // mkdir/10.t
 eexist_file_exists_test_case!(mkdir(~path, Mode::empty()));

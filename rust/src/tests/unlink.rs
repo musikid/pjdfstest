@@ -14,6 +14,7 @@ use super::{
         enametoolong::{enametoolong_comp_test_case, enametoolong_path_test_case},
         enoent::enoent_named_file_test_case,
         enotdir::enotdir_comp_test_case,
+        erofs::erofs_named_test_case,
     },
 };
 
@@ -153,6 +154,9 @@ enoent_named_file_test_case!(unlink);
 
 // unlink/07.t
 eloop_comp_test_case!(unlink);
+
+// unlink/12.t
+erofs_named_test_case!(unlink);
 
 // unlink/13.t
 efault_path_test_case!(unlink, nix::libc::unlink);

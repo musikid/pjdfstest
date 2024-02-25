@@ -12,6 +12,7 @@ use super::{
         efault::efault_either_test_case,
         eloop::eloop_either_test_case,
         enametoolong::{enametoolong_either_comp_test_case, enametoolong_either_path_test_case},
+        erofs::erofs_named_test_case,
         exdev::exdev_target_test_case,
     },
     CTIME, MTIME,
@@ -211,6 +212,12 @@ enoent_either_named_file_test_case!(link);
 
 // link/08.t
 eloop_either_test_case!(link);
+
+// link/16.t
+erofs_named_test_case!(link, |ctx: &mut TestContext, file| {
+    let path = ctx.gen_path();
+    link(file, &path)
+});
 
 // link/09.t
 crate::test_case! {

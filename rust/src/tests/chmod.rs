@@ -22,6 +22,7 @@ use super::errors::{
         enoent_comp_test_case, enoent_named_file_test_case, enoent_symlink_named_file_test_case,
     },
     enotdir::enotdir_comp_test_case,
+    erofs::erofs_named_test_case,
 };
 
 const ALLPERMS_STICKY: mode_t = ALLPERMS | Mode::S_ISVTX.bits();
@@ -137,6 +138,9 @@ eloop_comp_test_case!(chmod(~path, Mode::empty()));
 // chmod/06.t
 eloop_final_comp_test_case!(chmod(~path, Mode::empty()));
 
+// chmod/09.t
+erofs_named_test_case!(chmod(~path, Mode::empty()));
+
 // chmod/10.t
 efault_path_test_case!(chmod, |ptr| nix::libc::chmod(ptr, 0));
 
@@ -203,6 +207,9 @@ mod lchmod {
 
     enametoolong_comp_test_case!(lchmod(~path, Mode::empty()));
     enametoolong_path_test_case!(lchmod(~path, Mode::empty()));
+
+    // chmod/09.t
+    erofs_named_test_case!(lchmod(~path, Mode::empty()));
 
     // chmod/10.t
     // TODO: lchmod is missing in libc

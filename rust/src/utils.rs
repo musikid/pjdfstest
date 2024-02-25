@@ -1,6 +1,8 @@
+use std::path::Path;
+
 use nix::{
     fcntl::renameat,
-    sys::stat::{fchmodat, FchmodatFlags},
+    sys::stat::{fchmodat, lstat, FchmodatFlags},
     unistd::{fchownat, linkat, symlinkat, FchownatFlags, Gid, LinkatFlags, Uid},
 };
 
@@ -45,6 +47,29 @@ pub fn link<P: ?Sized + nix::NixPath>(old_path: &P, new_path: &P) -> nix::Result
 /// Wrapper for `symlinkat(path1, None, path2)`.
 pub fn symlink<P: ?Sized + nix::NixPath>(path1: &P, path2: &P) -> nix::Result<()> {
     symlinkat(path1, None, path2)
+}
+
+/// Get mountpoint.
+pub fn get_mountpoint(base_path: &Path) -> Result<&Path, anyhow::Error> {
+    let base_dev = lstat(base_path)?.st_dev;
+
+    let mut mountpoint = base_path;
+    loop {
+        let current = match mountpoint.parent() {
+            Some(p) => p,
+            // Root
+            _ => return Ok(mountpoint),
+        };
+        let current_dev = lstat(current)?.st_dev;
+
+        if current_dev != base_dev {
+            break;
+        }
+
+        mountpoint = current;
+    }
+
+    Ok(mountpoint)
 }
 
 /// Safe wrapper for `lchflags`.

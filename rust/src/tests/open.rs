@@ -15,6 +15,7 @@ use super::errors::efault::efault_path_test_case;
 use super::errors::eloop::eloop_comp_test_case;
 use super::errors::enametoolong::{enametoolong_comp_test_case, enametoolong_path_test_case};
 use super::errors::enoent::{enoent_comp_test_case, enoent_named_file_test_case};
+use super::errors::erofs::{erofs_named_test_case, erofs_new_file_test_case};
 use super::errors::etxtbsy::etxtbsy_test_case;
 use super::mksyscalls::{assert_perms_from_mode_and_umask, assert_uid_gid};
 use super::{assert_times_changed, assert_times_unchanged, ATIME, CTIME, MTIME};
@@ -211,6 +212,24 @@ enoent_comp_test_case!(open(~path, OFlag::O_CREAT, Mode::from_bits_truncate(0o64
 // open/04.t
 enoent_named_file_test_case!(open(~path, OFlag::O_RDONLY, Mode::empty()));
 
+fn open_flag_wrapper_ctx(flags: OFlag) -> impl Fn(&mut TestContext, &Path) -> nix::Result<RawFd> {
+    move |_, path| open(path, flags, Mode::empty())
+}
+
+// open/14.t
+erofs_named_test_case!(
+    open,
+    open_flag_wrapper_ctx(OFlag::O_WRONLY),
+    open_flag_wrapper_ctx(OFlag::O_RDWR),
+    open_flag_wrapper_ctx(OFlag::O_RDONLY | OFlag::O_TRUNC)
+);
+
+// open/15.t
+erofs_new_file_test_case!(
+    open,
+    open_flag_wrapper_ctx(OFlag::O_RDONLY | OFlag::O_CREAT,)
+);
+
 // open/12.t
 eloop_comp_test_case!(open(~path, OFlag::empty(), Mode::empty()));
 
@@ -286,16 +305,16 @@ fn locked(ctx: &mut TestContext) {
     assert_ewouldblock(&file, OFlag::O_EXLOCK, OFlag::O_SHLOCK);
 }
 
-fn open_flag_wrapper(flags: OFlag) -> impl Fn(&Path) -> nix::Result<RawFd> {
+fn open_flag_wrapper_path(flags: OFlag) -> impl Fn(&Path) -> nix::Result<RawFd> {
     move |path| open(path, flags, Mode::empty())
 }
 
 // open/20.t
 etxtbsy_test_case!(
     open,
-    open_flag_wrapper(OFlag::O_WRONLY),
-    open_flag_wrapper(OFlag::O_RDWR),
-    open_flag_wrapper(OFlag::O_RDONLY | OFlag::O_TRUNC)
+    open_flag_wrapper_path(OFlag::O_WRONLY),
+    open_flag_wrapper_path(OFlag::O_RDWR),
+    open_flag_wrapper_path(OFlag::O_RDONLY | OFlag::O_TRUNC)
 );
 
 // open/22.t

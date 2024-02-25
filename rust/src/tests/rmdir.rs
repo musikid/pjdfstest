@@ -11,7 +11,7 @@ use crate::{config::Config, context::TestContext, tests::assert_mtime_changed, u
 use super::{
     assert_ctime_changed,
     errors::efault::efault_path_test_case,
-    errors::eloop::eloop_comp_test_case,
+    errors::{eloop::eloop_comp_test_case, erofs::erofs_named_test_case},
     errors::{enametoolong::enametoolong_comp_test_case, enoent::enoent_named_file_test_case},
     errors::{enametoolong::enametoolong_path_test_case, enotdir::enotdir_comp_test_case},
 };
@@ -181,6 +181,9 @@ fn ebusy(ctx: &mut TestContext) {
     let dummy_mount = DummyMnt::new(ctx).unwrap();
     assert_eq!(rmdir(&dummy_mount.path), Err(Errno::EBUSY));
 }
+
+// rmdir/14.t
+erofs_named_test_case!(rmdir);
 
 // rmdir/15.t
 efault_path_test_case!(rmdir, nix::libc::rmdir);

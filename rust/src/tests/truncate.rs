@@ -15,6 +15,7 @@ use super::errors::{
     enametoolong::{enametoolong_comp_test_case, enametoolong_path_test_case},
     enoent::{enoent_comp_test_case, enoent_named_file_test_case},
     enotdir::enotdir_comp_test_case,
+    erofs::erofs_named_test_case,
     etxtbsy::etxtbsy_test_case,
 };
 
@@ -114,6 +115,9 @@ fn eisdir(ctx: &mut TestContext) {
     let path = ctx.create(FileType::Dir).unwrap();
     assert_eq!(truncate(&path, 0), Err(Errno::EISDIR));
 }
+
+// (f)truncate/10.t
+erofs_named_test_case!(truncate(~path, 123));
 
 // (f)truncate/11.t
 etxtbsy_test_case!(truncate(~path, 123));

@@ -14,7 +14,7 @@ use rand::distributions::{Alphanumeric, DistString};
 use std::{
     cell::Cell,
     fs::create_dir_all,
-    ops::Deref,
+    ops::{Deref, DerefMut},
     os::unix::prelude::RawFd,
     panic::{catch_unwind, resume_unwind, AssertUnwindSafe},
     path::{Path, PathBuf},
@@ -90,6 +90,12 @@ impl<'a> Deref for SerializedTestContext<'a> {
 
     fn deref(&self) -> &Self::Target {
         &self.ctx
+    }
+}
+
+impl<'a> DerefMut for SerializedTestContext<'a> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.ctx
     }
 }
 
