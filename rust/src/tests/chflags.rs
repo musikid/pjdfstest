@@ -202,7 +202,7 @@ fn unchanged_ctime_failed(ctx: &mut SerializedTestContext, ft: FileType) {
 
     for flag in allflags.iter().chain(once(&FileFlag::empty())) {
         assert_ctime_unchanged(ctx, &file, || {
-            ctx.as_user(&user, None, || {
+            ctx.as_user(user, None, || {
                 assert_eq!(chflags(&file, *flag), Err(Errno::EPERM));
             })
         });
@@ -213,7 +213,7 @@ fn unchanged_ctime_failed(ctx: &mut SerializedTestContext, ft: FileType) {
     #[cfg(any(target_os = "netbsd", target_os = "freebsd", target_os = "dragonfly"))]
     for flag in allflags.into_iter().chain(once(FileFlag::empty())) {
         assert_ctime_unchanged(ctx, &file, || {
-            ctx.as_user(&user, None, || {
+            ctx.as_user(user, None, || {
                 assert_eq!(lchflags(&file, flag), Err(Errno::EPERM));
             })
         });

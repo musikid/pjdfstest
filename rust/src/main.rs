@@ -92,7 +92,7 @@ fn main() -> anyhow::Result<()> {
         .path
         .ok_or_else(|| anyhow::anyhow!("cannot get current dir"))
         .or_else(|_| current_dir())?;
-    let base_dir = tempdir_in(&path)?;
+    let base_dir = tempdir_in(path)?;
 
     set_hook(Box::new(|_| {
         *BACKTRACE.lock().unwrap() = Some(Backtrace::capture());
@@ -147,7 +147,7 @@ fn run_test_cases(
 
     let is_root = Uid::current().is_root();
 
-    let enabled_features: HashSet<_> = config.features.fs_features.keys().into_iter().collect();
+    let enabled_features: HashSet<_> = config.features.fs_features.keys().collect();
 
     let entries = &config.dummy_auth.entries;
 

@@ -22,13 +22,13 @@ fn allowed(ctx: &mut SerializedTestContext) {
 
     prependacl(&path, &format!("deny::group:{}:readattr", user.gid));
 
-    ctx.as_user(&user, None, || {
+    ctx.as_user(user, None, || {
         let e = stat(&path).unwrap_err(); // "user" can no longer stat it
         assert_eq!(Errno::EACCES, e);
     });
 
     prependacl(&path, &format!("allow::user:{}:readattr", user.uid));
-    ctx.as_user(&user, None, || {
+    ctx.as_user(user, None, || {
         stat(&path).unwrap(); // "user" can stat it again
     });
 }
@@ -45,13 +45,13 @@ fn denied(ctx: &mut SerializedTestContext) {
         .create()
         .unwrap();
     let user = ctx.get_new_user();
-    ctx.as_user(&user, None, || {
+    ctx.as_user(user, None, || {
         stat(&path).unwrap(); // Anybody can stat it
     });
     prependacl(&path, &format!("deny::user:{}:readattr", user.uid));
     stat(&path).unwrap(); // Owner can still stat it
 
-    ctx.as_user(&user, None, || {
+    ctx.as_user(user, None, || {
         let e = stat(&path).unwrap_err(); // "user" can no longer stat it
         assert_eq!(Errno::EACCES, e);
     });

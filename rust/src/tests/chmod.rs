@@ -9,7 +9,6 @@ use crate::{
 use crate::utils::lchmod;
 
 use nix::{
-    libc::mode_t,
     sys::stat::{lstat, stat, Mode},
     unistd::chown,
 };
@@ -24,7 +23,8 @@ use super::errors::{
     enotdir::enotdir_comp_test_case,
 };
 
-const ALLPERMS_STICKY: mode_t = ALLPERMS | Mode::S_ISVTX.bits();
+#[cfg(any(target_os = "freebsd", target_os = "dragonfly"))]
+const ALLPERMS_STICKY: nix::libc::mode_t = ALLPERMS | Mode::S_ISVTX.bits();
 
 // chmod/00.t:L24
 crate::test_case! {
@@ -164,13 +164,13 @@ fn eftype(ctx: &mut SerializedTestContext, ft: FileType) {
     let new_mode = Mode::from_bits_truncate(0o644);
     let link = ctx.create(FileType::Symlink(Some(file.clone()))).unwrap();
 
-    ctx.as_user(&user, None, || {
+    ctx.as_user(user, None, || {
         assert_eq!(chmod(&file, new_mode | Mode::S_ISVTX), Err(Errno::EFTYPE));
     });
     let file_stat = stat(&file).unwrap();
     assert_eq!(file_stat.st_mode & ALLPERMS_STICKY, original_mode.bits());
 
-    ctx.as_user(&user, None, || {
+    ctx.as_user(user, None, || {
         assert_eq!(
             chmod(&link, original_mode | Mode::S_ISVTX),
             Err(Errno::EFTYPE)
@@ -182,7 +182,7 @@ fn eftype(ctx: &mut SerializedTestContext, ft: FileType) {
     // lchmod
 
     let mode = Mode::from_bits_truncate(0o621) | Mode::S_ISVTX;
-    ctx.as_user(&user, None, || {
+    ctx.as_user(user, None, || {
         assert_eq!(lchmod(&file, mode), Err(Errno::EFTYPE));
     });
 

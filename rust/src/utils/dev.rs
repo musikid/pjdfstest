@@ -29,11 +29,11 @@ mod freebsd {
     }
 
     pub fn major(dev: u64) -> u64 {
-        (((dev >> 32) & 0xffffff00) | ((dev >> 8) & 0xff)).into()
+        ((dev >> 32) & 0xffffff00) | ((dev >> 8) & 0xff)
     }
 
     pub fn minor(dev: u64) -> u64 {
-        (((dev >> 24) & 0xff00) | (dev & 0xffff00ff)).into()
+        ((dev >> 24) & 0xff00) | (dev & 0xffff00ff)
     }
 }
 
