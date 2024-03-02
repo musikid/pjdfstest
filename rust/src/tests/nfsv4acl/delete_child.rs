@@ -25,7 +25,7 @@ fn allows_rename(ctx: &mut SerializedTestContext, ft: FileType) {
 
     prependacl(&dir0, &format!("allow::user:{}:delete_child", user.uid));
 
-    ctx.as_user(&user, None, move || {
+    ctx.as_user(user, None, move || {
         rename(&file, &newpath).unwrap();
         assert_eq!(Err(Errno::EACCES), rename(&newpath, &file));
     });
@@ -47,7 +47,7 @@ fn allows_rmdir(ctx: &mut SerializedTestContext) {
 
     prependacl(&dir0, &format!("allow::user:{}:delete_child", user.uid));
 
-    ctx.as_user(&user, None, move || {
+    ctx.as_user(user, None, move || {
         rmdir(&dir1).unwrap();
     });
 }
@@ -65,7 +65,7 @@ fn allows_unlink(ctx: &mut SerializedTestContext) {
 
     prependacl(&dir, &format!("allow::user:{}:delete_child", user.uid));
 
-    ctx.as_user(&user, None, move || {
+    ctx.as_user(user, None, move || {
         unlink(&file).unwrap();
     });
 }
@@ -83,7 +83,7 @@ fn denied_unlink(ctx: &mut SerializedTestContext) {
 
     prependacl(&dir, &format!("deny::user:{}:delete_child", user.uid));
 
-    ctx.as_user(&user, None, move || {
+    ctx.as_user(user, None, move || {
         assert_eq!(Errno::EPERM, unlink(&file).unwrap_err());
     });
 }
@@ -101,7 +101,7 @@ fn denied_rmdir(ctx: &mut SerializedTestContext) {
 
     prependacl(&dir, &format!("deny::user:{}:delete_child", user.uid));
 
-    ctx.as_user(&user, None, move || {
+    ctx.as_user(user, None, move || {
         assert_eq!(Errno::EPERM, rmdir(&file).unwrap_err());
     });
 }
@@ -122,7 +122,7 @@ fn denied_rename(ctx: &mut SerializedTestContext, ft: FileType) {
 
     prependacl(&dir0, &format!("deny::user:{}:delete_child", user.uid));
 
-    ctx.as_user(&user, None, move || {
+    ctx.as_user(user, None, move || {
         assert_eq!(Err(Errno::EPERM), rename(&file, &newpath));
     });
 }

@@ -1,3 +1,6 @@
+// https://github.com/rust-lang/rust-clippy/issues/1553
+#![allow(clippy::redundant_closure_call)]
+
 use std::{
     backtrace::{Backtrace, BacktraceStatus},
     collections::HashSet,
@@ -18,7 +21,6 @@ use nix::{
     sys::stat::{umask, Mode},
     unistd::Uid,
 };
-use once_cell::sync::OnceCell;
 use strum::{EnumMessage, IntoEnumIterator};
 
 use tempfile::{tempdir_in, TempDir};
@@ -35,8 +37,6 @@ mod utils;
 use test::{FileSystemFeature, SerializedTestContext, TestCase, TestContext, TestFn};
 
 use crate::utils::chmod;
-
-struct PanicLocation(u32, u32, String);
 
 static BACKTRACE: Mutex<Option<Backtrace>> = Mutex::new(None);
 
@@ -92,7 +92,7 @@ fn main() -> anyhow::Result<()> {
         .path
         .ok_or_else(|| anyhow::anyhow!("cannot get current dir"))
         .or_else(|_| current_dir())?;
-    let base_dir = tempdir_in(&path)?;
+    let base_dir = tempdir_in(path)?;
 
     set_hook(Box::new(|_| {
         *BACKTRACE.lock().unwrap() = Some(Backtrace::capture());
@@ -147,7 +147,7 @@ fn run_test_cases(
 
     let is_root = Uid::current().is_root();
 
-    let enabled_features: HashSet<_> = config.features.fs_features.keys().into_iter().collect();
+    let enabled_features: HashSet<_> = config.features.fs_features.keys().collect();
 
     let entries = &config.dummy_auth.entries;
 

@@ -157,6 +157,7 @@ crate::test_case! {
     // rmdir/12.t
     eexist_enotempty_dotdot
 }
+#[cfg_attr(target_os = "freebsd", allow(unused_variables))]
 fn eexist_enotempty_dotdot(ctx: &mut TestContext) {
     // TODO: Not conforming to POSIX on FreeBSD
     // According to POSIX: EEXIST or ENOTEMPTY:

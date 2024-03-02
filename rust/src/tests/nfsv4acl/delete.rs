@@ -25,7 +25,7 @@ fn denied_delete_does_not_prohibit_rmdir(ctx: &mut SerializedTestContext) {
     prependacl(&dir, &format!("allow::user:{}:write_data", user.uid));
     prependacl(&file, &format!("deny::user:{}:delete", user.uid));
 
-    ctx.as_user(&user, None, move || {
+    ctx.as_user(user, None, move || {
         rmdir(&file).unwrap();
     });
 }
@@ -47,7 +47,7 @@ fn denied_delete_does_not_prohibit_unlink(ctx: &mut SerializedTestContext) {
     prependacl(&dir, &format!("allow::user:{}:write_data", user.uid));
     prependacl(&file, &format!("deny::user:{}:delete", user.uid));
 
-    ctx.as_user(&user, None, move || {
+    ctx.as_user(user, None, move || {
         unlink(&file).unwrap();
     });
 }
@@ -77,7 +77,7 @@ fn denied_delete_does_not_prohibit_rename(ctx: &mut SerializedTestContext, ft: F
         prependacl(&dir0, &format!("allow::user:{}:append", user.uid));
     }
 
-    ctx.as_user(&user, None, move || {
+    ctx.as_user(user, None, move || {
         rename(&file, &newpath).unwrap();
         rename(&newpath, &file).unwrap();
     });
@@ -95,7 +95,7 @@ fn delete_rmdir(ctx: &mut SerializedTestContext) {
 
     prependacl(&path, &format!("allow::user:{}:delete", user.uid));
 
-    ctx.as_user(&user, None, move || {
+    ctx.as_user(user, None, move || {
         rmdir(&path).unwrap();
     });
 }
@@ -112,7 +112,7 @@ fn delete_unlink(ctx: &mut SerializedTestContext) {
 
     prependacl(&path, &format!("allow::user:{}:delete", user.uid));
 
-    ctx.as_user(&user, None, move || {
+    ctx.as_user(user, None, move || {
         unlink(&path).unwrap();
     });
 }
@@ -134,7 +134,7 @@ fn delete_rename(ctx: &mut SerializedTestContext, ft: FileType) {
 
     prependacl(&file, &format!("allow::user:{}:delete", user.uid));
 
-    ctx.as_user(&user, None, move || {
+    ctx.as_user(user, None, move || {
         rename(&file, &newpath).unwrap();
     });
 }

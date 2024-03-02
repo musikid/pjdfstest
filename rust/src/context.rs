@@ -240,7 +240,6 @@ impl<'a> TestContext<'a> {
         let remaining_chars = max_path_len - initial_path_len;
 
         let parts: Vec<_> = (0..remaining_chars / component_len)
-            .into_iter()
             .map(|_| Alphanumeric.sample_string(&mut rand::thread_rng(), component_len - 1))
             .collect();
 

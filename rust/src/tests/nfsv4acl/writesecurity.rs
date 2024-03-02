@@ -32,7 +32,7 @@ fn cannot_set_sgid(ctx: &mut SerializedTestContext) {
 
     prependacl(&path, &format!("allow::user:{}:writesecurity", user.uid));
 
-    ctx.as_user(&user, None, || {
+    ctx.as_user(user, None, || {
         let e = chmod(&path, Mode::from_bits_truncate(0o2777));
         assert_eq!(Err(Errno::EPERM), e);
     });
@@ -53,7 +53,7 @@ fn cannot_set_suid(ctx: &mut SerializedTestContext) {
 
     prependacl(&path, &format!("allow::user:{}:writesecurity", user.uid));
 
-    ctx.as_user(&user, None, || {
+    ctx.as_user(user, None, || {
         let e = chmod(&path, Mode::from_bits_truncate(0o4777));
         assert_eq!(Err(Errno::EPERM), e);
     });
@@ -72,7 +72,7 @@ fn owner_can_always_write(ctx: &mut SerializedTestContext, ft: FileType) {
     chown(&path, Some(user.uid), Some(user.gid)).unwrap();
     prependacl(&path, &format!("deny::user:{}:writesecurity", user.gid));
 
-    ctx.as_user(&user, None, || {
+    ctx.as_user(user, None, || {
         chmod(&path, Mode::from_bits_truncate(0o777)).unwrap();
     });
 }
@@ -93,7 +93,7 @@ fn preserve_sgid(ctx: &mut SerializedTestContext) {
 
     prependacl(&path, &format!("allow::user:{}:writesecurity", user.uid));
 
-    ctx.as_user(&user, Some(&[user.gid]), || {
+    ctx.as_user(user, Some(&[user.gid]), || {
         prependacl(&path, &format!("allow::user:{}:write_data", user.uid));
     });
     assert_eq!(0o2755, stat(&path).unwrap().st_mode & ALLPERMS);
@@ -112,7 +112,7 @@ fn preserve_sticky(ctx: &mut SerializedTestContext) {
 
     prependacl(&path, &format!("allow::user:{}:writesecurity", user.uid));
 
-    ctx.as_user(&user, Some(&[user.gid]), || {
+    ctx.as_user(user, Some(&[user.gid]), || {
         prependacl(&path, &format!("allow::user:{}:write_data", user.uid));
     });
     assert_eq!(0o1755, stat(&path).unwrap().st_mode & ALLPERMS);
@@ -134,7 +134,7 @@ fn preserve_suid(ctx: &mut SerializedTestContext) {
 
     prependacl(&path, &format!("allow::user:{}:writesecurity", user.uid));
 
-    ctx.as_user(&user, Some(&[user.gid]), || {
+    ctx.as_user(user, Some(&[user.gid]), || {
         prependacl(&path, &format!("allow::user:{}:write_data", user.uid));
     });
     assert_eq!(0o4755, stat(&path).unwrap().st_mode & ALLPERMS);
@@ -168,7 +168,7 @@ fn set_sticky(ctx: &mut SerializedTestContext) {
 
     prependacl(&path, &format!("allow::user:{}:writesecurity", user.uid));
 
-    ctx.as_user(&user, None, || {
+    ctx.as_user(user, None, || {
         chmod(&path, Mode::from_bits_truncate(0o1755)).unwrap();
     });
 }
@@ -189,13 +189,13 @@ fn write_acl(ctx: &mut SerializedTestContext) {
     let entries = [entry];
 
     // by default, non-owners may not write ACLs
-    ctx.as_user(&user, None, || {
+    ctx.as_user(user, None, || {
         let e = exacl::setfacl(&[&path][..], &entries, AclOption::empty()).unwrap_err();
         assert_eq!(ErrorKind::PermissionDenied, e.kind());
     });
     prependacl(&path, &format!("allow::user:{}:writesecurity", user.uid));
 
-    ctx.as_user(&user, None, || {
+    ctx.as_user(user, None, || {
         exacl::setfacl(&[&path][..], &entries, AclOption::empty()).unwrap();
     });
 }
@@ -214,13 +214,13 @@ fn write_mode(ctx: &mut SerializedTestContext) {
     let user = ctx.get_new_user();
 
     // by default, non-owners may not write ACLs
-    ctx.as_user(&user, None, || {
+    ctx.as_user(user, None, || {
         let e = chmod(&path, Mode::from_bits_truncate(0o777)).unwrap_err();
         assert_eq!(Errno::EPERM, e);
     });
     prependacl(&path, &format!("allow::user:{}:writesecurity", user.uid));
 
-    ctx.as_user(&user, None, || {
+    ctx.as_user(user, None, || {
         chmod(&path, Mode::from_bits_truncate(0o777)).unwrap();
     });
 }

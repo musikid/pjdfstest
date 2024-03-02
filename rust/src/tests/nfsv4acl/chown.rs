@@ -29,7 +29,7 @@ fn clear_setuid_on_chown_gid(ctx: &mut SerializedTestContext, ft: FileType) {
     chmod(&path, Mode::from_bits_truncate(0o6555)).unwrap();
     prependacl(&path, &format!("allow::user:{}:chown", user.gid));
 
-    ctx.as_user(&user, Some(&[user.gid, group.gid][..]), || {
+    ctx.as_user(user, Some(&[user.gid, group.gid][..]), || {
         chown(&path, None, Some(group.gid)).unwrap();
     });
     let md = fs::metadata(&path).unwrap();
@@ -50,7 +50,7 @@ fn clear_setuid_on_chown_nothing(ctx: &mut SerializedTestContext, ft: FileType) 
     chmod(&path, Mode::from_bits_truncate(0o6555)).unwrap();
     prependacl(&path, &format!("allow::user:{}:chown", user.gid));
 
-    ctx.as_user(&user, None, || {
+    ctx.as_user(user, None, || {
         chown(&path, None, None).unwrap();
     });
     let md = fs::metadata(&path).unwrap();
@@ -70,7 +70,7 @@ fn clear_setuid_on_chown_uid(ctx: &mut SerializedTestContext, ft: FileType) {
     chmod(&path, Mode::from_bits_truncate(0o6555)).unwrap();
     prependacl(&path, &format!("allow::user:{}:chown", user.gid));
 
-    ctx.as_user(&user, None, || {
+    ctx.as_user(user, None, || {
         chown(&path, Some(user.uid), None).unwrap();
     });
     let md = fs::metadata(&path).unwrap();
@@ -89,19 +89,19 @@ fn gid(ctx: &mut SerializedTestContext) {
     let user1 = ctx.get_new_user();
 
     // Without any ACL, user0 can't change the gid
-    ctx.as_user(&user0, None, || {
+    ctx.as_user(user0, None, || {
         assert_eq!(Err(Errno::EPERM), chown(&path, None, Some(user0.gid)));
     });
 
     prependacl(&path, &format!("allow::user:{}:chown", user0.uid));
 
     // Even with the ACL, user0 can't change gid to somebody else's
-    ctx.as_user(&user0, None, || {
+    ctx.as_user(user0, None, || {
         assert_eq!(Err(Errno::EPERM), chown(&path, None, Some(user1.gid)));
     });
 
     // But he can change it to his own
-    ctx.as_user(&user0, None, || {
+    ctx.as_user(user0, None, || {
         chown(&path, None, Some(user0.gid)).unwrap();
     });
 }
@@ -117,19 +117,19 @@ fn uid(ctx: &mut SerializedTestContext) {
     let user1 = ctx.get_new_user();
 
     // Without any ACL, user0 can't change the uid
-    ctx.as_user(&user0, None, || {
+    ctx.as_user(user0, None, || {
         assert_eq!(Err(Errno::EPERM), chown(&path, Some(user0.uid), None));
     });
 
     prependacl(&path, &format!("allow::user:{}:chown", user0.uid));
 
     // Even with the ACL, user0 can't change uid to somebody else's
-    ctx.as_user(&user0, None, || {
+    ctx.as_user(user0, None, || {
         assert_eq!(Err(Errno::EPERM), chown(&path, Some(user1.uid), None));
     });
 
     // But he can change it to his own
-    ctx.as_user(&user0, None, || {
+    ctx.as_user(user0, None, || {
         chown(&path, Some(user0.uid), None).unwrap();
     });
 }

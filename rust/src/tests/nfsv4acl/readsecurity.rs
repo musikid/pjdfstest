@@ -28,7 +28,7 @@ fn allowed(ctx: &mut SerializedTestContext) {
     prependacl(&path, &format!("deny::user:{}:readsecurity", user.gid));
     prependacl(&path, &format!("allow::user:{}:readsecurity", user.gid));
 
-    ctx.as_user(&user, None, || {
+    ctx.as_user(user, None, || {
         getfacl(&path, AclOption::empty()).unwrap();
     });
 }
@@ -48,7 +48,7 @@ fn denied(ctx: &mut SerializedTestContext) {
 
     prependacl(&path, &format!("deny::user:{}:readsecurity", user.gid));
 
-    ctx.as_user(&user, None, || {
+    ctx.as_user(user, None, || {
         let e = getfacl(&path, AclOption::empty()).unwrap_err();
         assert_eq!(ErrorKind::PermissionDenied, e.kind());
     });
@@ -67,7 +67,7 @@ fn owner_can_always_read(ctx: &mut SerializedTestContext, ft: FileType) {
     chown(&path, Some(user.uid), Some(user.gid)).unwrap();
     prependacl(&path, &format!("deny::user:{}:readsecurity", user.gid));
 
-    ctx.as_user(&user, None, || {
+    ctx.as_user(user, None, || {
         getfacl(&path, AclOption::empty()).unwrap();
         stat(&path).unwrap();
     });

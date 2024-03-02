@@ -19,7 +19,7 @@ fn can_create_directories(ctx: &mut SerializedTestContext) {
 
     prependacl(&path, &format!("allow::user:{}:append", user.gid));
 
-    ctx.as_user(&user, None, move || {
+    ctx.as_user(user, None, move || {
         FileBuilder::new(FileType::Dir, &path).create().unwrap();
     });
 }
@@ -36,7 +36,7 @@ fn cant_create_files(ctx: &mut SerializedTestContext, ft: FileType) {
 
     prependacl(&path, &format!("allow::user:{}:append", user.gid));
 
-    ctx.as_user(&user, None, move || {
+    ctx.as_user(user, None, move || {
         let e = FileBuilder::new(ft, &path).create().unwrap_err();
         assert_eq!(Errno::EACCES, e);
     });
@@ -57,7 +57,7 @@ fn cant_rename_files(ctx: &mut SerializedTestContext) {
 
     prependacl(&dir, &format!("allow::user:{}:append", user.uid));
 
-    ctx.as_user(&user, None, move || {
+    ctx.as_user(user, None, move || {
         let e = rename(&oldpath, &newpath).unwrap_err();
         assert_eq!(Errno::EACCES, e);
     });
@@ -82,7 +82,7 @@ fn can_rename_directories(ctx: &mut SerializedTestContext) {
 
     prependacl(&dir, &format!("allow::user:{}:append", user.uid));
 
-    ctx.as_user(&user, None, move || {
+    ctx.as_user(user, None, move || {
         rename(&oldpath, &newpath).unwrap();
     });
 }
@@ -100,7 +100,7 @@ fn rmdir_err(ctx: &mut SerializedTestContext) {
 
     prependacl(&dir, &format!("allow::user:{}:append", user.uid));
 
-    ctx.as_user(&user, None, move || {
+    ctx.as_user(user, None, move || {
         assert_eq!(Err(Errno::EACCES), rmdir(&path));
     });
 }
@@ -119,7 +119,7 @@ fn unlink_err(ctx: &mut SerializedTestContext, ft: FileType) {
 
     prependacl(&dir, &format!("allow::user:{}:append", user.uid));
 
-    ctx.as_user(&user, None, move || {
+    ctx.as_user(user, None, move || {
         assert_eq!(Err(Errno::EACCES), unlink(&path));
     });
 }
