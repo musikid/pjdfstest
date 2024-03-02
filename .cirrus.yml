@@ -10,6 +10,7 @@ build: &BUILD
     - cd rust
     - cargo test
     - cargo build --all-targets --release
+    - df -T /tmp
     - target/release/pjdfstest -c $CFG -p /tmp
     - su $SU_ARGS "target/release/pjdfstest -c $CFG -p /tmp"
     - rustup component add clippy
