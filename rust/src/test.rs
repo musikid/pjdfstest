@@ -15,7 +15,6 @@ pub enum TestFn {
 }
 
 /// A single minimal test case.
-#[derive(Clone, Copy)]
 pub struct TestCase {
     pub name: &'static str,
     pub description: &'static str,
