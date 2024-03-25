@@ -1,3 +1,5 @@
+use std::path::Path;
+
 use nix::{
     errno::Errno,
     sys::stat::{lstat, Mode},
@@ -7,7 +9,7 @@ use nix::{
 use crate::{
     context::{FileType, SerializedTestContext},
     tests::AsTimeInvariant,
-    utils::{chmod, lchown, rename, ALLPERMS},
+    utils::{chmod, lchown, rename, rmdir, ALLPERMS},
 };
 
 /// We need to do a cartesian product between the `from` and the `to` file types.
@@ -26,10 +28,12 @@ macro_rules! sticky_rename {
                 [<rename_to_ $file_type:lower>], serialized, root => [$($raw_ft),+]
             }
             fn [<rename_to_ $file_type:lower>](ctx: &mut crate::SerializedTestContext, to_ft: crate::context::FileType) {
-                assert_sticky_rename(ctx,
+                assert_sticky_rename(
+                    ctx,
                     crate::context::FileType::$file_type $( ( $($args),* ) )?,
                     Some(to_ft),
-                    false)
+                    false
+                )
             }
 
             // We also want to test when the `to` argument doesn't exist
@@ -48,20 +52,24 @@ macro_rules! sticky_rename {
                 [<rename_from_ $file_type:lower>], serialized, root => [$($raw_ft),+]
             }
             fn [<rename_from_ $file_type:lower>](ctx: &mut crate::SerializedTestContext, to_ft: crate::context::FileType) {
-                assert_sticky_rename(ctx,
+                assert_sticky_rename(
+                    ctx,
                     crate::context::FileType::$file_type $( ( $($args),* ) )?,
                     Some(to_ft),
-                    true)
+                    true
+                )
             }
         }
     };
 }
 
 /// Assert that rename returns EACCES or EPERM:
+///
 /// - if the file pointed at by the `to` argument exists (when `assert_from` is false),
 /// - the directory containing 'from' (or `to` when `assert_from` is false) is marked sticky,
 /// - and neither the containing directory nor 'from' (or `to` when `assert_from` is false)
 /// are owned by the effective user ID.
+/// The function assumes that the current user is root.
 fn assert_sticky_rename(
     ctx: &mut SerializedTestContext,
     from_ft: FileType,
@@ -88,42 +96,122 @@ fn assert_sticky_rename(
     let from_path = from_dir.join("file");
     let to_path = to_dir.join("file");
 
-    // User owns both: the sticky directory and the destination file.
-    chown(sticky_dir, Some(user.uid), Some(user.gid)).unwrap();
-    let from_path = ctx
-        .new_file(from_ft.clone())
-        .name(&from_path)
-        .create()
-        .unwrap();
-    let metadata = lstat(&from_path).unwrap().as_time_invariant();
-    // We create a file if to_ft is not None
-    if let Some(to_ft) = to_ft.as_ref() {
-        ctx.new_file(to_ft.clone()).name(&to_path).create().unwrap();
-        lchown(&to_path, Some(user.uid), Some(user.gid)).unwrap();
-    };
-
-    ctx.as_user(&user, None, || {
-        assert!(rename(&from_path, &to_path).is_ok());
-    });
-    assert!(!from_path.exists());
-    let current_meta = lstat(&to_path).unwrap();
-    assert_eq!(metadata, current_meta.as_time_invariant());
-
-    ctx.as_user(&user, None, || {
-        assert!(rename(&to_path, &from_path).is_ok());
-    });
-    assert!(!to_path.exists());
-    let current_meta = lstat(&from_path).unwrap();
-    assert_eq!(metadata, current_meta.as_time_invariant());
-
-    //TODO: RAII
-    unlink(&from_path).unwrap();
-
+    // The current user is the effective user ID which is assumed to be root.
     let current_user = User::from_uid(Uid::effective()).unwrap().unwrap();
     let other_user = ctx.get_new_user();
     let different_users = &[&current_user, other_user];
 
-    // User owns the sticky directory, but doesn't own the destination file.
+    assert_owner_sticky_file_ok(
+        sticky_dir, user, ctx, &from_ft, &from_path, &to_ft, &to_path,
+    );
+
+    assert_owner_sticky_not_file_ok(
+        assert_from,
+        sticky_dir,
+        user,
+        ctx,
+        &from_ft,
+        &from_path,
+        &to_ft,
+        &to_path,
+        different_users,
+    );
+
+    assert_owner_not_sticky_file_ok(
+        sticky_dir,
+        user,
+        ctx,
+        &from_ft,
+        &from_path,
+        &to_ft,
+        &to_path,
+        different_users,
+    );
+
+    assert_not_owner_sticky_not_file_error(
+        assert_from,
+        sticky_dir,
+        user,
+        ctx,
+        &from_ft,
+        &from_path,
+        &to_ft,
+        &to_path,
+        different_users,
+    );
+
+    // assert_owner_sticky_dir_ok(assert_from, sticky_dir, user, ctx, &from_path, &to_path);
+
+    // assert_owner_sticky_not_source_dir_error(
+    //     sticky_dir,
+    //     user,
+    //     ctx,
+    //     &from_path,
+    //     &to_path,
+    //     different_users,
+    // );
+}
+
+/// This function asserts that rename works as expected either when:
+///
+/// - user owns both the source sticky directory and the source file,
+/// - user owns both the sticky directory and the destination file.
+fn assert_owner_sticky_file_ok<P: ?Sized + nix::NixPath + AsRef<Path>>(
+    sticky_dir: &P,
+    user: &User,
+    ctx: &SerializedTestContext,
+    from_ft: &FileType,
+    from_path: &P,
+    to_ft: &Option<FileType>,
+    to_path: &P,
+) {
+    chown(sticky_dir, Some(user.uid), Some(user.gid)).unwrap();
+    let from_path = ctx
+        .new_file(from_ft.clone())
+        .name(from_path)
+        .create()
+        .unwrap();
+    let metadata = lstat(&from_path).unwrap().as_time_invariant();
+    // We create a file if to_ft is not None
+    if let Some(to_ft) = to_ft {
+        ctx.new_file(to_ft.clone()).name(to_path).create().unwrap();
+        lchown(to_path, Some(user.uid), Some(user.gid)).unwrap();
+    };
+
+    ctx.as_user(&user, None, || {
+        assert!(rename(&*from_path, to_path.as_ref()).is_ok());
+    });
+    assert!(!from_path.exists());
+    let current_meta = lstat(to_path).unwrap();
+    assert_eq!(metadata, current_meta.as_time_invariant());
+
+    ctx.as_user(&user, None, || {
+        assert!(rename(to_path.as_ref(), &from_path).is_ok());
+    });
+    assert!(!to_path.as_ref().exists());
+    let current_meta = lstat(&from_path).unwrap();
+    assert_eq!(metadata, current_meta.as_time_invariant());
+
+    // TODO: RAII
+    unlink(&from_path).unwrap();
+}
+
+/// Depending on the value of the assert_from parameter, this function asserts that
+/// rename works as expected either when:
+///
+/// - user owns the source file, but doesn't own the source sticky directory.
+/// - user owns the sticky directory, but doesn't own the destination file.
+fn assert_owner_sticky_not_file_ok<P: ?Sized + nix::NixPath + AsRef<Path>>(
+    assert_from: bool,
+    sticky_dir: &P,
+    user: &User,
+    ctx: &SerializedTestContext,
+    from_ft: &FileType,
+    from_path: &P,
+    to_ft: &Option<FileType>,
+    to_path: &P,
+    different_users: &[&User],
+) {
     chown(sticky_dir, Some(user.uid), Some(user.gid)).unwrap();
     for other_user in different_users {
         let from_path = ctx
@@ -138,27 +226,42 @@ fn assert_sticky_rename(
         let to_owner = if !assert_from { other_user } else { &user };
         if let Some(to_ft) = to_ft.as_ref() {
             ctx.new_file(to_ft.clone()).name(&to_path).create().unwrap();
-            lchown(&to_path, Some(to_owner.uid), Some(to_owner.gid)).unwrap();
+            lchown(to_path, Some(to_owner.uid), Some(to_owner.gid)).unwrap();
         };
 
         ctx.as_user(&user, None, || {
-            assert!(rename(&from_path, &to_path).is_ok());
+            assert!(rename(&*from_path, to_path.as_ref()).is_ok());
         });
         assert!(!from_path.exists());
-        let current_meta = lstat(&to_path).unwrap();
+        let current_meta = lstat(to_path).unwrap();
         assert_eq!(metadata, current_meta.as_time_invariant());
 
         ctx.as_user(&user, None, || {
-            assert!(rename(&to_path, &from_path).is_ok());
+            assert!(rename(to_path.as_ref(), &from_path).is_ok());
         });
-        assert!(!to_path.exists());
+        assert!(!to_path.as_ref().exists());
         let current_meta = lstat(&from_path).unwrap();
         assert_eq!(metadata, current_meta.as_time_invariant());
-        //TODO: RAII
+
+        // TODO: RAII
         unlink(&from_path).unwrap();
     }
+}
 
-    // User owns the file, but doesn't own the sticky directory.
+/// This function asserts that rename works as expected either when:
+///
+/// - user owns the source file, but doesn't own the source sticky directory,
+/// - user owns the destination file, but doesn't own the sticky directory.
+fn assert_owner_not_sticky_file_ok<P: ?Sized + nix::NixPath + AsRef<Path>>(
+    sticky_dir: &P,
+    user: &User,
+    ctx: &SerializedTestContext,
+    from_ft: &FileType,
+    from_path: &P,
+    to_ft: &Option<FileType>,
+    to_path: &P,
+    different_users: &[&User],
+) {
     for other_user in different_users {
         chown(sticky_dir, Some(other_user.uid), Some(other_user.gid)).unwrap();
 
@@ -172,27 +275,44 @@ fn assert_sticky_rename(
 
         if let Some(to_ft) = to_ft.as_ref() {
             ctx.new_file(to_ft.clone()).name(&to_path).create().unwrap();
-            lchown(&to_path, Some(user.uid), Some(user.gid)).unwrap();
+            lchown(to_path, Some(user.uid), Some(user.gid)).unwrap();
         };
 
         ctx.as_user(&user, None, || {
-            assert!(rename(&from_path, &to_path).is_ok());
+            assert!(rename(&*from_path, to_path.as_ref()).is_ok());
         });
         assert!(!from_path.exists());
-        let current_meta = lstat(&to_path).unwrap();
+        let current_meta = lstat(to_path).unwrap();
         assert_eq!(metadata, current_meta.as_time_invariant());
 
         ctx.as_user(&user, None, || {
-            assert!(rename(&to_path, &from_path).is_ok());
+            assert!(rename(to_path.as_ref(), &from_path).is_ok());
         });
-        assert!(!to_path.exists());
+        assert!(!to_path.as_ref().exists());
         let current_meta = lstat(&from_path).unwrap();
         assert_eq!(metadata, current_meta.as_time_invariant());
-        //TODO: RAII
+
+        // TODO: RAII
         unlink(&from_path).unwrap();
     }
+}
 
-    // User doesn't own the sticky directory nor the file.
+/// Depending on the value of the assert_from parameter, this function asserts that
+/// rename returns EACCES or EPERM when:
+///
+/// - user doesn't own the source sticky directory nor the source file,
+/// - user doesn't own the sticky directory nor the destination file.
+fn assert_not_owner_sticky_not_file_error<P: ?Sized + nix::NixPath + AsRef<Path>>(
+    assert_from: bool,
+    sticky_dir: &P,
+    user: &User,
+    ctx: &SerializedTestContext,
+    from_ft: &FileType,
+    from_path: &P,
+    to_ft: &Option<FileType>,
+    to_path: &P,
+    different_users: &[&User],
+) {
     for other_user in different_users {
         chown(sticky_dir, Some(other_user.uid), Some(other_user.gid)).unwrap();
 
@@ -208,12 +328,12 @@ fn assert_sticky_rename(
         let to_owner = if !assert_from { other_user } else { &user };
         if let Some(to_ft) = to_ft.as_ref() {
             ctx.new_file(to_ft.clone()).name(&to_path).create().unwrap();
-            lchown(&to_path, Some(to_owner.uid), Some(to_owner.gid)).unwrap();
+            lchown(to_path, Some(to_owner.uid), Some(to_owner.gid)).unwrap();
         };
 
         ctx.as_user(&user, None, || {
             assert!(matches!(
-                rename(&from_path, &to_path),
+                rename(&*from_path, to_path.as_ref()),
                 Err(Errno::EACCES | Errno::EPERM)
             ));
         });
@@ -221,16 +341,100 @@ fn assert_sticky_rename(
         assert_eq!(metadata, current_meta.as_time_invariant());
 
         if to_ft.is_some() {
-            let current_to_meta = lstat(&to_path).unwrap();
+            let current_to_meta = lstat(to_path).unwrap();
             assert_eq!(current_to_meta.st_uid, to_owner.uid.as_raw());
             assert_eq!(current_to_meta.st_gid, to_owner.gid.as_raw());
         }
 
-        //TODO: RAII
+        // TODO: RAII
         unlink(&from_path).unwrap();
         if to_ft.is_some() {
-            unlink(&to_path).unwrap();
+            unlink(to_path).unwrap();
         }
+    }
+}
+
+/// Depending on the value of the assert_from parameter, this function asserts that
+/// rename works as expected either when:
+///
+/// - user owns both the source sticky directory and the source directory,
+/// - user owns both the sticky directory and the destination directory.
+fn assert_owner_sticky_dir_ok<P: ?Sized + nix::NixPath + AsRef<Path>>(
+    assert_from: bool,
+    sticky_dir: &P,
+    user: &User,
+    ctx: &SerializedTestContext,
+    from_path: &P,
+    to_path: &P,
+) {
+    chown(sticky_dir, Some(user.uid), Some(user.gid)).unwrap();
+    let from_path = ctx
+        .new_file(FileType::Dir)
+        .name(from_path)
+        .create()
+        .unwrap();
+    let metadata = lstat(&from_path).unwrap().as_time_invariant();
+
+    if assert_from {
+        ctx.as_user(user, None, || {
+            assert!(rename(&*from_path, to_path.as_ref()).is_ok());
+        });
+
+        assert!(!from_path.exists());
+        let current_meta = lstat(to_path).unwrap();
+        assert_eq!(metadata, current_meta.as_time_invariant());
+
+        ctx.as_user(user, None, || {
+            assert!(rename(to_path.as_ref(), &*from_path).is_ok());
+        });
+    }
+
+    ctx.as_user(user, None, || {
+        let to_path = ctx.new_file(FileType::Dir).name(to_path).create().unwrap();
+        assert!(rename(&from_path, &to_path).is_ok());
+    });
+
+    assert!(!from_path.exists());
+    let current_meta = lstat(to_path).unwrap();
+    assert_eq!(metadata, current_meta.as_time_invariant());
+
+    // TODO: RAII
+    rmdir(to_path).unwrap();
+}
+
+/// This function asserts that rename throws an error when
+/// user owns the source sticky directory, but doesn't own the source file.
+/// This fails when changing parent directory, because this will modify
+/// source directory inode (the .. link in it), but we can still rename it
+/// without changing its parent directory.
+fn assert_owner_sticky_not_source_dir_error<P: ?Sized + nix::NixPath + AsRef<Path>>(
+    sticky_dir: &P,
+    user: &User,
+    ctx: &SerializedTestContext,
+    from_path: &P,
+    to_path: &P,
+    different_users: &[&User],
+) {
+    chown(sticky_dir, Some(user.uid), Some(user.gid)).unwrap();
+    for other_user in different_users {
+        let from_path = ctx
+            .new_file(FileType::Dir)
+            .name(from_path)
+            .create()
+            .unwrap();
+        let from_owner = other_user;
+        lchown(&from_path, Some(from_owner.uid), Some(from_owner.gid)).unwrap();
+        let metadata = lstat(&from_path).unwrap().as_time_invariant();
+
+        ctx.as_user(user, None, || {
+            assert!(matches!(
+                rename(&*from_path, to_path.as_ref()),
+                Err(Errno::EACCES | Errno::EPERM)
+            ));
+        });
+
+        let current_meta = lstat(&from_path).unwrap();
+        assert_eq!(metadata, current_meta.as_time_invariant());
     }
 }
 
