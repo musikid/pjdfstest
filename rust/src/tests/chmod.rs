@@ -149,7 +149,7 @@ crate::test_case! {
     /// chmod returns EFTYPE if the effective user ID is not the super-user,
     /// the mode includes the sticky bit (S_ISVTX),
     /// and path does not refer to a directory
-    // chmod/12.t
+    // chmod/11.t
     eftype, serialized, root => [Regular, Fifo, Block, Char, Socket]
 }
 #[cfg(any(target_os = "freebsd", target_os = "dragonfly"))]
@@ -198,7 +198,10 @@ fn eftype(ctx: &mut SerializedTestContext, ft: FileType) {
 mod lchmod {
     use super::*;
 
+    // chmod/01.t
     enotdir_comp_test_case!(lchmod(~path, Mode::empty()));
+
+    // chmod/04.t
     enoent_named_file_test_case!(lchmod(~path, Mode::empty()));
     enoent_comp_test_case!(lchmod(~path, Mode::empty()));
 

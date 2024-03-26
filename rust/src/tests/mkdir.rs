@@ -17,6 +17,7 @@ crate::test_case! {
     /// POSIX: The file permission bits of the new directory shall be initialized from
     /// mode. These file permission bits of the mode argument shall be modified by the
     /// process' file creation mask.
+    // mkdir/00.t
     permission_bits_from_mode, serialized
 }
 fn permission_bits_from_mode(ctx: &mut SerializedTestContext) {
@@ -27,6 +28,7 @@ crate::test_case! {
     /// POSIX: The directory's user ID shall be set to the process' effective user ID.
     /// The directory's group ID shall be set to the group ID of the parent directory
     /// or to the effective group ID of the process.
+    // mkdir/00.t
     uid_gid_eq_euid_egid, serialized, root
 }
 fn uid_gid_eq_euid_egid(ctx: &mut SerializedTestContext) {
@@ -38,6 +40,7 @@ crate::test_case! {
     /// st_ctime, and st_mtime fields of the directory. Also, the st_ctime and
     /// st_mtime fields of the directory that contains the new entry shall be marked
     /// for update.
+    // mkdir/00.t
     changed_time_fields_success
 }
 fn changed_time_fields_success(ctx: &mut TestContext) {
@@ -51,6 +54,7 @@ fn changed_time_fields_success(ctx: &mut TestContext) {
         });
 }
 
+// mkdir/01.t
 enotdir_comp_test_case!(mkdir(~path, Mode::empty()));
 
 // mkdir/02.t

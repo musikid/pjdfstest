@@ -19,10 +19,10 @@ use super::errors::{
     etxtbsy::etxtbsy_test_case,
 };
 
-// tests/truncate/00.t
 
 crate::test_case! {
     /// truncate should extend a file, and shrink a sparse file
+    // truncate/00.t
     extend_file_shrink_sparse
 }
 fn extend_file_shrink_sparse(ctx: &mut TestContext) {
@@ -42,6 +42,7 @@ fn extend_file_shrink_sparse(ctx: &mut TestContext) {
 
 crate::test_case! {
     /// truncate should shrink the file if the specified size is less than the actual one
+    // truncate/00.t
     shrink_not_empty
 }
 fn shrink_not_empty(ctx: &mut TestContext) {
@@ -65,6 +66,7 @@ fn shrink_not_empty(ctx: &mut TestContext) {
 
 crate::test_case! {
     /// truncate should update ctime if it succeeds
+    // truncate/00.t
     update_ctime_success
 }
 fn update_ctime_success(ctx: &mut TestContext) {
@@ -77,6 +79,7 @@ fn update_ctime_success(ctx: &mut TestContext) {
 
 crate::test_case! {
     /// truncate should not update ctime if it fails
+    // truncate/00.t
     unchanged_ctime_failed, serialized, root
 }
 fn unchanged_ctime_failed(ctx: &mut SerializedTestContext) {

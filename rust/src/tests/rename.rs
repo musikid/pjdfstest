@@ -267,6 +267,7 @@ fn updates_link_parent(ctx: &mut TestContext) {
 
     assert!(rename(&src, &dst).is_ok());
 
+    // The .. link and parents' nlinks values should be updated
     let src_parent_stat = lstat(&src_parent).unwrap();
     let dst_parent_stat = lstat(&dst_parent).unwrap();
     assert_eq!(src_parent_stat.st_nlink, 2);
@@ -282,9 +283,9 @@ crate::test_case! {
     /// rename returns ENOTDIR when the 'from' argument is a directory,
     /// but 'to' is not a directory
     // rename/13.t
-    enotdir_from_to => [Regular, Fifo, Block, Char, Socket]
+    enotdir_from_dir_to_not_dir => [Regular, Fifo, Block, Char, Socket]
 }
-fn enotdir_from_to(ctx: &mut TestContext, ft: FileType) {
+fn enotdir_from_dir_to_not_dir(ctx: &mut TestContext, ft: FileType) {
     let path = ctx.create(ft).unwrap();
     let dir = ctx.create(FileType::Dir).unwrap();
 
@@ -300,7 +301,7 @@ enametoolong_either_path_test_case!(rename);
 // rename/03.t
 enoent_either_named_file_test_case!(rename);
 
-// reanme/11.t
+// rename/11.t
 eloop_either_test_case!(rename);
 
 crate::test_case! {
