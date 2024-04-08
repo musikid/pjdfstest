@@ -1,5 +1,6 @@
 use std::{
     cell::RefCell,
+    collections::HashSet,
     fmt::Debug,
     fs::metadata,
     os::unix::prelude::{FileTypeExt, MetadataExt as _},
@@ -16,14 +17,33 @@ use nix::{
 
 #[cfg(any(target_os = "netbsd", target_os = "freebsd", target_os = "dragonfly"))]
 use crate::utils::lchmod;
+
 use crate::{
-    config::get_flags_intersection,
+    config::FeaturesConfig,
+    context::{FileType, TestContext},
     flags::FileFlags,
-    runner::context::{FileType, TestContext},
     test::FileSystemFeature,
     tests::MetadataExt,
     utils::{chmod, link, rename, rmdir, symlink, ALLPERMS},
 };
+
+/// Return flags which intersects with the provided ones
+/// and those available in the configuration,
+/// along with the other available in the configuration (representing the flags which don't trigger errors in this context).
+pub fn get_flags_intersection(
+    config: &FeaturesConfig,
+    flags: &[FileFlags],
+) -> (Vec<FileFlags>, Vec<FileFlags>) {
+    let flags: HashSet<_> = flags.iter().copied().collect();
+    let eperm_flags: HashSet<_> = config.file_flags.intersection(&flags).copied().collect();
+    let valid_flags: Vec<_> = config
+        .file_flags
+        .difference(&eperm_flags)
+        .copied()
+        .collect();
+
+    (eperm_flags.into_iter().collect(), valid_flags)
+}
 
 /// Assert that setting `flags` on the file's parent directory if `parent` is `true`
 /// or the file itself otherwise do make the function fail with EPERM.

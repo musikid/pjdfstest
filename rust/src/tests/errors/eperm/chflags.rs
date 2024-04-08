@@ -10,7 +10,7 @@ use crate::{
     config::Config,
     features::FileSystemFeature,
     flags::FileFlags,
-    runner::context::{FileType, SerializedTestContext},
+    context::{FileType, SerializedTestContext},
     utils::{lchflags, lchown},
 };
 

@@ -6,7 +6,7 @@ use crate::{
 };
 
 #[cfg(not(target_os = "linux"))]
-use {crate::runner::context::TestContext, nix::unistd::unlink};
+use {crate::context::TestContext, nix::unistd::unlink};
 
 use nix::{
     errno::Errno,

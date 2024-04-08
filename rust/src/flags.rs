@@ -193,3 +193,21 @@ pub enum FileFlags {
     SF_SNAPINVAL,
 }
 }
+
+#[cfg(any(
+    target_os = "openbsd",
+    target_os = "netbsd",
+    target_os = "freebsd",
+    target_os = "dragonfly",
+    target_os = "macos",
+    target_os = "ios",
+    target_os = "watchos",
+))]
+impl FileFlags {
+    pub const IMMUTABLE_FLAGS: &'static [FileFlags] =
+        &[FileFlags::UF_IMMUTABLE, FileFlags::SF_IMMUTABLE];
+    pub const APPEND_ONLY_FLAGS: &'static [FileFlags] =
+        &[FileFlags::UF_APPEND, FileFlags::SF_APPEND];
+    pub const UNDELETABLE_FLAGS: &'static [FileFlags] =
+        &[FileFlags::UF_NOUNLINK, FileFlags::SF_NOUNLINK];
+}
