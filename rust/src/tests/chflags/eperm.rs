@@ -8,32 +8,22 @@ use nix::{
 
 use crate::{
     config::Config,
-    features::FileSystemFeature,
-    flags::FileFlags,
     context::{FileType, SerializedTestContext},
+    features::FileSystemFeature,
+    tests::supports_file_flags,
     utils::{lchflags, lchown},
 };
-
-/// Fails when one of FileFlags::SF_IMMUTABLE, FileFlags::SF_APPEND or FileFlags::SF_NOUNLINK is unsupported.
-fn supports_immutable_append_nounlink(config: &Config, _: &Path) -> anyhow::Result<()> {
-    let flags = [
-        FileFlags::SF_IMMUTABLE,
-        FileFlags::SF_APPEND,
-        FileFlags::SF_NOUNLINK,
-    ];
-
-    if !flags.iter().all(|f| config.features.file_flags.contains(f)) {
-        anyhow::bail!("Need support for SF_IMMUTABLE, SF_APPEND, and SF_NOUNLINK flags");
-    }
-
-    Ok(())
-}
 
 crate::test_case! {
     /// chflags returns EPERM when one of SF_IMMUTABLE, SF_APPEND, or SF_NOUNLINK
     /// is set and the user is not the super-user
     // chflags/08.t
-    immutable_append_nounlink_not_root, serialized, root; supports_immutable_append_nounlink
+    immutable_append_nounlink_not_root, serialized, root;
+    supports_file_flags!(
+        SF_IMMUTABLE,
+        SF_APPEND,
+        SF_NOUNLINK
+    )
      => [Regular, Dir, Fifo, Block, Char, Socket]
 }
 fn immutable_append_nounlink_not_root(ctx: &mut SerializedTestContext, ft: FileType) {
@@ -84,7 +74,12 @@ crate::test_case! {
     /// chflags returns EPERM when one of SF_IMMUTABLE, SF_APPEND, or SF_NOUNLINK
     /// is set and the user is not the super-user
     // chflags/08.t
-    immutable_append_nounlink_not_root_symlink, serialized, root; supports_immutable_append_nounlink
+    immutable_append_nounlink_not_root_symlink, serialized, root;
+    supports_file_flags!(
+        SF_IMMUTABLE,
+        SF_APPEND,
+        SF_NOUNLINK
+    )
 }
 fn immutable_append_nounlink_not_root_symlink(ctx: &mut SerializedTestContext) {
     let file = ctx.create(FileType::Symlink(None)).unwrap();
@@ -121,7 +116,12 @@ fn immutable_append_nounlink_not_root_symlink(ctx: &mut SerializedTestContext) {
 crate::test_case! {
     /// chflags returns EPERM if non-super-user tries to set one of SF_IMMUTABLE, SF_APPEND, or SF_NOUNLINK
     // chflags/10.t
-    set_immutable_append_nounlink_not_root, serialized, root; supports_immutable_append_nounlink
+    set_immutable_append_nounlink_not_root, serialized, root;
+    supports_file_flags!(
+        SF_IMMUTABLE,
+        SF_APPEND,
+        SF_NOUNLINK
+    )
      => [Regular, Dir, Fifo, Block, Char, Socket]
 }
 fn set_immutable_append_nounlink_not_root(ctx: &mut SerializedTestContext, ft: FileType) {
@@ -170,7 +170,12 @@ fn set_immutable_append_nounlink_not_root(ctx: &mut SerializedTestContext, ft: F
 crate::test_case! {
     /// chflags returns EPERM if non-super-user tries to set one of SF_IMMUTABLE, SF_APPEND, or SF_NOUNLINK
     // chflags/10.t
-    set_immutable_append_nounlink_not_root_symlink, serialized, root; supports_immutable_append_nounlink
+    set_immutable_append_nounlink_not_root_symlink, serialized, root;
+    supports_file_flags!(
+        SF_IMMUTABLE,
+        SF_APPEND,
+        SF_NOUNLINK
+    )
 }
 fn set_immutable_append_nounlink_not_root_symlink(ctx: &mut SerializedTestContext) {
     let file = ctx.create(FileType::Symlink(None)).unwrap();
