@@ -1,12 +1,13 @@
 use nix::{
     errno::Errno,
-    sys::stat::{stat, FileFlag},
+    sys::stat::stat,
     unistd::{chflags, chown},
 };
 
 use crate::{
     context::{FileType, SerializedTestContext},
     features::FileSystemFeature,
+    flags::FileFlags,
     tests::supports_file_flags,
 };
 
@@ -29,26 +30,34 @@ fn immutable_append_nounlink_not_root(ctx: &mut SerializedTestContext, ft: FileT
     chown(&file, Some(owner.uid), Some(owner.gid)).unwrap();
 
     let flags = [
-        FileFlag::SF_IMMUTABLE,
-        FileFlag::SF_APPEND,
-        FileFlag::SF_NOUNLINK,
+        FileFlags::SF_IMMUTABLE,
+        FileFlags::SF_APPEND,
+        FileFlags::SF_NOUNLINK,
     ];
 
     for flag in flags {
-        assert!(chflags(&file, flag).is_ok());
+        assert!(chflags(&file, flag.into()).is_ok());
         let set_flags = stat(&file).unwrap().st_flags;
 
         ctx.as_user(&not_owner, None, || {
-            assert_eq!(chflags(&file, FileFlag::UF_NODUMP), Err(Errno::EPERM));
+            let res = chflags(&file, FileFlags::UF_NODUMP.into());
+            assert_eq!(
+                res,
+                Err(Errno::EPERM),
+                "chflags has returned {res:?} for flag {flag} while EPERM was expected"
+            );
         });
-
         let actual_flags = stat(&file).unwrap().st_flags;
         assert_eq!(set_flags, actual_flags);
 
         ctx.as_user(&owner, None, || {
-            assert_eq!(chflags(&file, FileFlag::UF_NODUMP), Err(Errno::EPERM));
+            let res = chflags(&file, FileFlags::UF_NODUMP.into());
+            assert_eq!(
+                res,
+                Err(Errno::EPERM),
+                "chflags has returned {res:?} for flag {flag} while EPERM was expected"
+            );
         });
-
         let actual_flags = stat(&file).unwrap().st_flags;
         assert_eq!(set_flags, actual_flags);
     }
@@ -72,23 +81,33 @@ fn set_immutable_append_nounlink_not_root(ctx: &mut SerializedTestContext, ft: F
     chown(&file, Some(owner.uid), Some(owner.gid)).unwrap();
 
     let flags = [
-        FileFlag::SF_IMMUTABLE,
-        FileFlag::SF_APPEND,
-        FileFlag::SF_NOUNLINK,
+        FileFlags::SF_IMMUTABLE,
+        FileFlags::SF_APPEND,
+        FileFlags::SF_NOUNLINK,
     ];
 
     for flag in flags {
         let set_flags = stat(&file).unwrap().st_flags;
 
         ctx.as_user(&not_owner, None, || {
-            assert_eq!(chflags(&file, flag), Err(Errno::EPERM));
+            let res = chflags(&file, flag.into());
+            assert_eq!(
+                res,
+                Err(Errno::EPERM),
+                "chflags has returned {res:?} for flag {flag} while EPERM was expected"
+            );
         });
 
         let actual_flags = stat(&file).unwrap().st_flags;
         assert_eq!(set_flags, actual_flags);
 
         ctx.as_user(&owner, None, || {
-            assert_eq!(chflags(&file, flag), Err(Errno::EPERM));
+            let res = chflags(&file, flag.into());
+            assert_eq!(
+                res,
+                Err(Errno::EPERM),
+                "chflags has returned {res:?} for flag {flag} while EPERM was expected"
+            );
         });
 
         let actual_flags = stat(&file).unwrap().st_flags;
@@ -107,21 +126,31 @@ fn not_owner_not_root(ctx: &mut SerializedTestContext, ft: FileType) {
     let other_owner = ctx.get_new_user();
     let not_owner = ctx.get_new_user();
 
-    chflags(&file, FileFlag::empty()).unwrap();
     let default_flags = stat(&file).unwrap().st_flags;
 
     ctx.as_user(&not_owner, None, || {
-        assert_eq!(chflags(&file, FileFlag::UF_NODUMP), Err(Errno::EPERM));
+        let res = chflags(&file, FileFlags::UF_NODUMP.into());
+        assert_eq!(
+            res,
+            Err(Errno::EPERM),
+            "chflags has returned {res:?} when trying with non-owner user
+            and file owned by original owner while EPERM was expected"
+        );
     });
 
     let flags = stat(&file).unwrap().st_flags;
     assert_eq!(default_flags, flags);
 
     chown(&file, Some(other_owner.uid), Some(other_owner.gid)).unwrap();
-    chflags(&file, FileFlag::empty()).unwrap();
 
     ctx.as_user(&not_owner, None, || {
-        assert_eq!(chflags(&file, FileFlag::UF_NODUMP), Err(Errno::EPERM));
+        let res = chflags(&file, FileFlags::UF_NODUMP.into());
+        assert_eq!(
+            res,
+            Err(Errno::EPERM),
+            "chflags has returned {res:?} when trying with non-owner user
+            and file owned by original owner while EPERM was expected"
+        );
     });
 
     let flags = stat(&file).unwrap().st_flags;
@@ -139,26 +168,42 @@ fn set_sf_snapshot_user(ctx: &mut SerializedTestContext, ft: FileType) {
     let other_owner = ctx.get_new_user();
     let not_owner = ctx.get_new_user();
 
-    chflags(&file, FileFlag::empty()).unwrap();
     let default_flags = stat(&file).unwrap().st_flags;
 
     ctx.as_user(&not_owner, None, || {
-        assert_eq!(chflags(&file, FileFlag::SF_SNAPSHOT), Err(Errno::EPERM));
+        let res = chflags(&file, FileFlags::SF_SNAPSHOT.into());
+        assert_eq!(
+            res,
+            Err(Errno::EPERM),
+            "chflags has returned {res:?} when trying to set with non-owner user and file owned by original owner while EPERM was expected"
+        );
     });
 
-    assert_eq!(chflags(&file, FileFlag::SF_SNAPSHOT), Err(Errno::EPERM));
+    let res = chflags(&file, FileFlags::SF_SNAPSHOT.into());
+    assert_eq!(
+        res,
+        Err(Errno::EPERM),
+        "chflags has returned {res:?} when trying to set with owner user while EPERM was expected"
+    );
 
     let flags = stat(&file).unwrap().st_flags;
     assert_eq!(default_flags, flags);
 
     chown(&file, Some(other_owner.uid), Some(other_owner.gid)).unwrap();
-    chflags(&file, FileFlag::empty()).unwrap();
 
     ctx.as_user(&not_owner, None, || {
-        assert_eq!(chflags(&file, FileFlag::SF_SNAPSHOT), Err(Errno::EPERM));
+        assert_eq!(
+            chflags(&file, FileFlags::SF_SNAPSHOT.into()),
+            Err(Errno::EPERM),
+            "chflags has returned {res:?} when trying to set with non-owner user and file owned by another owner while EPERM was expected"
+        );
     });
 
-    assert_eq!(chflags(&file, FileFlag::SF_SNAPSHOT), Err(Errno::EPERM));
+    assert_eq!(
+        chflags(&file, FileFlags::SF_SNAPSHOT.into()),
+        Err(Errno::EPERM),
+        "chflags has returned {res:?} when trying to set with owner user and file owned by another owner while EPERM was expected"
+    );
 
     let flags = stat(&file).unwrap().st_flags;
     assert_eq!(default_flags, flags);

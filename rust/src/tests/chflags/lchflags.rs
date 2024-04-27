@@ -41,7 +41,7 @@ fn immutable_append_nounlink_not_root(ctx: &mut SerializedTestContext, ft: FileT
             assert_eq!(
                 res,
                 Err(Errno::EPERM),
-                "lchflags has returned {res:#?} for flag {flag} while EPERM was expected"
+                "lchflags has returned {res:?} for flag {flag} while EPERM was expected"
             );
         });
 
@@ -53,7 +53,7 @@ fn immutable_append_nounlink_not_root(ctx: &mut SerializedTestContext, ft: FileT
             assert_eq!(
                 res,
                 Err(Errno::EPERM),
-                "lchflags has returned {res:#?} for flag {flag} while EPERM was expected"
+                "lchflags has returned {res:?} for flag {flag} while EPERM was expected"
             );
         });
 
@@ -86,15 +86,14 @@ fn set_immutable_append_nounlink_not_root(ctx: &mut SerializedTestContext, ft: F
     ];
 
     for flag in flags {
-        assert!(lchflags(&file, flag.into()).is_ok());
         let set_flags = lstat(&file).unwrap().st_flags;
 
         ctx.as_user(&not_owner, None, || {
-            let res = lchflags(&file, FileFlags::UF_NODUMP.into());
+            let res = lchflags(&file, flag.into());
             assert_eq!(
                 res,
                 Err(Errno::EPERM),
-                "lchflags has returned {res:#?} for flag {flag} while EPERM was expected"
+                "lchflags has returned {res:?} for flag {flag} while EPERM was expected"
             );
         });
 
@@ -102,11 +101,11 @@ fn set_immutable_append_nounlink_not_root(ctx: &mut SerializedTestContext, ft: F
         assert_eq!(set_flags, actual_flags);
 
         ctx.as_user(&owner, None, || {
-            let res = lchflags(&file, FileFlags::UF_NODUMP.into());
+            let res = lchflags(&file, flag.into());
             assert_eq!(
                 res,
                 Err(Errno::EPERM),
-                "lchflags has returned {res:#?} for flag {flag} while EPERM was expected"
+                "lchflags has returned {res:?} for flag {flag} while EPERM was expected"
             );
         });
 
@@ -134,7 +133,7 @@ fn not_owner_not_root(ctx: &mut SerializedTestContext, ft: FileType) {
         assert_eq!(
             res,
             Err(Errno::EPERM),
-            "lchflags has returned {res:#?} when trying with non-owner user
+            "lchflags has returned {res:?} when trying with non-owner user
             and file owned by original owner while EPERM was expected"
         );
     });
@@ -149,7 +148,7 @@ fn not_owner_not_root(ctx: &mut SerializedTestContext, ft: FileType) {
         assert_eq!(
             res,
             Err(Errno::EPERM),
-            "lchflags has returned {res:#?} when trying with non-owner user
+            "lchflags has returned {res:?} when trying with non-owner user
             and file owned by another user while EPERM was expected"
         );
     });
@@ -176,7 +175,7 @@ fn set_sf_snapshot_user(ctx: &mut SerializedTestContext, ft: FileType) {
         assert_eq!(
             res,
             Err(Errno::EPERM),
-            "lchflags has returned {res:#?} when trying to set with non-owner user
+            "lchflags has returned {res:?} when trying to set with non-owner user
             and file owned by original owner while EPERM was expected"
         );
     });
@@ -185,7 +184,7 @@ fn set_sf_snapshot_user(ctx: &mut SerializedTestContext, ft: FileType) {
     assert_eq!(
         res,
         Err(Errno::EPERM),
-        "lchflags has returned {res:#?} when trying to set with original owner
+        "lchflags has returned {res:?} when trying to set with original owner
             and file owned by original owner while EPERM was expected"
     );
 
@@ -199,7 +198,7 @@ fn set_sf_snapshot_user(ctx: &mut SerializedTestContext, ft: FileType) {
         assert_eq!(
             res,
             Err(Errno::EPERM),
-            "lchflags has returned {res:#?} when trying to set with non-owner user
+            "lchflags has returned {res:?} when trying to set with non-owner user
             and file owned by another user than the original owner while EPERM was expected"
         );
     });
@@ -208,7 +207,7 @@ fn set_sf_snapshot_user(ctx: &mut SerializedTestContext, ft: FileType) {
     assert_eq!(
         res,
         Err(Errno::EPERM),
-        "lchflags has returned {res:#?} when trying to set with original owner
+        "lchflags has returned {res:?} when trying to set with original owner
             and file owned by another user than the original owner while EPERM was expected"
     );
 
