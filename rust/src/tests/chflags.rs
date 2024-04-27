@@ -25,28 +25,33 @@ use super::{
 };
 
 mod eperm;
+mod lchflags;
 
 //TODO: Split tests with unprivileged tests for user flags
 
 fn get_flags(ctx: &TestContext) -> (FileFlag, FileFlag, FileFlag) {
     static USER_FLAGS: OnceLock<HashSet<FileFlags>> = OnceLock::new();
-    USER_FLAGS.get_or_init(|| HashSet::from([
-        FileFlags::UF_NODUMP,
-        FileFlags::UF_IMMUTABLE,
-        FileFlags::UF_APPEND,
-        #[cfg(any(target_os = "freebsd", target_os = "dragonfly"))]
-        FileFlags::UF_NOUNLINK,
-        #[cfg(any(target_os = "freebsd", target_os = "dragonfly"))]
-        FileFlags::UF_OPAQUE,
-    ]));
+    USER_FLAGS.get_or_init(|| {
+        HashSet::from([
+            FileFlags::UF_NODUMP,
+            FileFlags::UF_IMMUTABLE,
+            FileFlags::UF_APPEND,
+            #[cfg(any(target_os = "freebsd", target_os = "dragonfly"))]
+            FileFlags::UF_NOUNLINK,
+            #[cfg(any(target_os = "freebsd", target_os = "dragonfly"))]
+            FileFlags::UF_OPAQUE,
+        ])
+    });
     static SYSTEM_FLAGS: OnceLock<HashSet<FileFlags>> = OnceLock::new();
-    SYSTEM_FLAGS.get_or_init(|| HashSet::from([
-        FileFlags::SF_ARCHIVED,
-        FileFlags::SF_IMMUTABLE,
-        FileFlags::SF_APPEND,
-        #[cfg(any(target_os = "freebsd", target_os = "dragonfly"))]
-        FileFlags::SF_NOUNLINK,
-    ]));
+    SYSTEM_FLAGS.get_or_init(|| {
+        HashSet::from([
+            FileFlags::SF_ARCHIVED,
+            FileFlags::SF_IMMUTABLE,
+            FileFlags::SF_APPEND,
+            #[cfg(any(target_os = "freebsd", target_os = "dragonfly"))]
+            FileFlags::SF_NOUNLINK,
+        ])
+    });
 
     let allflags: FileFlag = ctx
         .features_config()
@@ -256,7 +261,11 @@ fn securelevel(ctx: &mut TestContext, ft: FileType) {
     let jail = jail.start().unwrap();
     ctx.set_jail(jail);
 
-    for flag in [FileFlags::SF_IMMUTABLE, FileFlags::SF_APPEND, FileFlags::SF_NOUNLINK] {
+    for flag in [
+        FileFlags::SF_IMMUTABLE,
+        FileFlags::SF_APPEND,
+        FileFlags::SF_NOUNLINK,
+    ] {
         let file = ctx.create(ft.clone()).unwrap();
         lchflags(&file, flag.into()).unwrap();
 
@@ -269,7 +278,9 @@ fn securelevel(ctx: &mut TestContext, ft: FileType) {
             .output()
             .unwrap();
         assert!(!r.status.success());
-        assert!(OsStr::from_bytes(&r.stderr).to_string_lossy().contains("Operation not permitted"));
+        assert!(OsStr::from_bytes(&r.stderr)
+            .to_string_lossy()
+            .contains("Operation not permitted"));
     }
 }
 
