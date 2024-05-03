@@ -1,4 +1,4 @@
-use nix::{sys::stat::fstat, unistd::unlink};
+use nix::{errno::Errno, sys::stat::fstat, unistd::unlink};
 
 use crate::{
     context::{FileType, SerializedTestContext, TestContext},
@@ -154,6 +154,37 @@ enoent_named_file_test_case!(unlink);
 
 // unlink/07.t
 eloop_comp_test_case!(unlink);
+
+// From https://pubs.opengroup.org/onlinepubs/9699919799/functions/unlink.html
+//
+// The standard developers reviewed TR 24715-2006 and noted that LSB-conforming implementations
+// may return [EISDIR] instead of [EPERM] when unlinking a directory.
+// A change to permit this behavior by changing the requirement for [EPERM] to [EPERM] or [EISDIR] was considered,
+// but decided against since it would break existing strictly conforming and conforming applications.
+// Applications written for portability to both POSIX.1-2017 and the LSB should be prepared to handle either error code.
+#[cfg(not(target_os = "linux"))]
+crate::test_case! {
+    /// unlink may return EPERM if the named file is a directory
+    // unlink/08.t
+    unlink_dir
+}
+#[cfg(not(target_os = "linux"))]
+fn unlink_dir(ctx: &mut TestContext) {
+    let dir = ctx.create(FileType::Dir).unwrap();
+    assert!(matches!(unlink(&dir), Ok(_) | Err(Errno::EPERM)));
+}
+
+#[cfg(target_os = "linux")]
+crate::test_case! {
+    /// unlink return EISDIR or EPERM if the named file is a directory
+    // unlink/08.t
+    unlink_dir
+}
+#[cfg(target_os = "linux")]
+fn unlink_dir(ctx: &mut TestContext) {
+    let dir = ctx.create(FileType::Dir).unwrap();
+    assert!(matches!(unlink(&dir), Err(Errno::EISDIR | Errno::EPERM)));
+}
 
 // unlink/12.t
 erofs_named_test_case!(unlink);

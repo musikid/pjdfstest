@@ -213,6 +213,25 @@ enoent_either_named_file_test_case!(link);
 // link/08.t
 eloop_either_test_case!(link);
 
+crate::test_case! {
+    /// link returns EPERM if the source file is a directory
+    // link/11.t
+    link_source_dir, serialized, root
+}
+fn link_source_dir(ctx: &mut SerializedTestContext) {
+    let src = ctx.create(FileType::Dir).unwrap();
+    // TODO: Doesn't seem to be an error for SunOS with UFS?
+    assert_eq!(link(&src, &ctx.gen_path()), Err(Errno::EPERM));
+
+    let user = ctx.get_new_user();
+    chown(ctx.base_path(), Some(user.uid), Some(user.gid)).unwrap();
+    chown(&src, Some(user.uid), Some(user.gid)).unwrap();
+
+    ctx.as_user(&user, None, || {
+        assert_eq!(link(&src, &ctx.gen_path()), Err(Errno::EPERM));
+    })
+}
+
 // link/16.t
 erofs_named_test_case!(link, |ctx: &mut TestContext, file| {
     let path = ctx.gen_path();
