@@ -4,7 +4,7 @@ use crate::{
     context::{FileType, SerializedTestContext},
     test::TestContext,
     tests::{assert_ctime_changed, assert_ctime_unchanged},
-    utils::{chmod, lchmod, ALLPERMS},
+    utils::{chmod, ALLPERMS},
 };
 
 use nix::{
@@ -214,11 +214,13 @@ crate::test_case! {
     /// chmod returns EFTYPE if the effective user ID is not the super-user,
     /// the mode includes the sticky bit (S_ISVTX),
     /// and path does not refer to a directory
-    // chmod/12.t
+    // chmod/11.t
     eftype, serialized, root => [Regular, Fifo, Block, Char, Socket]
 }
 #[cfg(any(target_os = "freebsd", target_os = "dragonfly"))]
 fn eftype(ctx: &mut SerializedTestContext, ft: FileType) {
+    use crate::utils::lchmod;
+
     let user = ctx.get_new_user();
 
     let original_mode = Mode::from_bits_truncate(0o640);

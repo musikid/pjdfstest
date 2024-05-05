@@ -167,7 +167,7 @@ crate::test_case! {
     /// open returns EPERM when the named file has its immutable flag set
     /// and the file is to be modified
     // open/10.t
-    immutable_file, FileSystemFeature::Chflags
+    immutable_file, root, FileSystemFeature::Chflags
 }
 fn immutable_file(ctx: &mut TestContext) {
     let immutable_flags = FileFlags::IMMUTABLE_FLAGS.iter().copied().collect();
@@ -233,7 +233,7 @@ fn append_file(ctx: &mut TestContext) {
 
 crate::test_case! {
     /// Return EPERM if the parent directory of the named file has its immutable flag set
-    immutable_append_file, FileSystemFeature::Chflags
+    immutable_append_file, root, FileSystemFeature::Chflags
 }
 fn immutable_append_file(ctx: &mut TestContext) {
     let (flags, valid_flags) = get_flags_intersection(
@@ -322,7 +322,7 @@ fn immutable_append_file(ctx: &mut TestContext) {
 
 crate::test_case! {
     /// Return EPERM if the parent directory of the named file has its immutable flag set
-    immutable_append_undeletable_file, FileSystemFeature::Chflags
+    immutable_append_undeletable_file, root, FileSystemFeature::Chflags
 }
 fn immutable_append_undeletable_file(ctx: &mut TestContext) {
     let (flags, valid_flags) = get_flags_intersection(
@@ -375,7 +375,7 @@ fn immutable_append_undeletable_file(ctx: &mut TestContext) {
 
 crate::test_case! {
     /// Return EPERM if the parent directory of the named file has its immutable flag set
-    immutable_append_parent, FileSystemFeature::Chflags
+    immutable_append_parent, root, FileSystemFeature::Chflags
 }
 fn immutable_append_parent(ctx: &mut TestContext) {
     let (flags, valid_flags) = get_flags_intersection(
@@ -423,7 +423,7 @@ fn immutable_append_parent(ctx: &mut TestContext) {
 
 crate::test_case! {
     /// Return EPERM if the parent directory of the named file has its immutable flag set
-    immutable_parent, FileSystemFeature::Chflags
+    immutable_parent, root, FileSystemFeature::Chflags
 }
 fn immutable_parent(ctx: &mut TestContext) {
     let (flags, valid_flags) = get_flags_intersection(
