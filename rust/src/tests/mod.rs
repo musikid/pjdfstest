@@ -298,15 +298,18 @@ where
 
 /// Guard to conditionally skip tests on platforms which do not support
 /// the required file flags.
-#[cfg(any(
-    target_os = "openbsd",
-    target_os = "netbsd",
-    target_os = "freebsd",
-    target_os = "dragonfly",
-    target_os = "macos",
-    target_os = "ios",
-    target_os = "watchos",
-))]
+#[cfg_attr(
+    not(any(
+        target_os = "openbsd",
+        target_os = "netbsd",
+        target_os = "freebsd",
+        target_os = "dragonfly",
+        target_os = "macos",
+        target_os = "ios",
+        target_os = "watchos",
+    )),
+    allow(unused)
+)]
 macro_rules! supports_file_flags {
     ($($flags: ident),*) => {
         |config, _| {
@@ -325,15 +328,18 @@ macro_rules! supports_file_flags {
     };
 }
 
-#[cfg(any(
-    target_os = "openbsd",
-    target_os = "netbsd",
-    target_os = "freebsd",
-    target_os = "dragonfly",
-    target_os = "macos",
-    target_os = "ios",
-    target_os = "watchos",
-))]
+#[cfg_attr(
+    not(any(
+        target_os = "openbsd",
+        target_os = "netbsd",
+        target_os = "freebsd",
+        target_os = "dragonfly",
+        target_os = "macos",
+        target_os = "ios",
+        target_os = "watchos",
+    )),
+    allow(unused)
+)]
 use supports_file_flags;
 
 #[cfg(test)]
