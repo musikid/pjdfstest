@@ -1,11 +1,13 @@
 use std::{
-    cell::RefCell,
     collections::HashSet,
     fmt::Debug,
     fs::metadata,
-    os::unix::prelude::{FileTypeExt, MetadataExt as _},
+    os::{
+        freebsd::fs::MetadataExt as _,
+        unix::prelude::{FileTypeExt, MetadataExt as _},
+    },
     path::Path,
-    rc::Rc,
+    sync::atomic::AtomicBool,
 };
 
 use nix::{
@@ -19,11 +21,9 @@ use nix::{
 use crate::utils::lchmod;
 
 use crate::{
-    config::FeaturesConfig,
     context::{FileType, TestContext},
     flags::FileFlags,
     test::FileSystemFeature,
-    tests::MetadataExt,
     utils::{chmod, link, rename, rmdir, symlink, ALLPERMS},
 };
 
@@ -31,18 +31,20 @@ use crate::{
 /// and those available in the configuration,
 /// along with the other available in the configuration (representing the flags which don't trigger errors in this context).
 pub fn get_flags_intersection(
-    config: &FeaturesConfig,
-    flags: &[FileFlags],
+    supported_flags: &HashSet<FileFlags>,
+    error_flags: &[FileFlags],
 ) -> (Vec<FileFlags>, Vec<FileFlags>) {
-    let flags: HashSet<_> = flags.iter().copied().collect();
-    let eperm_flags: HashSet<_> = config.file_flags.intersection(&flags).copied().collect();
-    let valid_flags: Vec<_> = config
-        .file_flags
-        .difference(&eperm_flags)
+    let error_flags: HashSet<_> = error_flags.iter().copied().collect();
+    let supported_err_flags: HashSet<_> = supported_flags
+        .intersection(&error_flags)
+        .copied()
+        .collect();
+    let valid_flags: Vec<_> = supported_flags
+        .difference(&supported_err_flags)
         .copied()
         .collect();
 
-    (eperm_flags.into_iter().collect(), valid_flags)
+    (supported_err_flags.into_iter().collect(), valid_flags)
 }
 
 /// Assert that setting `flags` on the file's parent directory if `parent` is `true`
@@ -87,10 +89,18 @@ fn assert_flags<T: Debug, F, C>(
         (flagged_file, file)
     };
 
-    for flag in flags {
+    for &flag in flags {
+        let raw_flag: FileFlag = flag.into();
         let (flagged_file, file) = get_files();
 
-        chflags(&flagged_file, (*flag).into()).unwrap();
+        chflags(&flagged_file, raw_flag).unwrap();
+
+        let set_flags = metadata(&flagged_file).unwrap().st_flags();
+        assert!(
+            set_flags as u64 & raw_flag.bits() > 0,
+            "File should have {flag} set but only have {set_flags}"
+        );
+
         assert!(
             matches!(f(&file), Err(Errno::EPERM)),
             "{flag} does not trigger EPERM"
@@ -98,15 +108,24 @@ fn assert_flags<T: Debug, F, C>(
         assert!(!check(&file), "Error file check failed for {flag}");
 
         chflags(&flagged_file, FileFlag::empty()).unwrap();
-        assert!(f(&file).is_ok());
+
+        assert!(
+            f(&file).is_ok(),
+            "Failure when checking when unsetting flag {flag}"
+        );
         assert!(check(&file), "Success file check failed for {flag}");
     }
 
-    for flag in valid_flags {
+    for &flag in valid_flags {
+        let raw_flag: FileFlag = flag.into();
         let (flagged_file, file) = get_files();
 
-        chflags(&flagged_file, (*flag).into()).unwrap();
-        assert!(f(&file).is_ok(), "Failure for flag {flag}");
+        chflags(&flagged_file, raw_flag).unwrap();
+
+        assert!(
+            f(&file).is_ok(),
+            "Failure when checking if syscall is working for valid flag {flag}"
+        );
         assert!(
             check(&file),
             "Success file check failed for valid flag {flag}"
@@ -145,46 +164,60 @@ fn assert_flags_parent<T: Debug, F, C>(
 }
 
 crate::test_case! {
-    /// Return EPERM when the named file has its immutable flag set and the file is to be modified
+    /// open returns EPERM when the named file has its immutable flag set
+    /// and the file is to be modified
+    // open/10.t
     immutable_file, FileSystemFeature::Chflags
 }
 fn immutable_file(ctx: &mut TestContext) {
-    let (flags, valid_flags) =
-        get_flags_intersection(ctx.features_config(), FileFlags::IMMUTABLE_FLAGS);
+    let immutable_flags = FileFlags::IMMUTABLE_FLAGS.iter().copied().collect();
+    let flags: Vec<_> = ctx
+        .features_config()
+        .file_flags
+        .intersection(&immutable_flags)
+        .copied()
+        .collect();
+    let valid_flags = FileFlags::UNDELETABLE_FLAGS.iter().copied().collect();
+    let valid_flags: Vec<_> = ctx
+        .features_config()
+        .file_flags
+        .intersection(&valid_flags)
+        .copied()
+        .collect();
 
-    // open/10.t
-    // TODO: atime can remain unchanged depending on the mount flags
-    let meta = Rc::new(RefCell::from(None));
-    let meta_write = Rc::clone(&meta);
-    assert_flags_named_file(
-        ctx,
-        &flags,
-        &valid_flags,
-        Some(FileType::Regular),
-        |path| {
-            // TODO: Improve
-            *meta_write.borrow_mut() = Some(metadata(path).unwrap());
-            open(path, OFlag::O_RDONLY | OFlag::O_TRUNC, Mode::empty()).and_then(close)
-        },
-        |path| {
-            let size = metadata(path).unwrap();
-            meta.borrow().as_ref().unwrap().atime_ts() != size.atime_ts()
-        },
-    );
+    // TODO: Improve check function
+    let state = AtomicBool::new(false);
+    let created_type = Some(FileType::Regular);
+    let f = |path: &_| {
+        let res = open(path, OFlag::O_RDONLY | OFlag::O_TRUNC, Mode::empty()).and_then(close);
+        state.store(
+            match res {
+                Ok(_) => true,
+                _ => false,
+            },
+            std::sync::atomic::Ordering::Relaxed,
+        );
+        res
+    };
+    let check = |_: &_| state.load(std::sync::atomic::Ordering::Relaxed);
+
+    assert_flags(ctx, &flags, &valid_flags, false, created_type, f, check)
 }
 
 crate::test_case! {
     append_file, FileSystemFeature::Chflags
 }
 fn append_file(ctx: &mut TestContext) {
-    let (flags, valid_flags) =
-        get_flags_intersection(ctx.features_config(), FileFlags::APPEND_ONLY_FLAGS);
+    let (flags, _) = get_flags_intersection(
+        &ctx.features_config().file_flags,
+        FileFlags::APPEND_ONLY_FLAGS,
+    );
 
     // open/11.t
     assert_flags_named_file(
         ctx,
         &flags,
-        &valid_flags,
+        &[],
         Some(FileType::Regular),
         |path| {
             open(path, OFlag::O_WRONLY, Mode::empty())
@@ -204,7 +237,7 @@ crate::test_case! {
 }
 fn immutable_append_file(ctx: &mut TestContext) {
     let (flags, valid_flags) = get_flags_intersection(
-        ctx.features_config(),
+        &ctx.features_config().file_flags,
         &[FileFlags::IMMUTABLE_FLAGS, FileFlags::APPEND_ONLY_FLAGS].concat(),
     );
 
@@ -293,7 +326,7 @@ crate::test_case! {
 }
 fn immutable_append_undeletable_file(ctx: &mut TestContext) {
     let (flags, valid_flags) = get_flags_intersection(
-        ctx.features_config(),
+        &ctx.features_config().file_flags,
         &[
             FileFlags::IMMUTABLE_FLAGS,
             FileFlags::APPEND_ONLY_FLAGS,
@@ -326,6 +359,7 @@ fn immutable_append_undeletable_file(ctx: &mut TestContext) {
 
     // rename/06.t
     // TODO: Failure on ZFS with SF_APPEND
+    // TODO: Missing multiple file types
     assert_flags_named_file(
         ctx,
         &flags,
@@ -345,7 +379,7 @@ crate::test_case! {
 }
 fn immutable_append_parent(ctx: &mut TestContext) {
     let (flags, valid_flags) = get_flags_intersection(
-        ctx.features_config(),
+        &ctx.features_config().file_flags,
         &[FileFlags::IMMUTABLE_FLAGS, FileFlags::APPEND_ONLY_FLAGS].concat(),
     );
 
@@ -362,6 +396,7 @@ fn immutable_append_parent(ctx: &mut TestContext) {
 
     // rename/07.t
     // TODO: Failure on ZFS with SF_APPEND
+    // TODO: Missing multiple file types
     assert_flags_parent(
         ctx,
         &flags,
@@ -371,7 +406,7 @@ fn immutable_append_parent(ctx: &mut TestContext) {
             let to = ctx.create(FileType::Regular).unwrap();
             rename(from, &to)
         },
-        Path::exists,
+        |path| !path.exists(),
     );
 
     // rmdir/10.t
@@ -391,8 +426,10 @@ crate::test_case! {
     immutable_parent, FileSystemFeature::Chflags
 }
 fn immutable_parent(ctx: &mut TestContext) {
-    let (flags, valid_flags) =
-        get_flags_intersection(ctx.features_config(), FileFlags::IMMUTABLE_FLAGS);
+    let (flags, valid_flags) = get_flags_intersection(
+        &ctx.features_config().file_flags,
+        FileFlags::IMMUTABLE_FLAGS,
+    );
 
     let mode = Mode::from_bits_truncate(0o755);
 
@@ -450,6 +487,7 @@ fn immutable_parent(ctx: &mut TestContext) {
     );
 
     // rename/08.t
+    // TODO: Missing multiple file types
     assert_flags_parent(
         ctx,
         &flags,
