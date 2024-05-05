@@ -227,7 +227,7 @@ fn link_source_dir(ctx: &mut SerializedTestContext) {
     chown(ctx.base_path(), Some(user.uid), Some(user.gid)).unwrap();
     chown(&src, Some(user.uid), Some(user.gid)).unwrap();
 
-    ctx.as_user(&user, None, || {
+    ctx.as_user(user, None, || {
         assert_eq!(link(&src, &ctx.gen_path()), Err(Errno::EPERM));
     })
 }

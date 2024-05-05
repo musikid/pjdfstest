@@ -1,2 +1,2 @@
-#[cfg(any(target_os = "freebsd"))]
+#[cfg(target_os = "freebsd")]
 mod flag;

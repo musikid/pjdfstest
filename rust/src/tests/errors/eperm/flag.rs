@@ -191,10 +191,7 @@ fn immutable_file(ctx: &mut TestContext) {
     let f = |path: &_| {
         let res = open(path, OFlag::O_RDONLY | OFlag::O_TRUNC, Mode::empty()).and_then(close);
         state.store(
-            match res {
-                Ok(_) => true,
-                _ => false,
-            },
+            res.is_ok(),
             std::sync::atomic::Ordering::Relaxed,
         );
         res

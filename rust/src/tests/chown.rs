@@ -61,25 +61,25 @@ fn chown_euid_not_root_not_owner(ctx: &mut SerializedTestContext, ft: FileType) 
 
     let another_user = ctx.get_new_user();
 
-    ctx.as_user(&user, None, || {
+    ctx.as_user(user, None, || {
         assert_eq!(
             chown(&file, Some(another_user.uid), Some(another_user.gid)),
             Err(Errno::EPERM)
         );
     });
-    ctx.as_user(&another_user, None, || {
+    ctx.as_user(another_user, None, || {
         assert_eq!(
             chown(&file, Some(user.uid), Some(user.gid)),
             Err(Errno::EPERM)
         );
     });
-    ctx.as_user(&another_user, None, || {
+    ctx.as_user(another_user, None, || {
         assert_eq!(
             chown(&file, Some(another_user.uid), Some(another_user.gid)),
             Err(Errno::EPERM)
         );
     });
-    ctx.as_user(&user, None, || {
+    ctx.as_user(user, None, || {
         assert_eq!(
             chown(&file, None, Some(another_user.gid)),
             Err(Errno::EPERM)
@@ -88,25 +88,25 @@ fn chown_euid_not_root_not_owner(ctx: &mut SerializedTestContext, ft: FileType) 
 
     let link = ctx.create(FileType::Symlink(Some(file))).unwrap();
 
-    ctx.as_user(&user, None, || {
+    ctx.as_user(user, None, || {
         assert_eq!(
             chown(&link, Some(another_user.uid), Some(another_user.gid)),
             Err(Errno::EPERM)
         );
     });
-    ctx.as_user(&another_user, None, || {
+    ctx.as_user(another_user, None, || {
         assert_eq!(
             chown(&link, Some(user.uid), Some(user.gid)),
             Err(Errno::EPERM)
         );
     });
-    ctx.as_user(&another_user, None, || {
+    ctx.as_user(another_user, None, || {
         assert_eq!(
             chown(&link, Some(another_user.uid), Some(another_user.gid)),
             Err(Errno::EPERM)
         );
     });
-    ctx.as_user(&user, None, || {
+    ctx.as_user(user, None, || {
         assert_eq!(
             chown(&link, None, Some(another_user.gid)),
             Err(Errno::EPERM)
@@ -126,25 +126,25 @@ fn chown_euid_not_root_not_owner_symlink(ctx: &mut SerializedTestContext) {
 
     let another_user = ctx.get_new_user();
 
-    ctx.as_user(&user, None, || {
+    ctx.as_user(user, None, || {
         assert_eq!(
             lchown(&file, Some(another_user.uid), Some(another_user.gid)),
             Err(Errno::EPERM)
         );
     });
-    ctx.as_user(&another_user, None, || {
+    ctx.as_user(another_user, None, || {
         assert_eq!(
             lchown(&file, Some(user.uid), Some(user.gid)),
             Err(Errno::EPERM)
         );
     });
-    ctx.as_user(&another_user, None, || {
+    ctx.as_user(another_user, None, || {
         assert_eq!(
             lchown(&file, Some(another_user.uid), Some(another_user.gid)),
             Err(Errno::EPERM)
         );
     });
-    ctx.as_user(&user, None, || {
+    ctx.as_user(user, None, || {
         assert_eq!(
             lchown(&file, None, Some(another_user.gid)),
             Err(Errno::EPERM)

@@ -154,14 +154,14 @@ fn chmod_not_owner(ctx: &mut SerializedTestContext) {
     let mode = Mode::from_bits_truncate(0o642);
     let new_mode = Mode::from_bits_truncate(0o641);
 
-    ctx.as_user(&user, None, || {
+    ctx.as_user(user, None, || {
         assert!(chmod(&file, mode).is_ok());
         let file_stat = metadata(&file).unwrap();
         assert_eq!(file_stat.mode() as mode_t & ALLPERMS, mode.bits());
     });
 
     let other_user = ctx.get_new_user();
-    ctx.as_user(&other_user, None, || {
+    ctx.as_user(other_user, None, || {
         assert_eq!(chmod(&file, new_mode), Err(Errno::EPERM));
         let file_stat = metadata(&file).unwrap();
         assert_eq!(file_stat.mode() as mode_t & ALLPERMS, mode.bits());
@@ -170,7 +170,7 @@ fn chmod_not_owner(ctx: &mut SerializedTestContext) {
     let current = User::from_uid(Uid::effective()).unwrap().unwrap();
     chown(&file, Some(current.uid), Some(current.gid)).unwrap();
 
-    ctx.as_user(&user, None, || {
+    ctx.as_user(user, None, || {
         assert_eq!(chmod(&file, new_mode), Err(Errno::EPERM));
         let file_stat = metadata(&file).unwrap();
         assert_eq!(file_stat.mode() as mode_t & ALLPERMS, mode.bits());
@@ -181,14 +181,14 @@ fn chmod_not_owner(ctx: &mut SerializedTestContext) {
     chown(&link, Some(user.uid), Some(user.gid)).unwrap();
     chown(&file, Some(user.uid), Some(user.gid)).unwrap();
 
-    ctx.as_user(&user, None, || {
+    ctx.as_user(user, None, || {
         assert!(chmod(&link, mode).is_ok());
         let link_stat = metadata(&link).unwrap();
         assert_eq!(link_stat.mode() as mode_t & ALLPERMS, mode.bits());
     });
 
     let other_user = ctx.get_new_user();
-    ctx.as_user(&other_user, None, || {
+    ctx.as_user(other_user, None, || {
         assert_eq!(chmod(&link, new_mode), Err(Errno::EPERM));
         let link_stat = metadata(&link).unwrap();
         assert_eq!(link_stat.mode() as mode_t & ALLPERMS, mode.bits());
@@ -196,7 +196,7 @@ fn chmod_not_owner(ctx: &mut SerializedTestContext) {
 
     chown(&link, Some(current.uid), Some(current.gid)).unwrap();
 
-    ctx.as_user(&user, None, || {
+    ctx.as_user(user, None, || {
         assert_eq!(chmod(&link, new_mode), Err(Errno::EPERM));
         let link_stat = metadata(&link).unwrap();
         assert_eq!(link_stat.mode() as mode_t & ALLPERMS, mode.bits());
@@ -283,21 +283,21 @@ mod lchmod {
 
         chown(&file, Some(user.uid), Some(user.gid)).unwrap();
 
-        ctx.as_user(&user, None, || {
+        ctx.as_user(user, None, || {
             assert!(lchmod(&file, mode).is_ok());
             let file_stat = metadata(&file).unwrap();
             assert_eq!(file_stat.mode() as mode_t & ALLPERMS, mode.bits());
         });
 
         let other_user = ctx.get_new_user();
-        ctx.as_user(&other_user, None, || {
+        ctx.as_user(other_user, None, || {
             assert_eq!(lchmod(&file, new_mode), Err(Errno::EPERM));
             let file_stat = metadata(&file).unwrap();
             assert_eq!(file_stat.mode() as mode_t & ALLPERMS, mode.bits());
         });
         chown(&file, Some(current.uid), Some(current.gid)).unwrap();
 
-        ctx.as_user(&user, None, || {
+        ctx.as_user(user, None, || {
             assert_eq!(lchmod(&file, new_mode), Err(Errno::EPERM));
             let file_stat = metadata(&file).unwrap();
             assert_eq!(file_stat.mode() as mode_t & ALLPERMS, mode.bits());

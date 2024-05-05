@@ -32,7 +32,7 @@ pub(in super::super) fn immutable_append_nounlink_not_root_factory(
         assert!(chflags_variant(&file, flag.into()).is_ok());
         let set_flags = lstat(&file).unwrap().st_flags;
 
-        ctx.as_user(&not_owner, None, || {
+        ctx.as_user(not_owner, None, || {
             let res = chflags_variant(&file, FileFlags::UF_NODUMP.into());
             assert_eq!(
                 res,
@@ -44,7 +44,7 @@ pub(in super::super) fn immutable_append_nounlink_not_root_factory(
         let actual_flags = lstat(&file).unwrap().st_flags;
         assert_eq!(set_flags, actual_flags);
 
-        ctx.as_user(&owner, None, || {
+        ctx.as_user(owner, None, || {
             let res = chflags_variant(&file, FileFlags::UF_NODUMP.into());
             assert_eq!(
                 res,
@@ -134,7 +134,7 @@ pub(in super::super) fn set_immutable_append_nounlink_not_root_factory(
     for flag in flags {
         let set_flags = lstat(&file).unwrap().st_flags;
 
-        ctx.as_user(&not_owner, None, || {
+        ctx.as_user(not_owner, None, || {
             let res = syscall_variant(&file, flag.into());
             assert_eq!(
                 res,
@@ -146,7 +146,7 @@ pub(in super::super) fn set_immutable_append_nounlink_not_root_factory(
         let actual_flags = lstat(&file).unwrap().st_flags;
         assert_eq!(set_flags, actual_flags);
 
-        ctx.as_user(&owner, None, || {
+        ctx.as_user(owner, None, || {
             let res = syscall_variant(&file, flag.into());
             assert_eq!(
                 res,
@@ -227,7 +227,7 @@ pub(in super::super) fn not_owner_not_root_factory(
 
     let default_flags = lstat(&file).unwrap().st_flags;
 
-    ctx.as_user(&not_owner, None, || {
+    ctx.as_user(not_owner, None, || {
         let res = syscall_variant(&file, FileFlags::UF_NODUMP.into());
         assert_eq!(
             res,
@@ -241,7 +241,7 @@ pub(in super::super) fn not_owner_not_root_factory(
 
     lchown(&file, Some(other_owner.uid), Some(other_owner.gid)).unwrap();
 
-    ctx.as_user(&not_owner, None, || {
+    ctx.as_user(not_owner, None, || {
         let res = syscall_variant(&file, FileFlags::UF_NODUMP.into());
         assert_eq!(
             res,
@@ -312,7 +312,7 @@ pub(in super::super) fn set_sf_snapshot_user_factory(
 
     let default_flags = lstat(&file).unwrap().st_flags;
 
-    ctx.as_user(&not_owner, None, || {
+    ctx.as_user(not_owner, None, || {
         let res = syscall_variant(&file, FileFlags::SF_SNAPSHOT.into());
         assert_eq!(
             res,
@@ -333,7 +333,7 @@ pub(in super::super) fn set_sf_snapshot_user_factory(
 
     lchown(&file, Some(other_owner.uid), Some(other_owner.gid)).unwrap();
 
-    ctx.as_user(&not_owner, None, || {
+    ctx.as_user(not_owner, None, || {
         let res = syscall_variant(&file, FileFlags::SF_SNAPSHOT.into());
         assert_eq!(
             res,
