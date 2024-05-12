@@ -7,7 +7,6 @@ use std::{
         unix::prelude::{FileTypeExt, MetadataExt as _},
     },
     path::Path,
-    sync::atomic::AtomicBool,
 };
 
 use nix::{
@@ -21,11 +20,40 @@ use nix::{
 use crate::utils::lchmod;
 
 use crate::{
+    config::Config,
     context::{FileType, TestContext},
     flags::FileFlags,
     test::FileSystemFeature,
     utils::{chmod, link, rename, rmdir, symlink, ALLPERMS},
 };
+
+/// Guard to check whether any of the provided flags is available in the configuration.
+pub(crate) fn supports_any_flag_helper(
+    flags: &[FileFlags],
+    config: &Config,
+    _: &Path,
+) -> Result<(), anyhow::Error> {
+    let flags: HashSet<_> = flags.into_iter().copied().collect();
+
+    if config.features.file_flags.intersection(&flags).count() == 0 {
+        anyhow::bail!("None of the flags used for this test are available in the configuration")
+    }
+
+    Ok(())
+}
+
+/// Guard to check whether any of the provided flags is available in the configuration.
+macro_rules! supports_any_flag {
+    (@ $( $flag: expr ),+ $( , )*) => {
+        supports_any_flag!(&[ $( $flag ),+ ])
+    };
+
+    ($flags: expr) => {
+        |config, _p| $crate::tests::errors::eperm::flag::supports_any_flag_helper($flags, config, _p)
+    }
+}
+
+pub(crate) use supports_any_flag;
 
 /// Return flags which intersects with the provided ones
 /// and those available in the configuration,
@@ -52,7 +80,7 @@ pub fn get_flags_intersection(
 /// Also assert that `valid_flags` do not make the function fail.
 /// The `check` function should retuns a `bool` which should succeed when the tested function succeed.
 /// If the file needs to be created before, a [`FileType`](crate::runner::context::FileType) should be provided.
-fn assert_flags<T: Debug, F, C>(
+pub(crate) fn assert_flags<T: Debug, F, C>(
     ctx: &TestContext,
     flags: &[FileFlags],
     valid_flags: &[FileFlags],
@@ -134,7 +162,7 @@ fn assert_flags<T: Debug, F, C>(
 }
 
 /// Specialization of [`assert_flags`] for named files.
-fn assert_flags_named_file<T: Debug, F, C>(
+pub(crate) fn assert_flags_named_file<T: Debug, F, C>(
     ctx: &TestContext,
     flags: &[FileFlags],
     valid_flags: &[FileFlags],
@@ -149,7 +177,7 @@ fn assert_flags_named_file<T: Debug, F, C>(
 }
 
 /// Specialization of [`assert_flags`] for parent directory.
-fn assert_flags_parent<T: Debug, F, C>(
+pub(crate) fn assert_flags_parent<T: Debug, F, C>(
     ctx: &TestContext,
     flags: &[FileFlags],
     valid_flags: &[FileFlags],
@@ -161,71 +189,6 @@ fn assert_flags_parent<T: Debug, F, C>(
     C: Fn(&Path) -> bool,
 {
     assert_flags(ctx, flags, valid_flags, true, created_type, f, check)
-}
-
-crate::test_case! {
-    /// open returns EPERM when the named file has its immutable flag set
-    /// and the file is to be modified
-    // open/10.t
-    immutable_file, root, FileSystemFeature::Chflags
-}
-fn immutable_file(ctx: &mut TestContext) {
-    let immutable_flags = FileFlags::IMMUTABLE_FLAGS.iter().copied().collect();
-    let flags: Vec<_> = ctx
-        .features_config()
-        .file_flags
-        .intersection(&immutable_flags)
-        .copied()
-        .collect();
-    let valid_flags = FileFlags::UNDELETABLE_FLAGS.iter().copied().collect();
-    let valid_flags: Vec<_> = ctx
-        .features_config()
-        .file_flags
-        .intersection(&valid_flags)
-        .copied()
-        .collect();
-
-    // TODO: Improve check function
-    let state = AtomicBool::new(false);
-    let created_type = Some(FileType::Regular);
-    let f = |path: &_| {
-        let res = open(path, OFlag::O_RDONLY | OFlag::O_TRUNC, Mode::empty()).and_then(close);
-        state.store(
-            res.is_ok(),
-            std::sync::atomic::Ordering::Relaxed,
-        );
-        res
-    };
-    let check = |_: &_| state.load(std::sync::atomic::Ordering::Relaxed);
-
-    assert_flags(ctx, &flags, &valid_flags, false, created_type, f, check)
-}
-
-crate::test_case! {
-    append_file, FileSystemFeature::Chflags
-}
-fn append_file(ctx: &mut TestContext) {
-    let (flags, _) = get_flags_intersection(
-        &ctx.features_config().file_flags,
-        FileFlags::APPEND_ONLY_FLAGS,
-    );
-
-    // open/11.t
-    assert_flags_named_file(
-        ctx,
-        &flags,
-        &[],
-        Some(FileType::Regular),
-        |path| {
-            open(path, OFlag::O_WRONLY, Mode::empty())
-                .and_then(|fd| nix::unistd::write(fd, "data".as_bytes()).map(|_| fd))
-                .and_then(close)
-        },
-        |path| {
-            let actual_size = metadata(path).unwrap().size();
-            actual_size > 0
-        },
-    );
 }
 
 crate::test_case! {

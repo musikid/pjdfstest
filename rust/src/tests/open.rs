@@ -216,6 +216,107 @@ fn open_flag_wrapper_ctx(flags: OFlag) -> impl Fn(&mut TestContext, &Path) -> ni
     move |_, path| open(path, flags, Mode::empty())
 }
 
+#[cfg(any(
+    target_os = "openbsd",
+    target_os = "netbsd",
+    target_os = "freebsd",
+    target_os = "dragonfly",
+    target_os = "macos",
+    target_os = "ios",
+    target_os = "watchos",
+))]
+mod flags {
+    use std::{fs::metadata, os::unix::fs::MetadataExt as _, sync::atomic::AtomicBool};
+
+    use nix::{
+        fcntl::{open, OFlag},
+        sys::stat::Mode,
+        unistd::close,
+    };
+
+    use crate::{
+        context::{FileType, TestContext},
+        features::FileSystemFeature,
+        flags::FileFlags,
+        tests::errors::eperm::flag::{
+            assert_flags, assert_flags_named_file, get_flags_intersection, supports_any_flag,
+        },
+    };
+
+    crate::test_case! {
+        /// open returns EPERM when the named file has its immutable flag set
+        /// and the file is to be modified
+        // open/10.t
+        immutable_file, root, FileSystemFeature::Chflags; supports_any_flag!(FileFlags::IMMUTABLE_FLAGS)
+    }
+    fn immutable_file(ctx: &mut TestContext) {
+        let flags = FileFlags::IMMUTABLE_FLAGS.iter().copied().collect();
+        let flags: Vec<_> = ctx
+            .features_config()
+            .file_flags
+            .intersection(&flags)
+            .copied()
+            .collect();
+        let valid_flags = FileFlags::UNDELETABLE_FLAGS.iter().copied().collect();
+        let valid_flags: Vec<_> = ctx
+            .features_config()
+            .file_flags
+            .intersection(&valid_flags)
+            .copied()
+            .collect();
+
+        // TODO: Improve check function
+        let state = AtomicBool::new(false);
+        let created_type = Some(FileType::Regular);
+        let f = |path: &_| {
+            let oflags = [
+                OFlag::O_WRONLY,
+                OFlag::O_RDWR,
+                OFlag::O_RDONLY | OFlag::O_TRUNC,
+            ];
+            let res = oflags
+                .into_iter()
+                .map(|flag| open(path, flag, Mode::empty()).and_then(close))
+                .reduce(Result::and)
+                .unwrap();
+            state.store(res.is_ok(), std::sync::atomic::Ordering::Relaxed);
+            res
+        };
+        let check = |_: &_| state.load(std::sync::atomic::Ordering::Relaxed);
+
+        assert_flags(ctx, &flags, &valid_flags, false, created_type, f, check)
+    }
+
+    crate::test_case! {
+        /// open returns EPERM when the named file has its append-only flag set,
+        /// the file is to be modified, and O_TRUNC is specified or O_APPEND is not specified
+        // open/11.t
+        append_file, FileSystemFeature::Chflags; supports_any_flag!(FileFlags::APPEND_ONLY_FLAGS)
+    }
+    fn append_file(ctx: &mut TestContext) {
+        let (flags, _) = get_flags_intersection(
+            &ctx.features_config().file_flags,
+            FileFlags::APPEND_ONLY_FLAGS,
+        );
+
+        assert_flags_named_file(
+            ctx,
+            &flags,
+            &[],
+            Some(FileType::Regular),
+            |path| {
+                open(path, OFlag::O_WRONLY, Mode::empty())
+                    .and_then(|fd| nix::unistd::write(fd, "data".as_bytes()).map(|_| fd))
+                    .and_then(close)
+            },
+            |path| {
+                let actual_size = metadata(path).unwrap().size();
+                actual_size > 0
+            },
+        );
+    }
+}
+
 // open/14.t
 erofs_named_test_case!(
     open,
