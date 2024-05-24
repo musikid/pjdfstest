@@ -170,7 +170,7 @@ pub(crate) fn assert_flags_named_file<T: Debug, F, C>(
     f: F,
     check: C,
 ) where
-    F: Fn(&Path) -> nix::Result<T>,
+    F: FnMut(&Path) -> nix::Result<T>,
     C: Fn(&Path) -> bool,
 {
     assert_flags(ctx, flags, valid_flags, false, created_type, f, check)
@@ -245,38 +245,6 @@ fn immutable_append_file(ctx: &mut TestContext) {
             link(src, &*dest)
         },
         |src| metadata(src).map_or(false, |m| m.nlink() == 2),
-    );
-
-    // open/10.t
-    assert_flags_named_file(
-        ctx,
-        &flags,
-        &valid_flags,
-        Some(FileType::Regular),
-        |path| {
-            open(path, OFlag::O_WRONLY, Mode::empty())
-                .and_then(|fd| nix::unistd::write(fd, "data".as_bytes()).map(|_| fd))
-                .and_then(close)
-        },
-        |path| {
-            let size = metadata(path).unwrap().len();
-            size > 0
-        },
-    );
-    assert_flags_named_file(
-        ctx,
-        &flags,
-        &valid_flags,
-        Some(FileType::Regular),
-        |path| {
-            open(path, OFlag::O_RDWR, Mode::empty())
-                .and_then(|fd| nix::unistd::write(fd, "data".as_bytes()).map(|_| fd))
-                .and_then(close)
-        },
-        |path| {
-            let size = metadata(path).unwrap().len();
-            size > 0
-        },
     );
 }
 

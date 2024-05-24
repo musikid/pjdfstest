@@ -226,12 +226,17 @@ fn open_flag_wrapper_ctx(flags: OFlag) -> impl Fn(&mut TestContext, &Path) -> ni
     target_os = "watchos",
 ))]
 mod flags {
-    use std::{fs::metadata, os::unix::fs::MetadataExt as _, sync::atomic::AtomicBool};
+    use std::{
+        fs::metadata,
+        os::{freebsd::fs::MetadataExt as _, unix::fs::MetadataExt as _},
+        sync::atomic::AtomicBool,
+    };
 
     use nix::{
-        fcntl::{open, OFlag},
-        sys::stat::Mode,
-        unistd::close,
+        errno::Errno,
+        fcntl::{self, fcntl, open, FcntlArg, OFlag},
+        sys::stat::{FileFlag, Mode},
+        unistd::{chflags, close},
     };
 
     use crate::{
@@ -250,13 +255,10 @@ mod flags {
         immutable_file, root, FileSystemFeature::Chflags; supports_any_flag!(FileFlags::IMMUTABLE_FLAGS)
     }
     fn immutable_file(ctx: &mut TestContext) {
-        let flags = FileFlags::IMMUTABLE_FLAGS.iter().copied().collect();
-        let flags: Vec<_> = ctx
-            .features_config()
-            .file_flags
-            .intersection(&flags)
-            .copied()
-            .collect();
+        let (flags, _) = get_flags_intersection(
+            &ctx.features_config().file_flags,
+            FileFlags::APPEND_ONLY_FLAGS,
+        );
         let valid_flags = FileFlags::UNDELETABLE_FLAGS.iter().copied().collect();
         let valid_flags: Vec<_> = ctx
             .features_config()
@@ -265,26 +267,51 @@ mod flags {
             .copied()
             .collect();
 
-        // TODO: Improve check function
-        let state = AtomicBool::new(false);
-        let created_type = Some(FileType::Regular);
-        let f = |path: &_| {
-            let oflags = [
-                OFlag::O_WRONLY,
-                OFlag::O_RDWR,
-                OFlag::O_RDONLY | OFlag::O_TRUNC,
-            ];
-            let res = oflags
-                .into_iter()
-                .map(|flag| open(path, flag, Mode::empty()).and_then(close))
-                .reduce(Result::and)
-                .unwrap();
-            state.store(res.is_ok(), std::sync::atomic::Ordering::Relaxed);
-            res
-        };
-        let check = |_: &_| state.load(std::sync::atomic::Ordering::Relaxed);
+        let oflags = [
+            OFlag::O_WRONLY,
+            OFlag::O_RDWR,
+            OFlag::O_RDONLY | OFlag::O_TRUNC,
+        ];
 
-        assert_flags(ctx, &flags, &valid_flags, false, created_type, f, check)
+        {
+            let flags: &[FileFlags] = &flags;
+            let valid_flags: &[FileFlags] = &valid_flags;
+            {
+                for &flag in flags {
+                    let raw_flag: FileFlag = flag.into();
+                    let file = ctx.create(FileType::Regular).unwrap();
+
+                    chflags(&file, raw_flag).unwrap();
+
+                    let set_flags = metadata(&file).unwrap().st_flags();
+                    assert!(
+                        set_flags as u64 & raw_flag.bits() > 0,
+                        "File should have {flag} set but only have {set_flags}"
+                    );
+
+                    for oflag in oflags {
+                        assert!(
+                            matches!(open(&file, oflag, Mode::empty()), Err(Errno::EPERM)),
+                            "opening with {oflag:?} for {flag} does not trigger EPERM"
+                        );
+                    }
+                }
+
+                for &flag in valid_flags {
+                    let raw_flag: FileFlag = flag.into();
+                    let file = ctx.create(FileType::Regular).unwrap();
+
+                    chflags(&file, raw_flag).unwrap();
+
+                    for oflag in oflags {
+                        assert!(
+                            open(&file, oflag, Mode::empty()).is_ok(),
+                            "Failure when checking if open with {oflag:?} is working for valid flag {flag}"
+                        );
+                    }
+                }
+            }
+        }
     }
 
     crate::test_case! {
@@ -299,21 +326,54 @@ mod flags {
             FileFlags::APPEND_ONLY_FLAGS,
         );
 
-        assert_flags_named_file(
-            ctx,
-            &flags,
-            &[],
-            Some(FileType::Regular),
-            |path| {
-                open(path, OFlag::O_WRONLY, Mode::empty())
-                    .and_then(|fd| nix::unistd::write(fd, "data".as_bytes()).map(|_| fd))
-                    .and_then(close)
-            },
-            |path| {
-                let actual_size = metadata(path).unwrap().size();
-                actual_size > 0
-            },
-        );
+        let invalid_oflags = [
+            OFlag::O_WRONLY,
+            OFlag::O_RDWR,
+            OFlag::O_RDONLY | OFlag::O_TRUNC,
+            OFlag::O_RDONLY | OFlag::O_APPEND | OFlag::O_TRUNC,
+            OFlag::O_WRONLY | OFlag::O_APPEND | OFlag::O_TRUNC,
+            OFlag::O_RDWR | OFlag::O_APPEND | OFlag::O_TRUNC,
+        ];
+        let valid_oflags = [
+            OFlag::O_WRONLY | OFlag::O_APPEND,
+            OFlag::O_RDWR | OFlag::O_APPEND,
+        ];
+
+        let flags: &[FileFlags] = &flags;
+
+        for &flag in flags {
+            let file = ctx.create(FileType::Regular).unwrap();
+            let raw_flag: FileFlag = flag.into();
+
+            chflags(&file, raw_flag).unwrap();
+
+            let set_flags = metadata(&file).unwrap().st_flags();
+            assert!(
+                set_flags as u64 & raw_flag.bits() > 0,
+                "File should have {flag} set but only have {set_flags}"
+            );
+
+            for oflag in invalid_oflags {
+                let res = open(&file, oflag, Mode::empty());
+                assert!(
+                    matches!(res, Err(Errno::EPERM)),
+                    "Opening file with {oflag:?} for flag {flag} does not trigger EPERM"
+                );
+            }
+
+            for oflag in valid_oflags {
+                let res = open(&file, oflag, Mode::empty());
+                assert!(
+                    res.is_ok(),
+                    "Opening file with {oflag:?} for flag {flag} does not work"
+                );
+                let fd = res.unwrap();
+                assert!(
+                    fcntl(fd, FcntlArg::F_GETFD).is_ok(),
+                    "Opened file descriptor check failed for {flag}"
+                );
+            }
+        }
     }
 }
 
