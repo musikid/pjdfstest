@@ -2,7 +2,7 @@ use std::{fs::File, io::Write};
 
 use nix::{
     errno::Errno,
-    fcntl::{open, OFlag},
+    fcntl::OFlag,
     sys::stat::{lstat, Mode},
     unistd::ftruncate,
 };
@@ -12,7 +12,7 @@ use crate::{
     context::FileType,
     test::{SerializedTestContext, TestContext},
     tests::{assert_ctime_changed, assert_ctime_unchanged},
-    utils::chmod,
+    utils::{chmod, open},
 };
 
 crate::test_case! {

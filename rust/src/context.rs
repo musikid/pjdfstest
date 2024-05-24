@@ -15,7 +15,7 @@ use std::{
     cell::Cell,
     fs::create_dir_all,
     ops::{Deref, DerefMut},
-    os::unix::prelude::RawFd,
+    os::fd::{AsRawFd, FromRawFd, OwnedFd},
     panic::{catch_unwind, resume_unwind, AssertUnwindSafe},
     path::{Path, PathBuf},
     thread,
@@ -78,7 +78,7 @@ pub struct TestContext<'a> {
     features_config: &'a FeaturesConfig,
     auth_entries: DummyAuthEntries<'a>,
     #[cfg(target_os = "freebsd")]
-    jail: Option<jail::RunningJail>
+    jail: Option<jail::RunningJail>,
 }
 
 pub struct SerializedTestContext<'a> {
@@ -171,7 +171,7 @@ impl<'a> TestContext<'a> {
             features_config: &config.features,
             auth_entries: DummyAuthEntries::new(entries),
             #[cfg(target_os = "freebsd")]
-            jail: None
+            jail: None,
         }
     }
 
@@ -195,7 +195,7 @@ impl<'a> TestContext<'a> {
         &self,
         oflag: OFlag,
         mode: Option<nix::sys::stat::mode_t>,
-    ) -> Result<(PathBuf, RawFd), nix::Error> {
+    ) -> Result<(PathBuf, OwnedFd), nix::Error> {
         let mut file = self.new_file(FileType::Regular);
         if let Some(mode) = mode {
             file = file.mode(mode);
@@ -403,7 +403,7 @@ impl FileBuilder {
                     None,
                 )?;
                 let sockaddr = UnixAddr::new(&path)?;
-                bind(fd, &sockaddr)?;
+                bind(fd.as_raw_fd(), &sockaddr)?;
                 if let Some(mode) = self.mode {
                     chmod(&path, mode)?;
                 }
@@ -429,7 +429,7 @@ impl FileBuilder {
 
     /// Create the file according to the provided information and open it.
     /// This function automatically adds [`O_CREAT`](nix::fcntl::OFlag::O_CREAT) to the [`open`](nix::fcntl::open) flags when creating a regular file.
-    pub fn open(mut self, oflags: OFlag) -> nix::Result<(PathBuf, RawFd)> {
+    pub fn open(mut self, oflags: OFlag) -> nix::Result<(PathBuf, OwnedFd)> {
         match self.file_type {
             FileType::Regular => {
                 let path = self.final_path();
@@ -438,11 +438,11 @@ impl FileBuilder {
                     OFlag::O_CREAT | oflags,
                     self.mode.unwrap_or_else(|| Mode::from_bits_truncate(0o644)),
                 )
-                .map(|fd| (path, fd))
+                .map(|fd| (path, unsafe { OwnedFd::from_raw_fd(fd) }))
             }
-            _ => self
-                .create()
-                .and_then(|p| open(&p, oflags, Mode::empty()).map(|fd| (p, fd))),
+            _ => self.create().and_then(|p| {
+                open(&p, oflags, Mode::empty()).map(|fd| (p, unsafe { OwnedFd::from_raw_fd(fd) }))
+            }),
         }
     }
 
