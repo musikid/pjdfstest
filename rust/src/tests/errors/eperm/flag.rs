@@ -13,7 +13,7 @@ use nix::{
     errno::Errno,
     fcntl::{open, OFlag},
     sys::stat::{mknod, mode_t, stat, FileFlag, Mode, SFlag},
-    unistd::{chflags, close, mkdir, mkfifo, truncate, unlink},
+    unistd::{chflags, mkdir, mkfifo, truncate, unlink},
 };
 
 #[cfg(any(target_os = "netbsd", target_os = "freebsd", target_os = "dragonfly"))]

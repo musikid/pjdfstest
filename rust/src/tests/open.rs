@@ -226,26 +226,20 @@ fn open_flag_wrapper_ctx(flags: OFlag) -> impl Fn(&mut TestContext, &Path) -> ni
     target_os = "watchos",
 ))]
 mod flags {
-    use std::{
-        fs::metadata,
-        os::{freebsd::fs::MetadataExt as _, unix::fs::MetadataExt as _},
-        sync::atomic::AtomicBool,
-    };
+    use std::{fs::metadata, os::freebsd::fs::MetadataExt as _};
 
     use nix::{
         errno::Errno,
-        fcntl::{self, fcntl, open, FcntlArg, OFlag},
+        fcntl::{fcntl, open, FcntlArg, OFlag},
         sys::stat::{FileFlag, Mode},
-        unistd::{chflags, close},
+        unistd::chflags,
     };
 
     use crate::{
         context::{FileType, TestContext},
         features::FileSystemFeature,
         flags::FileFlags,
-        tests::errors::eperm::flag::{
-            assert_flags, assert_flags_named_file, get_flags_intersection, supports_any_flag,
-        },
+        tests::errors::eperm::flag::{get_flags_intersection, supports_any_flag},
     };
 
     crate::test_case! {
