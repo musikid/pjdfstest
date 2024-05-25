@@ -4,7 +4,7 @@ fn main() {
     // Setup cfg aliases
     cfg_aliases! {
         // OS-exclusive syscalls
-        chflags: { any(target_os = "openbsd", target_os = "netbsd", target_os = "freebsd", target_os = "dragonfly", target_os = "macos", target_os = "ios") },
+        chflags: { file_flags },
         lchmod: { any(target_os = "netbsd", target_os = "freebsd", target_os = "dragonfly") },
         lchflags: { any(target_os = "openbsd", target_os = "netbsd", target_os = "freebsd",
                     target_os = "dragonfly", target_os = "macos", target_os = "ios") },
