@@ -51,6 +51,20 @@ eloop_comp_test_case!(lchmod(~path, Mode::empty()));
 enametoolong_comp_test_case!(lchmod(~path, Mode::empty()));
 enametoolong_path_test_case!(lchmod(~path, Mode::empty()));
 
+mod flag {
+    use crate::tests::errors::eperm::flag::immutable_append_named_test_case;
+
+    use super::*;
+
+    // chmod/08.t
+    const EXPECTED_MODE: Mode = Mode::from_bits_truncate(0o100);
+    immutable_append_named_test_case!(lchmod, |path| lchmod(path, EXPECTED_MODE), |path| metadata(
+        path
+    )
+    .map_or(false, |m| m.mode() as mode_t & ALLPERMS
+        == EXPECTED_MODE.bits()));
+}
+
 // chmod/09.t
 erofs_named_test_case!(lchmod(~path, Mode::empty()));
 

@@ -24,7 +24,7 @@ use crate::{
     context::{FileType, TestContext},
     flags::FileFlags,
     test::FileSystemFeature,
-    utils::{chmod, link, rename, rmdir, symlink, ALLPERMS},
+    utils::{link, rename, rmdir, symlink, ALLPERMS},
 };
 
 /// Guard to check whether any of the provided flags is available in the configuration.
@@ -196,27 +196,6 @@ fn immutable_append_file(ctx: &mut TestContext) {
         &[FileFlags::IMMUTABLE_FLAGS, FileFlags::APPEND_ONLY_FLAGS].concat(),
     );
 
-    // chmod/08.t
-    let mode = Mode::from_bits_truncate(0o100);
-    assert_flags_named_file(
-        ctx,
-        &flags,
-        &valid_flags,
-        FileType::Regular,
-        |path| chmod(path, mode),
-        |path| metadata(path).map_or(false, |m| m.mode() as mode_t & ALLPERMS == mode.bits()),
-    );
-
-    #[cfg(any(target_os = "netbsd", target_os = "freebsd", target_os = "dragonfly"))]
-    assert_flags_named_file(
-        ctx,
-        &flags,
-        &valid_flags,
-        FileType::Regular,
-        |path| lchmod(path, mode),
-        |path| metadata(path).map_or(false, |m| m.mode() as mode_t & ALLPERMS == mode.bits()),
-    );
-
     // (f)truncate/08.t
     // TODO: Failure on ZFS with SF_APPEND
     let size = 123;
@@ -243,7 +222,7 @@ fn immutable_append_file(ctx: &mut TestContext) {
     );
 }
 
-fn immutable_append_named_helper<T: Debug, F, C>(ctx: &mut TestContext, f: F, check: C)
+pub(crate) fn immutable_append_named_helper<T: Debug, F, C>(ctx: &mut TestContext, f: F, check: C)
 where
     F: Fn(&Path) -> nix::Result<T>,
     C: Fn(&Path) -> bool,
@@ -259,19 +238,20 @@ where
 /// Create a test case which asserts that the syscall returns EPERM
 /// if the named file has its immutable or append-only flag set.
 ///
-/// The macro takes as arguments the syscall identifier, its function and the check
-/// function which asserts that it worked.
+/// The macro takes as arguments the syscall identifier,
+/// the function to produce an output which can be verified and the check
+/// function which asserts that it worked using the previously produced result.
 macro_rules! immutable_append_named_test_case {
     ($syscall: ident, $f: expr, $c: expr) => {
         $crate::test_case! {
             #[doc = concat!(stringify!($syscall),
                  " returns EPERM if the named file has its immutable or append-only flag set")]
             immutable_append_named, root;
-            crate::tests::errors::eperm::supports_any_flag!($crate::FileFlags::IMMUTABLE_FLAGS),
-            crate::tests::errors::eperm::supports_any_flag!($crate::FileFlags::APPEND_ONLY_FLAGS)
+            crate::tests::errors::eperm::flag::supports_any_flag!($crate::flags::FileFlags::IMMUTABLE_FLAGS),
+            crate::tests::errors::eperm::flag::supports_any_flag!($crate::flags::FileFlags::APPEND_ONLY_FLAGS)
         }
-        fn immutable_append_named(ctx: &mut crate::context::SerializedTestContext) {
-            $crate::tests::error::eperm::flag::immutable_append_named_helper(ctx, $f, $c)
+        fn immutable_append_named(ctx: &mut crate::context::TestContext) {
+            $crate::tests::errors::eperm::flag::immutable_append_named_helper(ctx, $f, $c)
         }
     };
 }
