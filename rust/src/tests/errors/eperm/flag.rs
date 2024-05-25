@@ -33,7 +33,7 @@ pub(crate) fn supports_any_flag_helper(
     config: &Config,
     _: &Path,
 ) -> Result<(), anyhow::Error> {
-    let flags: HashSet<_> = flags.into_iter().copied().collect();
+    let flags: HashSet<_> = flags.iter().copied().collect();
 
     if config.features.file_flags.intersection(&flags).count() == 0 {
         anyhow::bail!("None of the flags used for this test are available in the configuration")
