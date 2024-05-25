@@ -3,13 +3,7 @@ use std::{
     os::unix::fs::symlink,
 };
 
-#[cfg(any(
-    target_os = "freebsd",
-    target_os = "ios",
-    target_os = "macos",
-    target_os = "netbsd",
-    target_os = "openbsd"
-))]
+#[cfg(birthtime)]
 use crate::tests::birthtime_ts;
 use crate::tests::MetadataExt;
 use crate::utils::chmod;
@@ -99,25 +93,13 @@ fn utime_omit(ctx: &mut TestContext) {
     assert_eq!(md.mtime_ts(), date2);
 }
 
-#[cfg(any(
-    target_os = "freebsd",
-    target_os = "ios",
-    target_os = "macos",
-    target_os = "netbsd",
-    target_os = "openbsd"
-))]
+#[cfg(birthtime)]
 crate::test_case! {
     /// utimensat can update birthtimes
     // utimensat/03.t
     birthtime, FileSystemFeature::Utimensat, FileSystemFeature::StatStBirthtime
 }
-#[cfg(any(
-    target_os = "freebsd",
-    target_os = "ios",
-    target_os = "macos",
-    target_os = "netbsd",
-    target_os = "openbsd"
-))]
+#[cfg(birthtime)]
 fn birthtime(ctx: &mut TestContext) {
     let date1 = TimeSpec::seconds(100000000); // Sat Mar  3 02:46:40 MST 1973
     let date2 = TimeSpec::seconds(200000000); // Mon May  3 13:33:20 MDT 1976
