@@ -58,7 +58,7 @@ pub(crate) use supports_any_flag;
 /// Return flags which intersects with the provided ones
 /// and those available in the configuration,
 /// along with the other available in the configuration (representing the flags which don't trigger errors in this context).
-pub fn get_flags_intersection(
+pub fn get_supported_and_error_flags(
     supported_flags: &HashSet<FileFlags>,
     error_flags: &[FileFlags],
 ) -> (Vec<FileFlags>, Vec<FileFlags>) {
@@ -93,28 +93,22 @@ pub(crate) fn assert_flags<T: Debug, F, C>(
     C: Fn(&Path) -> bool,
 {
     let get_files = || {
-        let (flagged_file, file) = if parent {
+        if parent {
             let dir = ctx.create(FileType::Dir).unwrap();
-            let file = dir.join("file");
-            let file = if let Some(created_type) = created_type.clone() {
-                ctx.new_file(created_type).name(file).create().unwrap()
-            } else {
-                file
-            };
+            let path = dir.join("file");
+            if let Some(created_type) = created_type.clone() {
+                ctx.new_file(created_type).name(&path).create().unwrap();
+            }
 
-            (dir, file)
+            (dir, path)
         } else {
             let path = ctx.gen_path();
-            let file = if let Some(created_type) = created_type.clone() {
-                ctx.new_file(created_type).name(path).create().unwrap()
-            } else {
-                path
-            };
+            if let Some(created_type) = created_type.clone() {
+                ctx.new_file(created_type).name(&path).create().unwrap();
+            }
 
-            (file.clone(), file)
-        };
-
-        (flagged_file, file)
+            (path.clone(), path)
+        }
     };
 
     for &flag in flags {
@@ -123,6 +117,7 @@ pub(crate) fn assert_flags<T: Debug, F, C>(
 
         chflags(&flagged_file, raw_flag).unwrap();
 
+        // TODO: Add flag names list from FileFlag init when nix will be upgraded
         let set_flags = metadata(&flagged_file).unwrap().st_flags();
         assert!(
             set_flags as u64 & raw_flag.bits() > 0,
@@ -196,7 +191,7 @@ crate::test_case! {
     immutable_append_file, root, FileSystemFeature::Chflags
 }
 fn immutable_append_file(ctx: &mut TestContext) {
-    let (flags, valid_flags) = get_flags_intersection(
+    let (flags, valid_flags) = get_supported_and_error_flags(
         &ctx.features_config().file_flags,
         &[FileFlags::IMMUTABLE_FLAGS, FileFlags::APPEND_ONLY_FLAGS].concat(),
     );
@@ -253,7 +248,7 @@ crate::test_case! {
     immutable_append_undeletable_file, root, FileSystemFeature::Chflags
 }
 fn immutable_append_undeletable_file(ctx: &mut TestContext) {
-    let (flags, valid_flags) = get_flags_intersection(
+    let (flags, valid_flags) = get_supported_and_error_flags(
         &ctx.features_config().file_flags,
         &[
             FileFlags::IMMUTABLE_FLAGS,
@@ -306,7 +301,7 @@ crate::test_case! {
     immutable_append_parent, root, FileSystemFeature::Chflags
 }
 fn immutable_append_parent(ctx: &mut TestContext) {
-    let (flags, valid_flags) = get_flags_intersection(
+    let (flags, valid_flags) = get_supported_and_error_flags(
         &ctx.features_config().file_flags,
         &[FileFlags::IMMUTABLE_FLAGS, FileFlags::APPEND_ONLY_FLAGS].concat(),
     );
@@ -354,7 +349,7 @@ crate::test_case! {
     immutable_parent, root, FileSystemFeature::Chflags
 }
 fn immutable_parent(ctx: &mut TestContext) {
-    let (flags, valid_flags) = get_flags_intersection(
+    let (flags, valid_flags) = get_supported_and_error_flags(
         &ctx.features_config().file_flags,
         FileFlags::IMMUTABLE_FLAGS,
     );
