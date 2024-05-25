@@ -4,26 +4,11 @@ use std::os::unix::fs::MetadataExt as StdMetadataExt;
 
 use std::{fs::metadata, path::Path};
 
-#[cfg(any(
-    target_os = "freebsd",
-    target_os = "ios",
-    target_os = "macos",
-    target_os = "netbsd",
-    target_os = "openbsd"
-))]
-use nix::sys::stat::stat;
 use nix::sys::time::TimeSpec;
 
 use crate::test::TestContext;
 
-#[cfg(any(
-    target_os = "openbsd",
-    target_os = "netbsd",
-    target_os = "freebsd",
-    target_os = "dragonfly",
-    target_os = "macos",
-    target_os = "ios",
-))]
+#[cfg(chflags)]
 pub mod chflags;
 pub mod chmod;
 pub mod chown;
@@ -134,16 +119,12 @@ impl AsTimeInvariant for nix::sys::stat::FileStat {
     }
 }
 
-#[cfg(any(
-    target_os = "freebsd",
-    target_os = "ios",
-    target_os = "macos",
-    target_os = "netbsd",
-    target_os = "openbsd"
-))]
+#[cfg(birthtime)]
 // Note: can't be a method of MetadataExt, because StdMetadataExt lacks a
 // birthtime() method.
 fn birthtime_ts(path: &Path) -> TimeSpec {
+    use nix::sys::stat::stat;
+
     let sb = stat(path).unwrap();
     TimeSpec::new(sb.st_birthtime, sb.st_birthtime_nsec)
 }

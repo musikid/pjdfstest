@@ -5,7 +5,7 @@ use crate::{
     utils::{chmod, ALLPERMS},
 };
 
-#[cfg(any(target_os = "netbsd", target_os = "freebsd", target_os = "dragonfly"))]
+#[cfg(lchmod)]
 use crate::utils::lchmod;
 
 use nix::{
@@ -194,7 +194,7 @@ fn eftype(ctx: &mut SerializedTestContext, ft: FileType) {
     assert_eq!(file_stat.st_mode & ALLPERMS_STICKY, original_mode.bits());
 }
 
-#[cfg(any(target_os = "netbsd", target_os = "freebsd", target_os = "dragonfly"))]
+#[cfg(lchmod)]
 mod lchmod {
     use super::*;
 
