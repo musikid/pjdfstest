@@ -25,7 +25,7 @@ fn immutable_file(ctx: &mut TestContext) {
     // hence why we don't take the valid flags from `get_flags_intersection`
     let (flags, _) = get_supported_and_error_flags(
         &ctx.features_config().file_flags,
-        FileFlags::APPEND_ONLY_FLAGS,
+        FileFlags::IMMUTABLE_FLAGS,
     );
     let valid_flags = FileFlags::UNDELETABLE_FLAGS.iter().copied().collect();
     let valid_flags: Vec<_> = ctx
@@ -56,7 +56,7 @@ fn immutable_file(ctx: &mut TestContext) {
         for oflag in oflags {
             assert!(
                 matches!(open(&file, oflag, Mode::empty()), Err(Errno::EPERM)),
-                "opening with {oflag:?} for {flag} does not trigger EPERM"
+                "Opening with {oflag:?} for {flag} does not trigger EPERM"
             );
         }
     }
