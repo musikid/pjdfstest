@@ -1,8 +1,8 @@
 use nix::errno::Errno;
 use nix::unistd::chown;
 
-use crate::context::{FileType, SerializedTestContext};
-use crate::{context::TestContext, utils::lchown};
+use crate::context::{FileType, SerializedTestContext, TestContext};
+use crate::utils::lchown;
 
 use super::errors::efault::efault_path_test_case;
 use super::errors::eloop::{eloop_comp_test_case, eloop_final_comp_test_case};
@@ -50,9 +50,9 @@ efault_path_test_case!(chown, |ptr| nix::libc::chown(ptr, 0, 0));
 crate::test_case! {
     /// chown returns EPERM if the operation would change the ownership, but the effective user ID is not the super-user and the process is not an owner of the file
     // chown/07.t
-    chown_euid_not_root_not_owner, serialized, root => [Regular, Dir, Fifo, Block, Char, Socket]
+    euid_not_root_not_owner, serialized, root => [Regular, Dir, Fifo, Block, Char, Socket]
 }
-fn chown_euid_not_root_not_owner(ctx: &mut SerializedTestContext, ft: FileType) {
+fn euid_not_root_not_owner(ctx: &mut SerializedTestContext, ft: FileType) {
     let user = ctx.get_new_user();
     chown(ctx.base_path(), Some(user.uid), Some(user.gid)).unwrap();
 
@@ -114,48 +114,49 @@ fn chown_euid_not_root_not_owner(ctx: &mut SerializedTestContext, ft: FileType) 
     });
 }
 
-crate::test_case! {
-    /// chown returns EPERM if the operation would change the ownership, but the effective user ID is not the super-user and the process is not an owner of the file
-    chown_euid_not_root_not_owner_symlink, serialized, root
-}
-fn chown_euid_not_root_not_owner_symlink(ctx: &mut SerializedTestContext) {
-    let user = ctx.get_new_user();
-    chown(ctx.base_path(), Some(user.uid), Some(user.gid)).unwrap();
-
-    let file = ctx.create(FileType::Symlink(None)).unwrap();
-
-    let another_user = ctx.get_new_user();
-
-    ctx.as_user(user, None, || {
-        assert_eq!(
-            lchown(&file, Some(another_user.uid), Some(another_user.gid)),
-            Err(Errno::EPERM)
-        );
-    });
-    ctx.as_user(another_user, None, || {
-        assert_eq!(
-            lchown(&file, Some(user.uid), Some(user.gid)),
-            Err(Errno::EPERM)
-        );
-    });
-    ctx.as_user(another_user, None, || {
-        assert_eq!(
-            lchown(&file, Some(another_user.uid), Some(another_user.gid)),
-            Err(Errno::EPERM)
-        );
-    });
-    ctx.as_user(user, None, || {
-        assert_eq!(
-            lchown(&file, None, Some(another_user.gid)),
-            Err(Errno::EPERM)
-        );
-    });
-}
-
 mod lchown {
     use std::path::Path;
 
     use super::*;
+
+    crate::test_case! {
+        /// chown returns EPERM if the operation would change the ownership, but the effective user ID is not the super-user and the process is not an owner of the file
+        // chown/07.t
+        euid_not_root_not_owner, serialized, root
+    }
+    fn euid_not_root_not_owner(ctx: &mut SerializedTestContext) {
+        let user = ctx.get_new_user();
+        chown(ctx.base_path(), Some(user.uid), Some(user.gid)).unwrap();
+
+        let file = ctx.create(FileType::Symlink(None)).unwrap();
+
+        let another_user = ctx.get_new_user();
+
+        ctx.as_user(user, None, || {
+            assert_eq!(
+                lchown(&file, Some(another_user.uid), Some(another_user.gid)),
+                Err(Errno::EPERM)
+            );
+        });
+        ctx.as_user(another_user, None, || {
+            assert_eq!(
+                lchown(&file, Some(user.uid), Some(user.gid)),
+                Err(Errno::EPERM)
+            );
+        });
+        ctx.as_user(another_user, None, || {
+            assert_eq!(
+                lchown(&file, Some(another_user.uid), Some(another_user.gid)),
+                Err(Errno::EPERM)
+            );
+        });
+        ctx.as_user(user, None, || {
+            assert_eq!(
+                lchown(&file, None, Some(another_user.gid)),
+                Err(Errno::EPERM)
+            );
+        });
+    }
 
     fn lchown_wrapper<P: AsRef<Path>>(ctx: &mut TestContext, path: P) -> nix::Result<()> {
         let path = path.as_ref();
