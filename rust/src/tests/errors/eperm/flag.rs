@@ -217,15 +217,12 @@ where
 /// function which asserts that it worked using the previously produced result.
 macro_rules! immutable_append_named_test_case {
     ($syscall: ident, $f: expr, $c: expr) => {
-        use $crate::flags::FileFlags;
-        use $crate::tests::errors::eperm::flag::supports_any_flag;
-
         $crate::test_case! {
             #[doc = concat!(stringify!($syscall),
                  " returns EPERM if the named file has its immutable or append-only flag set")]
             immutable_append_named, root, $crate::test::FileSystemFeature::Chflags;
-            supports_any_flag!(FileFlags::IMMUTABLE_FLAGS),
-            supports_any_flag!(FileFlags::APPEND_ONLY_FLAGS)
+            $crate::tests::errors::eperm::flag::supports_any_flag!($crate::flags::FileFlags::IMMUTABLE_FLAGS),
+            $crate::tests::errors::eperm::flag::supports_any_flag!($crate::flags::FileFlags::APPEND_ONLY_FLAGS)
         }
         fn immutable_append_named(ctx: &mut $crate::context::TestContext) {
             $crate::tests::errors::eperm::flag::immutable_append_named_helper(ctx, $f, $c)
@@ -257,20 +254,18 @@ pub(crate) fn immutable_append_undeletable_named_helper<T: Debug, F, C>(
 /// Create a test case which asserts that the syscall returns EPERM
 /// if the named file has its immutable, undeletable or append-only flag set.
 /// Takes as arguments the syscall name,
-/// the function to produce a result which can be checked against and the check
-/// function which asserts that it worked using the previously produced result.
+/// the function to produce a result which can be checked against, the check
+/// function which asserts that it worked using the previously produced result,
+/// and optionally the FileType to operate on.
 macro_rules! immutable_append_undeletable_named_test_case {
     ($syscall: ident, $f: expr, $c: expr, $ft: expr) => {
-        use $crate::flags::FileFlags;
-        use $crate::tests::errors::eperm::flag::supports_any_flag;
-
         $crate::test_case! {
             #[doc = concat!(stringify!($syscall),
                  " returns EPERM if the named file has its immutable, undeletable or append-only flag set")]
             immutable_append_undeletable_named, root, $crate::test::FileSystemFeature::Chflags;
-            supports_any_flag!(FileFlags::IMMUTABLE_FLAGS),
-            supports_any_flag!(FileFlags::APPEND_ONLY_FLAGS),
-            supports_any_flag!(FileFlags::UNDELETABLE_FLAGS)
+            $crate::tests::errors::eperm::flag::supports_any_flag!($crate::flags::FileFlags::IMMUTABLE_FLAGS),
+            $crate::tests::errors::eperm::flag::supports_any_flag!($crate::flags::FileFlags::APPEND_ONLY_FLAGS),
+            $crate::tests::errors::eperm::flag::supports_any_flag!($crate::flags::FileFlags::UNDELETABLE_FLAGS)
         }
         fn immutable_append_undeletable_named(ctx: &mut $crate::context::TestContext) {
             $crate::tests::errors::eperm::flag::immutable_append_undeletable_named_helper(
@@ -289,56 +284,61 @@ macro_rules! immutable_append_undeletable_named_test_case {
 }
 pub(crate) use immutable_append_undeletable_named_test_case;
 
-crate::test_case! {
-    /// Return EPERM if the parent directory of the named file has its immutable flag set
-    immutable_append_parent, root, FileSystemFeature::Chflags
-}
-fn immutable_append_parent(ctx: &mut TestContext) {
+/// Helper to generate `immutable_append_parent` test cases,
+/// which asserts that the syscall returns EPERM
+/// if the parent directory of the named file has its immutable or append-only flag set.
+pub(crate) fn immutable_append_parent_helper<T: Debug, F, C>(
+    ctx: &TestContext,
+    f: F,
+    check: C,
+    ft: FileType,
+) where
+    F: Fn(&Path) -> nix::Result<T>,
+    C: Fn(&Path) -> bool,
+{
     let (flags, valid_flags) = get_supported_and_error_flags(
         &ctx.features_config().file_flags,
         &[FileFlags::IMMUTABLE_FLAGS, FileFlags::APPEND_ONLY_FLAGS].concat(),
     );
 
-    // unlink/10.t
-    // TODO: Failure on ZFS with SF_APPEND
-    assert_flags_parent(
-        ctx,
-        &flags,
-        &valid_flags,
-        Some(FileType::Regular),
-        unlink,
-        |path| !path.exists(),
-    );
-
-    // rename/07.t
-    // TODO: Failure on ZFS with SF_APPEND
-    // TODO: Missing multiple file types
-    assert_flags_parent(
-        ctx,
-        &flags,
-        &valid_flags,
-        Some(FileType::Regular),
-        |from| {
-            let to = ctx.create(FileType::Regular).unwrap();
-            rename(from, &to)
-        },
-        |path| !path.exists(),
-    );
-
-    // rmdir/10.t
-    // TODO: Failure on ZFS
-    assert_flags_parent(
-        ctx,
-        &flags,
-        &valid_flags,
-        Some(FileType::Dir),
-        rmdir,
-        |path| !path.exists(),
-    );
+    assert_flags_parent(ctx, &flags, &valid_flags, Some(ft), f, check)
 }
 
+/// Create a test case which asserts that the syscall returns EPERM
+/// if the parent directory of the named file has its immutable or append-only flag set.
+/// Takes as arguments the syscall name,
+/// the function to produce a result which can be checked against, the check
+/// function which asserts that it worked using the previously produced result,
+/// and optionally the FileType to operate on.
+macro_rules! immutable_append_parent_test_case {
+    ($syscall: ident, $f: expr, $c: expr, $ft: expr) => {
+        $crate::test_case! {
+            #[doc = concat!(stringify!($syscall),
+                 " returns EPERM if the parent directory of the named file has its immutable or append-only flag set")]
+            immutable_append_parent, root, $crate::test::FileSystemFeature::Chflags;
+            $crate::tests::errors::eperm::flag::supports_any_flag!($crate::flags::FileFlags::IMMUTABLE_FLAGS),
+            $crate::tests::errors::eperm::flag::supports_any_flag!($crate::flags::FileFlags::APPEND_ONLY_FLAGS),
+            $crate::tests::errors::eperm::flag::supports_any_flag!($crate::flags::FileFlags::UNDELETABLE_FLAGS)
+        }
+        fn immutable_append_parent(ctx: &mut $crate::context::TestContext) {
+            $crate::tests::errors::eperm::flag::immutable_append_parent_helper(
+                ctx, $f, $c, $ft,
+            )
+        }
+    };
+    ($syscall: ident, $f: expr, $c: expr) => {
+        $crate::tests::errors::eperm::flag::immutable_append_parent_test_case!(
+            $syscall,
+            $f,
+            $c,
+            $crate::context::FileType::Regular
+        );
+    };
+}
+pub(crate) use immutable_append_parent_test_case;
+
 crate::test_case! {
-    /// Return EPERM if the parent directory of the named file has its immutable flag set
+    /// Return EPERM if the parent directory of the to be created file has its immutable flag set
     immutable_parent, root, FileSystemFeature::Chflags
 }
 fn immutable_parent(ctx: &mut TestContext) {

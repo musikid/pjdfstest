@@ -383,16 +383,18 @@ mod flag {
     use crate::flags::FileFlags;
     use crate::tests::errors::eperm::flag::supports_any_flag;
 
+    //TODO: should also check that `to` exists
+
     crate::test_case! {
         /// rename returns EPERM if the named file has its immutable, undeletable or append-only flag set
         // rename/06.t
-        immutable_append_undeletable_named, root, crate::test::FileSystemFeature::Chflags;
+        immutable_append_undeletable_named, root, FileSystemFeature::Chflags;
         supports_any_flag!(FileFlags::IMMUTABLE_FLAGS),
         supports_any_flag!(FileFlags::APPEND_ONLY_FLAGS),
         supports_any_flag!(FileFlags::UNDELETABLE_FLAGS)
          => [Regular, Dir, Fifo, Block, Char, Socket, Symlink(None)]
     }
-    fn immutable_append_undeletable_named(ctx: &mut crate::context::TestContext, ft: FileType) {
+    fn immutable_append_undeletable_named(ctx: &mut TestContext, ft: FileType) {
         // We don't use exists to check the path existence
         // because it doesn't work for symlinks
         if matches!(ft, FileType::Symlink(..)) {
@@ -408,6 +410,40 @@ mod flag {
         }
 
         crate::tests::errors::eperm::flag::immutable_append_undeletable_named_helper(
+            ctx,
+            |from| {
+                let to = ctx.gen_path();
+                rename(from, &to)
+            },
+            |from| !from.exists(),
+            ft,
+        )
+    }
+
+    crate::test_case! {
+        /// rename returns EPERM if the parent directory of the named file has its immutable or append-only flag set
+        // rename/07.t
+        immutable_append_parent, root, FileSystemFeature::Chflags;
+        supports_any_flag!(FileFlags::IMMUTABLE_FLAGS),
+        supports_any_flag!(FileFlags::APPEND_ONLY_FLAGS)
+         => [Regular, Dir, Fifo, Block, Char, Socket, Symlink(None)]
+    }
+    fn immutable_append_parent(ctx: &mut crate::context::TestContext, ft: FileType) {
+        // We don't use exists to check the path existence
+        // because it doesn't work for symlinks
+        if matches!(ft, FileType::Symlink(..)) {
+            return crate::tests::errors::eperm::flag::immutable_append_parent_helper(
+                ctx,
+                |from| {
+                    let to = ctx.gen_path();
+                    rename(from, &to)
+                },
+                |from| !from.is_symlink(),
+                ft,
+            );
+        }
+
+        crate::tests::errors::eperm::flag::immutable_append_parent_helper(
             ctx,
             |from| {
                 let to = ctx.gen_path();
