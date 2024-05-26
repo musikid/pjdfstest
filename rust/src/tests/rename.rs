@@ -376,3 +376,45 @@ fn eexist_enotempty_to_non_empty(ctx: &mut TestContext, ft: FileType) {
 
 // rename/15.t
 exdev_target_test_case!(rename);
+
+// #[cfg(file_flags)]
+mod flag {
+    use super::*;
+    use crate::flags::FileFlags;
+    use crate::tests::errors::eperm::flag::supports_any_flag;
+
+    crate::test_case! {
+        /// rename returns EPERM if the named file has its immutable, undeletable or append-only flag set
+        // rename/06.t
+        immutable_append_undeletable_named, root, crate::test::FileSystemFeature::Chflags;
+        supports_any_flag!(FileFlags::IMMUTABLE_FLAGS),
+        supports_any_flag!(FileFlags::APPEND_ONLY_FLAGS),
+        supports_any_flag!(FileFlags::UNDELETABLE_FLAGS)
+         => [Regular, Dir, Fifo, Block, Char, Socket, Symlink(None)]
+    }
+    fn immutable_append_undeletable_named(ctx: &mut crate::context::TestContext, ft: FileType) {
+        // We don't use exists to check the path existence
+        // because it doesn't work for symlinks
+        if matches!(ft, FileType::Symlink(..)) {
+            return crate::tests::errors::eperm::flag::immutable_append_undeletable_named_helper(
+                ctx,
+                |from| {
+                    let to = ctx.gen_path();
+                    rename(from, &to)
+                },
+                |from| !from.is_symlink(),
+                ft,
+            );
+        }
+
+        crate::tests::errors::eperm::flag::immutable_append_undeletable_named_helper(
+            ctx,
+            |from| {
+                let to = ctx.gen_path();
+                rename(from, &to)
+            },
+            |from| !from.exists(),
+            ft,
+        )
+    }
+}

@@ -232,7 +232,7 @@ fn link_source_dir(ctx: &mut SerializedTestContext) {
     })
 }
 
-#[cfg(file_flags)]
+// #[cfg(file_flags)]
 mod flag {
     use std::{fs::metadata, os::unix::fs::MetadataExt};
 
