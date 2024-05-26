@@ -2,26 +2,17 @@ use std::{
     collections::HashSet,
     fmt::Debug,
     fs::{metadata, symlink_metadata},
-    os::{
-        freebsd::fs::MetadataExt as _,
-        unix::prelude::{FileTypeExt, MetadataExt as _},
-    },
+    os::freebsd::fs::MetadataExt as _,
     path::Path,
 };
 
-use nix::{
-    errno::Errno,
-    fcntl::{open, OFlag},
-    sys::stat::{mknod, FileFlag, Mode, SFlag},
-    unistd::{chflags, mkdir, mkfifo, unlink},
-};
+use nix::{errno::Errno, sys::stat::FileFlag, unistd::chflags};
 
 use crate::{
     config::Config,
     context::{FileType, TestContext},
     flags::FileFlags,
-    test::FileSystemFeature,
-    utils::{lchflags, link, rename, rmdir, symlink},
+    utils::lchflags,
 };
 
 /// Guard to check whether any of the provided flags is available in the configuration.
@@ -55,7 +46,7 @@ pub(crate) use supports_any_flag;
 /// Return flags which intersects with the provided ones
 /// and those available in the configuration,
 /// along with the other available in the configuration (representing the flags which don't trigger errors in this context).
-pub fn get_supported_and_error_flags(
+pub fn get_supported_error_flags_and_valid_flags(
     supported_flags: &HashSet<FileFlags>,
     error_flags: &[FileFlags],
 ) -> (Vec<FileFlags>, Vec<FileFlags>) {
@@ -80,7 +71,7 @@ pub fn get_supported_and_error_flags(
 pub(crate) fn assert_flags<T: Debug, F, C>(
     ctx: &TestContext,
     flags: &[FileFlags],
-    _valid_flags: &[FileFlags],
+    valid_flags: &[FileFlags],
     parent: bool,
     created_type: Option<FileType>,
     f: F,
@@ -147,21 +138,21 @@ pub(crate) fn assert_flags<T: Debug, F, C>(
         assert!(check(&file), "Success file check failed for {flag}");
     }
 
-    // for &flag in valid_flags {
-    //     let raw_flag: FileFlag = flag.into();
-    //     let (flagged_file, file) = get_files();
+    for &flag in valid_flags {
+        let raw_flag: FileFlag = flag.into();
+        let (flagged_file, file) = get_files();
 
-    //     chflags(&flagged_file, raw_flag).unwrap();
+        chflags(&flagged_file, raw_flag).unwrap();
 
-    //     assert!(
-    //         f(&file).is_ok(),
-    //         "Failure when checking if syscall is working for valid flag {flag}"
-    //     );
-    //     assert!(
-    //         check(&file),
-    //         "Success file check failed for valid flag {flag}"
-    //     );
-    // }
+        assert!(
+            f(&file).is_ok(),
+            "Failure when checking if syscall is working for valid flag {flag}"
+        );
+        assert!(
+            check(&file),
+            "Success file check failed for valid flag {flag}"
+        );
+    }
 }
 
 /// Specialization of [`assert_flags`] for named files.
@@ -202,7 +193,7 @@ where
     F: Fn(&Path) -> nix::Result<T>,
     C: Fn(&Path) -> bool,
 {
-    let (flags, valid_flags) = get_supported_and_error_flags(
+    let (flags, valid_flags) = get_supported_error_flags_and_valid_flags(
         &ctx.features_config().file_flags,
         &[FileFlags::IMMUTABLE_FLAGS, FileFlags::APPEND_ONLY_FLAGS].concat(),
     );
@@ -243,9 +234,14 @@ pub(crate) fn immutable_append_undeletable_named_helper<T: Debug, F, C>(
     F: Fn(&Path) -> nix::Result<T>,
     C: Fn(&Path) -> bool,
 {
-    let (flags, valid_flags) = get_supported_and_error_flags(
+    let (flags, valid_flags) = get_supported_error_flags_and_valid_flags(
         &ctx.features_config().file_flags,
-        &[FileFlags::IMMUTABLE_FLAGS, FileFlags::APPEND_ONLY_FLAGS].concat(),
+        &[
+            FileFlags::IMMUTABLE_FLAGS,
+            FileFlags::APPEND_ONLY_FLAGS,
+            FileFlags::UNDELETABLE_FLAGS,
+        ]
+        .concat(),
     );
 
     assert_flags_named_file(ctx, &flags, &valid_flags, ft, f, check)
@@ -296,7 +292,7 @@ pub(crate) fn immutable_append_parent_helper<T: Debug, F, C>(
     F: Fn(&Path) -> nix::Result<T>,
     C: Fn(&Path) -> bool,
 {
-    let (flags, valid_flags) = get_supported_and_error_flags(
+    let (flags, valid_flags) = get_supported_error_flags_and_valid_flags(
         &ctx.features_config().file_flags,
         &[FileFlags::IMMUTABLE_FLAGS, FileFlags::APPEND_ONLY_FLAGS].concat(),
     );
@@ -317,8 +313,7 @@ macro_rules! immutable_append_parent_test_case {
                  " returns EPERM if the parent directory of the named file has its immutable or append-only flag set")]
             immutable_append_parent, root, $crate::test::FileSystemFeature::Chflags;
             $crate::tests::errors::eperm::flag::supports_any_flag!($crate::flags::FileFlags::IMMUTABLE_FLAGS),
-            $crate::tests::errors::eperm::flag::supports_any_flag!($crate::flags::FileFlags::APPEND_ONLY_FLAGS),
-            $crate::tests::errors::eperm::flag::supports_any_flag!($crate::flags::FileFlags::UNDELETABLE_FLAGS)
+            $crate::tests::errors::eperm::flag::supports_any_flag!($crate::flags::FileFlags::APPEND_ONLY_FLAGS)
         }
         fn immutable_append_parent(ctx: &mut $crate::context::TestContext) {
             $crate::tests::errors::eperm::flag::immutable_append_parent_helper(
@@ -337,92 +332,38 @@ macro_rules! immutable_append_parent_test_case {
 }
 pub(crate) use immutable_append_parent_test_case;
 
-crate::test_case! {
-    /// Return EPERM if the parent directory of the to be created file has its immutable flag set
-    immutable_parent, root, FileSystemFeature::Chflags
-}
-fn immutable_parent(ctx: &mut TestContext) {
-    let (flags, valid_flags) = get_supported_and_error_flags(
+/// Helper to generate `immutable_parent` test cases,
+/// which asserts that the syscall returns EPERM
+/// if the parent directory of the to be created file has its immutable flag set.
+pub(crate) fn immutable_parent_helper<T: Debug, F, C>(ctx: &TestContext, f: F, check: C)
+where
+    F: Fn(&Path) -> nix::Result<T>,
+    C: Fn(&Path) -> bool,
+{
+    let (flags, valid_flags) = get_supported_error_flags_and_valid_flags(
         &ctx.features_config().file_flags,
         FileFlags::IMMUTABLE_FLAGS,
     );
 
-    let mode = Mode::from_bits_truncate(0o755);
-
-    // mkdir/08.t
-    assert_flags_parent(
-        ctx,
-        &flags,
-        &valid_flags,
-        None,
-        |path| mkdir(path, mode),
-        Path::is_dir,
-    );
-
-    // mkfifo/10.t
-    assert_flags_parent(
-        ctx,
-        &flags,
-        &valid_flags,
-        None,
-        |path| mkfifo(path, mode),
-        |path| metadata(path).map_or(false, |m| m.file_type().is_fifo()),
-    );
-
-    // mknod/09.t
-    assert_flags_parent(
-        ctx,
-        &flags,
-        &valid_flags,
-        None,
-        |path| mknod(path, SFlag::S_IFIFO, mode, 0),
-        |path| metadata(path).map_or(false, |m| m.file_type().is_fifo()),
-    );
-
-    // open/09.t
-    assert_flags_parent(
-        ctx,
-        &flags,
-        &valid_flags,
-        None,
-        |path| open(path, OFlag::O_RDONLY | OFlag::O_CREAT, mode),
-        Path::exists,
-    );
-
-    // link/13.t
-    assert_flags_parent(
-        ctx,
-        &flags,
-        &valid_flags,
-        None,
-        |dest| {
-            let from = ctx.create(FileType::Regular).unwrap();
-            link(&*from, dest)
-        },
-        |dest| metadata(dest).map_or(false, |m| m.nlink() == 2),
-    );
-
-    // rename/08.t
-    // TODO: Missing multiple file types
-    assert_flags_parent(
-        ctx,
-        &flags,
-        &valid_flags,
-        None,
-        |to| {
-            let from = ctx.create(FileType::Regular).unwrap();
-            rename(&*from, to)
-        },
-        Path::exists,
-    );
-
-    // symlink/09.t
-    assert_flags_parent(
-        ctx,
-        &flags,
-        &valid_flags,
-        None,
-        |path| symlink(Path::new("test"), path),
-        Path::is_symlink,
-    );
+    assert_flags_parent(ctx, &flags, &valid_flags, None, f, check)
 }
+
+/// Create a test case which asserts that the syscall returns EPERM
+/// if the parent directory of the to be created file has its immutable flag set.
+/// Takes as arguments the syscall name,
+/// the function to produce a result which can be checked against, the check
+/// function which asserts that it worked using the previously produced result.
+macro_rules! immutable_parent_test_case {
+    ($syscall: ident, $f: expr, $c: expr) => {
+        $crate::test_case! {
+            #[doc = concat!(stringify!($syscall),
+                 " returns EPERM if the parent directory of the named file has its immutable or append-only flag set")]
+            immutable_parent, root, $crate::test::FileSystemFeature::Chflags;
+            $crate::tests::errors::eperm::flag::supports_any_flag!($crate::flags::FileFlags::IMMUTABLE_FLAGS)
+        }
+        fn immutable_parent(ctx: &mut $crate::context::TestContext) {
+            $crate::tests::errors::eperm::flag::immutable_parent_helper(ctx, $f, $c)
+        }
+    };
+}
+pub(crate) use immutable_parent_test_case;

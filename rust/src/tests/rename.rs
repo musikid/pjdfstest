@@ -379,11 +379,13 @@ exdev_target_test_case!(rename);
 
 // #[cfg(file_flags)]
 mod flag {
+    use std::path::Path;
+
     use super::*;
     use crate::flags::FileFlags;
     use crate::tests::errors::eperm::flag::supports_any_flag;
 
-    //TODO: should also check that `to` exists
+    // TODO: Should also check that `to` exists
 
     crate::test_case! {
         /// rename returns EPERM if the named file has its immutable, undeletable or append-only flag set
@@ -451,6 +453,35 @@ mod flag {
             },
             |from| !from.exists(),
             ft,
+        )
+    }
+
+    crate::test_case! {
+        /// rename returns EPERM if the parent directory of the file pointed at by the 'to' argument has its immutable flag set
+        // rename/08.t
+        immutable_parent, root, FileSystemFeature::Chflags;
+        supports_any_flag!(FileFlags::IMMUTABLE_FLAGS)
+         => [Regular, Dir, Fifo, Block, Char, Socket, Symlink(None)]
+    }
+    fn immutable_parent(ctx: &mut crate::context::TestContext, ft: FileType) {
+        if matches!(ft, FileType::Symlink(..)) {
+            return crate::tests::errors::eperm::flag::immutable_parent_helper(
+                ctx,
+                |to| {
+                    let from = ctx.create(ft.clone()).unwrap();
+                    rename(&*from, to)
+                },
+                Path::is_symlink,
+            );
+        }
+
+        crate::tests::errors::eperm::flag::immutable_parent_helper(
+            ctx,
+            |to| {
+                let from = ctx.create(ft.clone()).unwrap();
+                rename(&*from, to)
+            },
+            Path::exists,
         )
     }
 }

@@ -256,6 +256,23 @@ mod flag {
             |src| metadata(src).map_or(false, |m| m.nlink() == 2),
         )
     }
+
+    crate::test_case! {
+        /// link returns EPERM if the parent directory of the named file has its immutable or append-only flag set
+        // link/13.t
+        immutable_parent, root, crate::test::FileSystemFeature::Chflags;
+        crate::tests::errors::eperm::flag::supports_any_flag!(crate::flags::FileFlags::IMMUTABLE_FLAGS)
+    }
+    fn immutable_parent(ctx: &mut crate::context::TestContext) {
+        crate::tests::errors::eperm::flag::immutable_parent_helper(
+            ctx,
+            |dest| {
+                let from = ctx.create(FileType::Regular).unwrap();
+                link(&*from, dest)
+            },
+            |dest| metadata(dest).map_or(false, |m| m.nlink() == 2),
+        )
+    }
 }
 
 // link/16.t

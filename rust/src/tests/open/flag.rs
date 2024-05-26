@@ -1,4 +1,4 @@
-use std::{fs::metadata, os::freebsd::fs::MetadataExt as _};
+use std::{fs::metadata, os::freebsd::fs::MetadataExt as _, path::Path};
 
 use nix::{
     errno::Errno,
@@ -11,7 +11,9 @@ use crate::{
     context::{FileType, TestContext},
     features::FileSystemFeature,
     flags::FileFlags,
-    tests::errors::eperm::flag::{get_supported_and_error_flags, supports_any_flag},
+    tests::errors::eperm::flag::{
+        get_supported_error_flags_and_valid_flags, immutable_parent_test_case, supports_any_flag,
+    },
 };
 
 crate::test_case! {
@@ -23,7 +25,7 @@ crate::test_case! {
 fn immutable_file(ctx: &mut TestContext) {
     // In the original test the flags considered as valid are the undeletable ones,
     // hence why we don't take the valid flags from `get_flags_intersection`
-    let (flags, _) = get_supported_and_error_flags(
+    let (flags, _) = get_supported_error_flags_and_valid_flags(
         &ctx.features_config().file_flags,
         FileFlags::IMMUTABLE_FLAGS,
     );
@@ -83,7 +85,7 @@ crate::test_case! {
     append_file, FileSystemFeature::Chflags; supports_any_flag!(FileFlags::APPEND_ONLY_FLAGS)
 }
 fn append_file(ctx: &mut TestContext) {
-    let (flags, _) = get_supported_and_error_flags(
+    let (flags, _) = get_supported_error_flags_and_valid_flags(
         &ctx.features_config().file_flags,
         FileFlags::APPEND_ONLY_FLAGS,
     );
@@ -135,3 +137,15 @@ fn append_file(ctx: &mut TestContext) {
         }
     }
 }
+
+// open/09.t
+// TODO: test valid flags
+immutable_parent_test_case!(
+    open,
+    |path| open(
+        path,
+        OFlag::O_RDONLY | OFlag::O_CREAT,
+        Mode::from_bits_truncate(0o644)
+    ),
+    Path::exists
+);
