@@ -16,9 +16,6 @@ use nix::{
     unistd::{chflags, mkdir, mkfifo, truncate, unlink},
 };
 
-#[cfg(any(target_os = "netbsd", target_os = "freebsd", target_os = "dragonfly"))]
-use crate::utils::lchmod;
-
 use crate::{
     config::Config,
     context::{FileType, TestContext},
@@ -186,43 +183,10 @@ pub(crate) fn assert_flags_parent<T: Debug, F, C>(
     assert_flags(ctx, flags, valid_flags, true, created_type, f, check)
 }
 
-crate::test_case! {
-    /// Returns EPERM if the named file has its immutable or append-only flag set
-    immutable_append_file, root, FileSystemFeature::Chflags
-}
-fn immutable_append_file(ctx: &mut TestContext) {
-    let (flags, valid_flags) = get_supported_and_error_flags(
-        &ctx.features_config().file_flags,
-        &[FileFlags::IMMUTABLE_FLAGS, FileFlags::APPEND_ONLY_FLAGS].concat(),
-    );
-
-    // (f)truncate/08.t
-    // TODO: Failure on ZFS with SF_APPEND
-    let size = 123;
-    assert_flags_named_file(
-        ctx,
-        &flags,
-        &valid_flags,
-        FileType::Regular,
-        |path| truncate(path, size),
-        |path| stat(path).map_or(false, |s| s.st_size == size),
-    );
-
-    // link/12.t
-    assert_flags_named_file(
-        ctx,
-        &flags,
-        &valid_flags,
-        FileType::Regular,
-        |src| {
-            let dest = ctx.gen_path();
-            link(src, &*dest)
-        },
-        |src| metadata(src).map_or(false, |m| m.nlink() == 2),
-    );
-}
-
-pub(crate) fn immutable_append_named_helper<T: Debug, F, C>(ctx: &mut TestContext, f: F, check: C)
+/// Helper to generate `immutable_append_named` test cases,
+/// which asserts that the syscall returns EPERM
+/// if the named file has its immutable or append-only flag set.
+pub(crate) fn immutable_append_named_helper<T: Debug, F, C>(ctx: &TestContext, f: F, check: C)
 where
     F: Fn(&Path) -> nix::Result<T>,
     C: Fn(&Path) -> bool,
@@ -237,9 +201,8 @@ where
 
 /// Create a test case which asserts that the syscall returns EPERM
 /// if the named file has its immutable or append-only flag set.
-///
-/// The macro takes as arguments the syscall identifier,
-/// the function to produce an output which can be verified and the check
+/// Takes as arguments the syscall name,
+/// the function to produce a result which can be checked against and the check
 /// function which asserts that it worked using the previously produced result.
 macro_rules! immutable_append_named_test_case {
     ($syscall: ident, $f: expr, $c: expr) => {
