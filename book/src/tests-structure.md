@@ -33,9 +33,9 @@ TC2 --> TC2F2[Test case]
 src/tests
 ├── chmod (syscall)
 │   ├── errno.rs (aspect)
-│   ├── mod.rs (syscall declaration)
 │   └── permission.rs (aspect)
 └── mod.rs (glues syscalls together)
+└── chmod.rs (syscall declaration)
 ```
 
 #### tests/mod.rs
@@ -49,8 +49,8 @@ pub mod chmod;
 ## Syscall module
 
 A syscall module contains test cases related to a specific syscall.
-Its declaration should be in the `mod.rs` file 
-of the relevant folder (`chmod/` in our case).
+Its declaration should be in the `<syscall_name>.rs` file at the root of the
+`tests/` directory.
 Common syscall-specific helpers can go here.
 
 ### Aspect
@@ -61,7 +61,7 @@ Here "aspect" is a subjective area of related functionality.
 The aspect module may be either:
 
 - in a single file, which contains all the test functions,
-- in a folder, which contains multiple modules for the test functions and a `mod.rs` file, in which the case is declared.
+- in a folder, which contains multiple modules for the test functions, in which the case is declared.
 
 Except in the case of a very large set of test functions, the first style
 should be preferred.
