@@ -235,7 +235,7 @@ mod privileged {
     eexist_file_exists_test_case!(mknod, mknod_block_wrapper, mknod_char_wrapper; root);
 }
 
-// #[cfg(file_flags)]
+#[cfg(file_flags)]
 mod flag {
     use std::fs::metadata;
 

@@ -107,7 +107,7 @@ enoent_comp_test_case!(truncate(~path, 0));
 // truncate/07.t
 eloop_comp_test_case!(truncate(~path, 0));
 
-// #[cfg(file_flags)]
+#[cfg(file_flags)]
 mod flag {
     use std::{fs::metadata, os::unix::fs::MetadataExt};
 

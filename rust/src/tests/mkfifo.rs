@@ -76,7 +76,7 @@ eexist_file_exists_test_case!(mkfifo(~path, Mode::empty()));
 // mkfifo/12.t
 efault_path_test_case!(mkfifo, |ptr| nix::libc::mkfifo(ptr, 0o644));
 
-// #[cfg(file_flags)]
+#[cfg(file_flags)]
 mod flag {
     use std::fs::metadata;
 

@@ -1,6 +1,6 @@
 use std::error::Error;
-use std::{borrow::Cow, fmt::Display};
 use std::process::exit;
+use std::{borrow::Cow, fmt::Display};
 
 use nix::unistd::{Group, User};
 use serde::{de::Visitor, ser::SerializeTuple, Deserialize, Serialize};
@@ -145,11 +145,11 @@ impl Default for DummyAuthConfig {
                 },
                 DummyAuthEntry {
                     user: upjdfstest,
-                    group: gpjdfstest
+                    group: gpjdfstest,
                 },
                 DummyAuthEntry {
                     user: utests,
-                    group: gtests
+                    group: gtests,
                 },
             ],
         }

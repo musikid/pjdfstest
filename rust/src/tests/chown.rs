@@ -114,7 +114,7 @@ fn euid_not_root_not_owner(ctx: &mut SerializedTestContext, ft: FileType) {
     });
 }
 
-// #[cfg(file_flags)]
+#[cfg(file_flags)]
 mod flag {
     use std::{fs::metadata, os::unix::fs::MetadataExt};
 

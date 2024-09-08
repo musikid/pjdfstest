@@ -8,7 +8,7 @@ use std::{
     io::{stdout, Write},
     panic::{catch_unwind, set_hook},
     path::PathBuf,
-    sync::Mutex
+    sync::Mutex,
 };
 
 use config::Config;
@@ -110,7 +110,8 @@ fn main() -> anyhow::Result<()> {
                         case.name.contains(pat)
                     }
                 })
-        }).map(|tc: &TestCase| TestCase {
+        })
+        .map(|tc: &TestCase| TestCase {
             // Ideally trim_start_matches could be done in test_case!, but only
             // const functions are allowed there.
             name: tc.name.trim_start_matches("pjdfstest::tests::"),
@@ -193,11 +194,13 @@ fn run_test_cases(
             .any(|guard| guard(config, temp_dir.path()).is_err())
         {
             should_skip = true;
-            skip_reasons.extend(test_case
-                .guards
-                .iter()
-                .filter_map(|guard| guard(config, base_dir.path()).err())
-                .map(|err| err.to_string()));
+            skip_reasons.extend(
+                test_case
+                    .guards
+                    .iter()
+                    .filter_map(|guard| guard(config, base_dir.path()).err())
+                    .map(|err| err.to_string()),
+            );
         }
 
         // TODO: ;decide what to do about verbose
@@ -235,15 +238,17 @@ fn run_test_cases(
                 succeeded_tests_count += 1;
             }
             Err(e) => {
-                let backtrace = BACKTRACE.lock().unwrap()
+                let backtrace = BACKTRACE
+                    .lock()
+                    .unwrap()
                     .take()
                     .filter(|bt| bt.status() == BacktraceStatus::Captured);
                 let panic_information = match e.downcast::<String>() {
                     Ok(v) => *v,
                     Err(e) => match e.downcast::<&str>() {
                         Ok(v) => v.to_string(),
-                        _ => "Unknown Source of Error".to_owned()
-                    }
+                        _ => "Unknown Source of Error".to_owned(),
+                    },
                 };
                 println!("{:73} FAILED\n\t{}", test_case.name, panic_information);
                 if let Some(backtrace) = backtrace {

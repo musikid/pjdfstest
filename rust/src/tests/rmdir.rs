@@ -199,7 +199,7 @@ erofs_named_test_case!(rmdir);
 // rmdir/15.t
 efault_path_test_case!(rmdir, nix::libc::rmdir);
 
-// #[cfg(file_flags)]
+#[cfg(file_flags)]
 mod flag {
     use crate::tests::errors::eperm::flag::{
         immutable_append_parent_test_case, immutable_append_undeletable_named_test_case,

@@ -377,7 +377,7 @@ fn eexist_enotempty_to_non_empty(ctx: &mut TestContext, ft: FileType) {
 // rename/15.t
 exdev_target_test_case!(rename);
 
-// #[cfg(file_flags)]
+#[cfg(file_flags)]
 mod flag {
     use std::path::Path;
 

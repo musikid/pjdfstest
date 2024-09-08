@@ -74,7 +74,7 @@ eexist_file_exists_test_case!(mkdir(~path, Mode::empty()));
 // mkdir/12.t
 efault_path_test_case!(mkdir, |ptr| nix::libc::mkdir(ptr, 0o755));
 
-// #[cfg(file_flags)]
+#[cfg(file_flags)]
 mod flag {
     use std::path::Path;
 

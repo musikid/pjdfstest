@@ -186,7 +186,7 @@ fn unlink_dir(ctx: &mut TestContext) {
     assert!(matches!(unlink(&dir), Err(Errno::EISDIR | Errno::EPERM)));
 }
 
-// #[cfg(file_flags)]
+#[cfg(file_flags)]
 mod flag {
     use super::*;
     use crate::tests::errors::eperm::flag::{

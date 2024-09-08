@@ -51,7 +51,7 @@ eloop_comp_test_case!(lchmod(~path, Mode::empty()));
 enametoolong_comp_test_case!(lchmod(~path, Mode::empty()));
 enametoolong_path_test_case!(lchmod(~path, Mode::empty()));
 
-// #[cfg(file_flags)]
+#[cfg(file_flags)]
 mod flag {
     use crate::tests::errors::eperm::flag::immutable_append_named_test_case;
 
