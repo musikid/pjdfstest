@@ -78,7 +78,7 @@ pub struct TestContext<'a> {
     features_config: &'a FeaturesConfig,
     auth_entries: DummyAuthEntries<'a>,
     #[cfg(target_os = "freebsd")]
-    jail: Option<jail::RunningJail>
+    jail: Option<jail::RunningJail>,
 }
 
 pub struct SerializedTestContext<'a> {
@@ -171,7 +171,7 @@ impl<'a> TestContext<'a> {
             features_config: &config.features,
             auth_entries: DummyAuthEntries::new(entries),
             #[cfg(target_os = "freebsd")]
-            jail: None
+            jail: None,
         }
     }
 
@@ -303,15 +303,7 @@ impl<'a> Drop for TestContext<'a> {
                 _ => continue,
             };
 
-            if cfg!(any(
-                target_os = "openbsd",
-                target_os = "netbsd",
-                target_os = "freebsd",
-                target_os = "dragonfly",
-                target_os = "macos",
-                target_os = "ios"
-            )) || entry.file_type().is_dir()
-            {
+            if cfg!(lchflags) || entry.file_type().is_dir() {
                 let file_stat = match lstat(entry.path()) {
                     Ok(s) => s,
                     _ => continue,
@@ -324,14 +316,7 @@ impl<'a> Drop for TestContext<'a> {
 
                 // We remove all flags
                 // TODO: Some platforms do not support lchflags, write chflagsat alternative for those (openbsd, macos, ios?)
-                #[cfg(any(
-                    target_os = "openbsd",
-                    target_os = "netbsd",
-                    target_os = "freebsd",
-                    target_os = "dragonfly",
-                    target_os = "macos",
-                    target_os = "ios"
-                ))]
+                #[cfg(lchflags)]
                 {
                     use crate::utils::lchflags;
                     use nix::{libc::fflags_t, sys::stat::FileFlag};
@@ -415,7 +400,7 @@ impl FileBuilder {
                     &path,
                 )?;
 
-                #[cfg(any(target_os = "netbsd", target_os = "freebsd", target_os = "dragonfly"))]
+                #[cfg(lchmod)]
                 if let Some(mode) = self.mode {
                     lchmod(&path, mode)?;
                 }

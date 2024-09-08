@@ -73,7 +73,7 @@ pub fn get_mountpoint(base_path: &Path) -> Result<&Path, anyhow::Error> {
 }
 
 /// Safe wrapper for `lchflags`.
-#[cfg(any(target_os = "netbsd", target_os = "freebsd", target_os = "dragonfly"))]
+#[cfg(lchflags)]
 pub fn lchflags<P: ?Sized + nix::NixPath>(
     path: &P,
     flags: nix::sys::stat::FileFlag,
