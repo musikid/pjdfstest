@@ -423,9 +423,11 @@ impl FileBuilder {
                     OFlag::O_CREAT | oflags,
                     self.mode.unwrap_or_else(|| Mode::from_bits_truncate(0o644)),
                 )
+                // SAFETY: The file descriptor was initialized only by open and isn't used anywhere else, leaving the ownership
                 .map(|fd| (path, unsafe { OwnedFd::from_raw_fd(fd) }))
             }
             _ => self.create().and_then(|p| {
+                // SAFETY: The file descriptor was initialized only by open and isn't used anywhere else, leaving the ownership
                 open(&p, oflags, Mode::empty()).map(|fd| (p, unsafe { OwnedFd::from_raw_fd(fd) }))
             }),
         }
