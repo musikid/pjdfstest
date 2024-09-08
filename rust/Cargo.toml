@@ -28,3 +28,6 @@ caps = "0.5.4"
 [[bin]]
 name = "pjdfstest"
 path = "src/main.rs"
+
+[build-dependencies]
+cfg_aliases = "0.2.1"
