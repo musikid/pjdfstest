@@ -206,6 +206,7 @@ fn chmod_not_owner(ctx: &mut SerializedTestContext) {
     });
 }
 
+#[cfg(file_flags)]
 mod flag {
     use super::*;
     use crate::tests::errors::eperm::flag::immutable_append_named_test_case;
