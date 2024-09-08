@@ -118,17 +118,23 @@ fn euid_not_root_not_owner(ctx: &mut SerializedTestContext, ft: FileType) {
 mod flag {
     use std::{fs::metadata, os::unix::fs::MetadataExt};
 
+    use crate::{
+        features::FileSystemFeature,
+        tests::errors::eperm::flag::{immutable_append_named_helper, supports_any_flag},
+    };
+
     use super::*;
 
     crate::test_case! {
         /// chown returns EPERM if the named file has its immutable or append-only flag set
         // chown/08.t
-        immutable_append_named, root, crate::test::FileSystemFeature::Chflags;
-        crate::tests::errors::eperm::flag::supports_any_flag!(crate::flags::FileFlags::IMMUTABLE_FLAGS),crate::tests::errors::eperm::flag::supports_any_flag!(crate::flags::FileFlags::APPEND_ONLY_FLAGS)
+        immutable_append_named, root, FileSystemFeature::Chflags;
+        supports_any_flag!(crate::flags::FileFlags::IMMUTABLE_FLAGS),
+        supports_any_flag!(crate::flags::FileFlags::APPEND_ONLY_FLAGS)
     }
-    fn immutable_append_named(ctx: &mut crate::context::TestContext) {
+    fn immutable_append_named(ctx: &mut TestContext) {
         let (other_user, other_group) = ctx.get_new_entry();
-        crate::tests::errors::eperm::flag::immutable_append_named_helper(
+        immutable_append_named_helper(
             ctx,
             |path| chown(path, Some(other_user.uid), Some(other_group.gid)),
             |path| {
