@@ -74,11 +74,8 @@ mod t {
         assert!(guard(&config, Path::new("test")).is_ok());
     }
 
-    #[cfg(file_flags)]
     crate::test_case! {support_flags_unique; supports_file_flags!(SF_APPEND)}
-    #[cfg(file_flags)]
     fn support_flags_unique(_: &mut TestContext) {}
-    #[cfg(file_flags)]
     #[test]
     fn support_flags_test_unique() {
         use std::collections::HashSet;
@@ -101,11 +98,8 @@ mod t {
         assert!(guard(&config, Path::new("test")).is_ok());
     }
 
-    #[cfg(file_flags)]
     crate::test_case! {support_flags_not_empty; supports_file_flags!(SF_APPEND, UF_APPEND)}
-    #[cfg(file_flags)]
     fn support_flags_not_empty(_: &mut TestContext) {}
-    #[cfg(file_flags)]
     #[test]
     fn support_flags_test_not_empty() {
         use std::collections::HashSet;
