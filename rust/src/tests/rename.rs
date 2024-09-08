@@ -383,9 +383,9 @@ mod flag {
 
     use super::*;
     use crate::flags::FileFlags;
-    use crate::tests::errors::eperm::flag::supports_any_flag;
+    use crate::tests::supports_any_flag;
 
-    // TODO: Should also check that `to` exists
+    // TODO: Should also check that `to` exists?
 
     crate::test_case! {
         /// rename returns EPERM if the named file has its immutable, undeletable or append-only flag set

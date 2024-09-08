@@ -12,8 +12,9 @@ use crate::{
     features::FileSystemFeature,
     flags::FileFlags,
     tests::errors::eperm::flag::{
-        get_supported_error_flags_and_valid_flags, immutable_parent_test_case, supports_any_flag,
+        get_supported_error_flags_and_valid_flags, immutable_parent_test_case,
     },
+    tests::supports_any_flag,
 };
 
 crate::test_case! {

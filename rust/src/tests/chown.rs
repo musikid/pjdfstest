@@ -120,7 +120,7 @@ mod flag {
 
     use crate::{
         features::FileSystemFeature,
-        tests::errors::eperm::flag::{immutable_append_named_helper, supports_any_flag},
+        tests::{errors::eperm::flag::immutable_append_named_helper, supports_any_flag},
     };
 
     use super::*;

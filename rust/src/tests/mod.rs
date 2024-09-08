@@ -1,3 +1,4 @@
+use std::collections::HashSet;
 use std::fs::symlink_metadata;
 use std::ops::{BitAnd, BitOr};
 use std::os::unix::fs::MetadataExt as StdMetadataExt;
@@ -6,6 +7,8 @@ use std::{fs::metadata, path::Path};
 
 use nix::sys::time::TimeSpec;
 
+use crate::config::Config;
+use crate::flags::FileFlags;
 use crate::test::TestContext;
 
 #[cfg(chflags)]
@@ -276,20 +279,37 @@ where
         .execute(ctx, true, f)
 }
 
+/// Guard to check whether any of the provided flags is available in the configuration.
+pub(crate) fn supports_any_flag_helper(
+    flags: &[FileFlags],
+    config: &Config,
+    _: &Path,
+) -> Result<(), anyhow::Error> {
+    let flags: HashSet<_> = flags.iter().copied().collect();
+
+    if config.features.file_flags.intersection(&flags).count() == 0 {
+        anyhow::bail!("None of the flags used for this test are available in the configuration")
+    }
+
+    Ok(())
+}
+
+/// Macro to check whether any of the provided flags as an array is available in the configuration.
+macro_rules! supports_any_flag {
+    (@ $( $flag: expr ),+ $( , )*) => {
+        supports_any_flag!(&[ $( $flag ),+ ])
+    };
+
+    ($flags: expr) => {
+        |config, _p| $crate::tests::supports_any_flag_helper($flags, config, _p)
+    }
+}
+
+pub(crate) use supports_any_flag;
+
 /// Guard to conditionally skip tests on platforms which do not support
-/// the required file flags.
-#[cfg_attr(
-    not(any(
-        target_os = "openbsd",
-        target_os = "netbsd",
-        target_os = "freebsd",
-        target_os = "dragonfly",
-        target_os = "macos",
-        target_os = "ios",
-        target_os = "watchos",
-    )),
-    allow(unused)
-)]
+/// all of the requested file flags.
+#[cfg_attr(not(file_flags), allow(unused))]
 macro_rules! supports_file_flags {
     ($($flags: ident),*) => {
         |config, _| {
@@ -308,18 +328,7 @@ macro_rules! supports_file_flags {
     };
 }
 
-#[cfg_attr(
-    not(any(
-        target_os = "openbsd",
-        target_os = "netbsd",
-        target_os = "freebsd",
-        target_os = "dragonfly",
-        target_os = "macos",
-        target_os = "ios",
-        target_os = "watchos",
-    )),
-    allow(unused)
-)]
+#[cfg_attr(not(file_flags), allow(unused))]
 use supports_file_flags;
 
 #[cfg(test)]

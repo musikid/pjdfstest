@@ -237,21 +237,28 @@ mod flag {
     use std::{fs::metadata, os::unix::fs::MetadataExt};
 
     use super::*;
-    use crate::tests::errors::eperm::flag::{immutable_append_named_helper, supports_any_flag};
+    use crate::{
+        features::FileSystemFeature,
+        flags::FileFlags,
+        tests::{
+            errors::eperm::flag::{immutable_append_named_helper, immutable_parent_helper},
+            supports_any_flag,
+        },
+    };
 
     crate::test_case! {
         /// link returns EPERM if the named file has its immutable or append-only flag set
         // link/12.t
-        immutable_append_named, root;
-        supports_any_flag!(crate::flags::FileFlags::IMMUTABLE_FLAGS),
-        supports_any_flag!(crate::flags::FileFlags::APPEND_ONLY_FLAGS)
+        immutable_append_named, root, FileSystemFeature::Chflags;
+        supports_any_flag!(FileFlags::IMMUTABLE_FLAGS),
+        supports_any_flag!(FileFlags::APPEND_ONLY_FLAGS)
     }
     fn immutable_append_named(ctx: &mut crate::context::TestContext) {
         immutable_append_named_helper(
             ctx,
             |src| {
                 let dest = ctx.gen_path();
-                link(src, &*dest)
+                link(src, &dest)
             },
             |src| metadata(src).map_or(false, |m| m.nlink() == 2),
         )
@@ -260,15 +267,15 @@ mod flag {
     crate::test_case! {
         /// link returns EPERM if the parent directory of the named file has its immutable or append-only flag set
         // link/13.t
-        immutable_parent, root, crate::test::FileSystemFeature::Chflags;
-        crate::tests::errors::eperm::flag::supports_any_flag!(crate::flags::FileFlags::IMMUTABLE_FLAGS)
+        immutable_parent, root, FileSystemFeature::Chflags;
+        supports_any_flag!(FileFlags::IMMUTABLE_FLAGS)
     }
-    fn immutable_parent(ctx: &mut crate::context::TestContext) {
-        crate::tests::errors::eperm::flag::immutable_parent_helper(
+    fn immutable_parent(ctx: &mut TestContext) {
+        immutable_parent_helper(
             ctx,
             |dest| {
                 let from = ctx.create(FileType::Regular).unwrap();
-                link(&*from, dest)
+                link(from.as_path(), dest)
             },
             |dest| metadata(dest).map_or(false, |m| m.nlink() == 2),
         )
