@@ -15,7 +15,6 @@ use super::errors::{
     enametoolong::{enametoolong_comp_test_case, enametoolong_path_test_case},
     enoent::{enoent_comp_test_case, enoent_named_file_test_case},
     enotdir::enotdir_comp_test_case,
-    eperm::flag::immutable_append_named_test_case,
     erofs::erofs_named_test_case,
     etxtbsy::etxtbsy_test_case,
 };
@@ -109,6 +108,7 @@ eloop_comp_test_case!(truncate(~path, 0));
 
 #[cfg(file_flags)]
 mod flag {
+    use crate::tests::errors::eperm::flag::immutable_append_named_test_case;
     use std::{fs::metadata, os::unix::fs::MetadataExt};
 
     use super::*;
