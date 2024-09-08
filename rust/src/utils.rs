@@ -44,7 +44,7 @@ pub fn rename<P: ?Sized + nix::NixPath>(old_path: &P, new_path: &P) -> nix::Resu
 
 /// Wrapper for `linkat(None, old_path, None, new_path)`.
 pub fn link<P: ?Sized + nix::NixPath>(old_path: &P, new_path: &P) -> nix::Result<()> {
-    linkat(None, old_path, None, new_path, AtFlags::AT_SYMLINK_NOFOLLOW)
+    linkat(None, old_path, None, new_path, AtFlags::empty())
 }
 
 /// Wrapper for `symlinkat(path1, None, path2)`.

@@ -11,7 +11,7 @@
 posix_fallocate = {}
 
 # Might use the key notation as well.
-[features.posix_fallocate]
+# [features.posix_fallocate]
 
 [settings]
 # naptime is the duration of various short sleeps.  It should be greater than
