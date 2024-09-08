@@ -4,7 +4,6 @@ use std::path::PathBuf;
 
 use crate::test::FileFlags;
 use crate::test::FileSystemFeature;
-use figment::value::Value;
 use serde::{Deserialize, Serialize};
 
 mod auth;
@@ -21,8 +20,6 @@ pub struct FeaturesConfig {
     pub file_flags: HashSet<FileFlags>,
     #[serde(default)]
     pub secondary_fs: Option<PathBuf>,
-    #[serde(default)]
-    pub eperm: EpermConfig,
     #[serde(flatten)]
     pub fs_features: HashMap<FileSystemFeature, CommonFeatureConfig>,
 }
@@ -55,9 +52,4 @@ pub struct Config {
     pub features: FeaturesConfig,
     pub settings: SettingsConfig,
     pub dummy_auth: DummyAuthConfig,
-}
-
-#[derive(Debug, Default, Serialize, Deserialize)]
-pub struct EpermConfig {
-    pub syscalls_flags: HashMap<String, Value>,
 }

@@ -139,7 +139,6 @@ fn append_file(ctx: &mut TestContext) {
 }
 
 // open/09.t
-// TODO: test valid flags
 immutable_parent_test_case!(
     open,
     |path| open(

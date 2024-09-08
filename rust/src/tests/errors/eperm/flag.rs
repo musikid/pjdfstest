@@ -30,7 +30,7 @@ pub(crate) fn supports_any_flag_helper(
     Ok(())
 }
 
-/// Guard to check whether any of the provided flags is available in the configuration.
+/// Macro to check whether any of the provided flags as an array is available in the configuration.
 macro_rules! supports_any_flag {
     (@ $( $flag: expr ),+ $( , )*) => {
         supports_any_flag!(&[ $( $flag ),+ ])
