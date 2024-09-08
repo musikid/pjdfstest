@@ -1,10 +1,10 @@
 # Test declaration
 
-Test cases have the same structure than usual Rust tests, 
+Test cases have the same structure than usual Rust tests,
 that is `unwrap`ing `Result`s and using assertion macros (`assert` and `assert_eq`),
 the exception being that it should take a `&mut TestContext` parameter.
 It might also take a `FileType` argument if required.
-It also needs an additional declaration with the `test_case!` macro alongside the function, 
+It also needs an additional declaration with the `test_case!` macro alongside the function,
 with the function name being the only mandatory argument.
 
 For example:
@@ -16,7 +16,7 @@ fn ctime(ctx: &mut TestContext, f_type: FileType) {
     let path = ctx.create(f_type).unwrap();
     let ctime_before = stat(&path).unwrap().st_ctime;
 
-    sleep(Duration::from_secs(1));
+    ctx.nap();
 
     chmod(&path, Mode::from_bits_truncate(0o111)).unwrap();
 
@@ -24,6 +24,34 @@ fn ctime(ctx: &mut TestContext, f_type: FileType) {
     assert!(ctime_after > ctime_before);
 }
 ```
+
+All the structures and functions needed are documented in the `pjdfstest` crate,
+which you can obtain by running `cargo doc --open` in the `rust` directory
+or by visiting the [online documentation](/doc/pjdfstest).
+
+## Test context
+
+The `TestContext` struct is a helper struct which provides methods
+to create files, sleep, change user, etc.
+It is passed as a parameter to the test functions and should be used
+to interact with the system in order to ensure that the tests are isolated
+and do not interfere with each other.
+
+### Serialization
+
+When a test case needs to be run in a serialized manner, the `SerializedTestContext` struct should be used instead.
+It provides additional methods to change the user, group, supplementary groups, or umask of the process.
+Please see the [Serialized test cases](#serialized-test-cases) section for more information.
+
+## Assertions
+
+The `assert` and `assert_eq` macros should be used to check the results of the tests.
+The `assert` macro should be used when the test is checking a condition,
+while the `assert_eq` macro should be used when the test is checking that two values are equal.
+In addition to these macros, the suite provides some additional assertion macros which
+should be used when appropriate.
+`assert_ctime_changed` should be used when checking that the ctime of a file has changed,
+and `assert_mtime_changed` should be used when checking that the mtime of a file has changed.
 
 ## Description
 
@@ -51,7 +79,7 @@ to modify the execution of the tests or add requirements.
 Some features are not available for every file system.
 For tests requiring such features, the execution becomes opt-in.
 A variant of the `FileSystemFeature` enum corresponding to this feature
-should be specified after potential `root` requirement and before file flags.
+should be specified after potential `root` requirement and before guards.
 Multiple features can be specified, separated by a comma `,`.
 
 For example:
@@ -70,7 +98,7 @@ for both developers and users.
 ### Guards
 
 It is possible to specify "guards", which are functions which checks if a requirement
-is met and return an error if not, so the test is skipped.
+is met and return an error if not so the test will be skipped.
 They can be specified by appending function names after a `;` separator,
 after potential `root` requirement and features.
 
@@ -92,7 +120,7 @@ pub type Guard = fn(&Config, &Path) -> anyhow::Result<()>;
 fn has_reasonable_link_max(_: &Config, base_path: &Path) -> anyhow::Result<()> {
     let link_max = pathconf(base_path, nix::unistd::PathconfVar::LINK_MAX)?
         .ok_or_else(|| anyhow::anyhow!("Failed to get LINK_MAX value"))?;
-    
+
     if link_max >= LINK_MAX_LIMIT {
         anyhow::bail!("LINK_MAX value is too high ({link_max}, expected smaller than {LINK_MAX_LIMIT}");
     }
@@ -110,7 +138,7 @@ crate::test_case! {
 ### Root privileges
 
 Some tests may need root privileges to run.
-To declare that a test function require such privileges, 
+To declare that a test function require such privileges,
 `root` should be added to its declaration.
 For example:
 
@@ -131,27 +159,42 @@ The test function should also accept a `FileType` parameter to operate on.
 For example:
 
 ```rust,ignore
-crate::test_case! {change_perm, root, FileSystemFeature::Chflags; FileFlags::SF_IMMUTABLE, FileFlags::UF_IMMUTABLE 
+crate::test_case! {change_perm, root, FileSystemFeature::Chflags; FileFlags::SF_IMMUTABLE, FileFlags::UF_IMMUTABLE
 => [Regular, Fifo, Block, Char, Socket]}
 fn change_perm(ctx: &mut TestContext, f_type: FileType) {
 ```
 
-## Platform-specific functions 
+## Platform-specific features
 
-Some functions (like `lchmod`) are not supported on every operating system.
-When a test make use of such function, it is possible to restrain its compilation
-to the supported operating systems, with the attribute `#[cfg(target_os = ...)]`.
-It is also possible to apply this attribute on an aspect, or even on a syscall module.
+Some features (like `lchmod`) are not supported on every operating system.
+When a test make use of such feature, it is possible to restrain its compilation
+to the supported operating systems, with the attribute `#[cfg(feature_name)]`.
+It is also possible to apply this attribute on an aspect or even a syscall module.
 For example:
 
 ```rust,ignore
-#[cfg(target_os = "freebsd")]
+#[cfg(lchmod)]
 mod lchmod;
+```
+
+To declare it, the feature and its requirements have to be specified in the `build.rs` file
+using the usual conditional compilation
+[syntax](https://doc.rust-lang.org/reference/conditional-compilation.html).
+Then, the feature should be added to the `cfg_aliases!` macro.
+With `lchmod`, we would get:
+
+```rust,ignore
+    cfg_aliases! {
+        ...
+        lchmod: { any(target_os = "netbsd", target_os = "freebsd", target_os = "dragonfly") },
+        ...
+    }
 ```
 
 ## Serialized test cases
 
-Some test cases need functions only available when they are run serialized, especially when they affect the whole process.
+Some test cases need functions only available when they are run serialized,
+especially when they affect the whole process.
 An example is changing user (`SerializedTestContext::as_user`).
 To have access to these functions, the test should be declared with a `SerializedTestContext`
 parameter in place of `TestContext` and the `serialized` keyword should be prepended before features.

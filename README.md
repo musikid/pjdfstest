@@ -11,7 +11,7 @@ cargo run
 
 ## Documentation
 
-The documentation is available at [https://musikid.github.io/pjdfstest/](https://musikid.github.io/pjdfstest/).
+The documentation is available at <https://saidsay-so.github.io/pjdfstest/>.
 
 ## Command-line interface
 

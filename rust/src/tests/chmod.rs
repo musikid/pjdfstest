@@ -25,6 +25,9 @@ use super::errors::{
     erofs::erofs_named_test_case,
 };
 
+#[cfg(lchmod)]
+mod lchmod;
+
 #[cfg(any(target_os = "freebsd", target_os = "dragonfly"))]
 const ALLPERMS_STICKY: nix::libc::mode_t = ALLPERMS | Mode::S_ISVTX.bits();
 
@@ -271,6 +274,3 @@ fn eftype(ctx: &mut SerializedTestContext, ft: FileType) {
     let file_stat = lstat(&file).unwrap();
     assert_eq!(file_stat.st_mode & ALLPERMS_STICKY, original_mode.bits());
 }
-
-#[cfg(any(target_os = "netbsd", target_os = "freebsd", target_os = "dragonfly"))]
-mod lchmod;

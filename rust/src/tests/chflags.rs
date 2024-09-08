@@ -7,7 +7,7 @@ use nix::{
     unistd::chflags,
 };
 
-#[cfg(any(target_os = "netbsd", target_os = "freebsd", target_os = "dragonfly"))]
+#[cfg(lchflags)]
 use crate::utils::lchflags;
 use crate::{
     context::{FileType, SerializedTestContext, TestContext},
@@ -102,7 +102,7 @@ fn set_flags(ctx: &mut TestContext, ft: FileType) {
     let file = ctx.create(ft).unwrap();
     assert!(chflags(&file, FileFlag::empty()).is_ok());
 
-    #[cfg(any(target_os = "netbsd", target_os = "freebsd", target_os = "dragonfly"))]
+    #[cfg(lchflags)]
     for flags_set in [flags, user_flags, system_flags, FileFlag::empty()] {
         assert!(lchflags(&file, FileFlag::empty()).is_ok());
         assert!(lchflags(&file, flags_set).is_ok());
@@ -133,12 +133,12 @@ fn set_flags_symlink(ctx: &mut TestContext) {
     }
 }
 
-#[cfg(any(target_os = "netbsd", target_os = "freebsd", target_os = "dragonfly"))]
+#[cfg(lchflags)]
 crate::test_case! {
     /// lchflags changes flags without following symlinks
     lchflags_set_flags_no_follow_symlink, root, FileSystemFeature::Chflags
 }
-#[cfg(any(target_os = "netbsd", target_os = "freebsd", target_os = "dragonfly"))]
+#[cfg(lchflags)]
 fn lchflags_set_flags_no_follow_symlink(ctx: &mut TestContext) {
     let (flags, user_flags, system_flags) = get_flags(ctx);
 
@@ -180,7 +180,7 @@ fn changed_ctime_success(ctx: &mut TestContext, ft: FileType) {
 
     let file = ctx.create(ft).unwrap();
 
-    #[cfg(any(target_os = "netbsd", target_os = "freebsd", target_os = "dragonfly"))]
+    #[cfg(lchflags)]
     for flag in allflags.into_iter().chain(once(FileFlag::empty())) {
         assert_ctime_changed(ctx, &file, || {
             assert!(lchflags(&file, flag).is_ok());
@@ -214,7 +214,7 @@ fn unchanged_ctime_failed(ctx: &mut SerializedTestContext, ft: FileType) {
 
     let file = ctx.create(ft).unwrap();
 
-    #[cfg(any(target_os = "netbsd", target_os = "freebsd", target_os = "dragonfly"))]
+    #[cfg(lchflags)]
     for flag in allflags.into_iter().chain(once(FileFlag::empty())) {
         assert_ctime_unchanged(ctx, &file, || {
             ctx.as_user(user, None, || {

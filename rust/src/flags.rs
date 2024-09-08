@@ -9,15 +9,7 @@ macro_rules! flags {
                 $flag),*
         }
 
-        #[cfg(any(
-            target_os = "openbsd",
-            target_os = "netbsd",
-            target_os = "freebsd",
-            target_os = "dragonfly",
-            target_os = "macos",
-            target_os = "ios",
-            target_os = "watchos",
-        ))]
+        #[cfg(file_flags)]
         impl From<$enum> for nix::sys::stat::FileFlag {
             fn from(flag: $enum) -> Self {
                 match flag {
