@@ -187,13 +187,34 @@ fn ctime(ctx: &amp;mut TestContext, f_type: FileType) {
     let path = ctx.create(f_type).unwrap();
     let ctime_before = stat(&amp;path).unwrap().st_ctime;
 
-    sleep(Duration::from_secs(1));
+    ctx.nap();
 
     chmod(&amp;path, Mode::from_bits_truncate(0o111)).unwrap();
 
     let ctime_after = stat(&amp;path).unwrap().st_ctime;
     assert!(ctime_after &gt; ctime_before);
 }</code></pre>
+<p>All the structures and functions needed are documented in the <code>pjdfstest</code> crate,
+which you can obtain by running <code>cargo doc --open</code> in the <code>rust</code> directory
+or by visiting the <a href="/doc/pjdfstest">online documentation</a>.</p>
+<h2 id="test-context"><a class="header" href="#test-context">Test context</a></h2>
+<p>The <code>TestContext</code> struct is a helper struct which provides methods
+to create files, sleep, change user, etc.
+It is passed as a parameter to the test functions and should be used
+to interact with the system in order to ensure that the tests are isolated
+and do not interfere with each other.</p>
+<h3 id="serialization"><a class="header" href="#serialization">Serialization</a></h3>
+<p>When a test case needs to be run in a serialized manner, the <code>SerializedTestContext</code> struct should be used instead.
+It provides additional methods to change the user, group, supplementary groups, or umask of the process.
+Please see the <a href="#serialized-test-cases">Serialized test cases</a> section for more information.</p>
+<h2 id="assertions"><a class="header" href="#assertions">Assertions</a></h2>
+<p>The <code>assert</code> and <code>assert_eq</code> macros should be used to check the results of the tests.
+The <code>assert</code> macro should be used when the test is checking a condition,
+while the <code>assert_eq</code> macro should be used when the test is checking that two values are equal.
+In addition to these macros, the suite provides some additional assertion macros which
+should be used when appropriate.
+<code>assert_ctime_changed</code> should be used when checking that the ctime of a file has changed,
+and <code>assert_mtime_changed</code> should be used when checking that the mtime of a file has changed.</p>
 <h2 id="description"><a class="header" href="#description">Description</a></h2>
 <p>It is possible to provide doc comments which will be used as documentation for developers
 but also be displayed to users when they run the test.
@@ -212,7 +233,7 @@ to modify the execution of the tests or add requirements.</p>
 <p>Some features are not available for every file system.
 For tests requiring such features, the execution becomes opt-in.
 A variant of the <code>FileSystemFeature</code> enum corresponding to this feature
-should be specified after potential <code>root</code> requirement and before file flags.
+should be specified after potential <code>root</code> requirement and before guards.
 Multiple features can be specified, separated by a comma <code>,</code>.</p>
 <p>For example:</p>
 <pre><code class="language-rust ignore">#[cfg(target_os = "freebsd")]
@@ -223,7 +244,7 @@ A description of the feature should be provided as documentation
 for both developers and users.</p>
 <h3 id="guards"><a class="header" href="#guards">Guards</a></h3>
 <p>It is possible to specify "guards", which are functions which checks if a requirement
-is met and return an error if not, so the test is skipped.
+is met and return an error if not so the test will be skipped.
 They can be specified by appending function names after a <code>;</code> separator,
 after potential <code>root</code> requirement and features.</p>
 <p>The function has to take a <code>&amp;Config</code> argument
@@ -237,7 +258,7 @@ pub type Guard = fn(&amp;Config, &amp;Path) -&gt; anyhow::Result&lt;()&gt;;</cod
 <pre><code class="language-rust ignore">fn has_reasonable_link_max(_: &amp;Config, base_path: &amp;Path) -&gt; anyhow::Result&lt;()&gt; {
     let link_max = pathconf(base_path, nix::unistd::PathconfVar::LINK_MAX)?
         .ok_or_else(|| anyhow::anyhow!("Failed to get LINK_MAX value"))?;
-    
+
     if link_max &gt;= LINK_MAX_LIMIT {
         anyhow::bail!("LINK_MAX value is too high ({link_max}, expected smaller than {LINK_MAX_LIMIT}");
     }
@@ -264,19 +285,30 @@ The file types should be added at the end of the test case declaration,
 within brackets and with a fat arrow before (<code>=&gt; [Regular]</code>).
 The test function should also accept a <code>FileType</code> parameter to operate on.</p>
 <p>For example:</p>
-<pre><code class="language-rust ignore">crate::test_case! {change_perm, root, FileSystemFeature::Chflags; FileFlags::SF_IMMUTABLE, FileFlags::UF_IMMUTABLE 
+<pre><code class="language-rust ignore">crate::test_case! {change_perm, root, FileSystemFeature::Chflags; FileFlags::SF_IMMUTABLE, FileFlags::UF_IMMUTABLE
 =&gt; [Regular, Fifo, Block, Char, Socket]}
 fn change_perm(ctx: &amp;mut TestContext, f_type: FileType) {</code></pre>
-<h2 id="platform-specific-functions"><a class="header" href="#platform-specific-functions">Platform-specific functions</a></h2>
-<p>Some functions (like <code>lchmod</code>) are not supported on every operating system.
-When a test make use of such function, it is possible to restrain its compilation
-to the supported operating systems, with the attribute <code>#[cfg(target_os = ...)]</code>.
-It is also possible to apply this attribute on an aspect, or even on a syscall module.
+<h2 id="platform-specific-features"><a class="header" href="#platform-specific-features">Platform-specific features</a></h2>
+<p>Some features (like <code>lchmod</code>) are not supported on every operating system.
+When a test make use of such feature, it is possible to restrain its compilation
+to the supported operating systems, with the attribute <code>#[cfg(feature_name)]</code>.
+It is also possible to apply this attribute on an aspect or even a syscall module.
 For example:</p>
-<pre><code class="language-rust ignore">#[cfg(target_os = "freebsd")]
+<pre><code class="language-rust ignore">#[cfg(lchmod)]
 mod lchmod;</code></pre>
+<p>To declare it, the feature and its requirements have to be specified in the <code>build.rs</code> file
+using the usual conditional compilation
+<a href="https://doc.rust-lang.org/reference/conditional-compilation.html">syntax</a>.
+Then, the feature should be added to the <code>cfg_aliases!</code> macro.
+With <code>lchmod</code>, we would get:</p>
+<pre><code class="language-rust ignore">    cfg_aliases! {
+        ...
+        lchmod: { any(target_os = "netbsd", target_os = "freebsd", target_os = "dragonfly") },
+        ...
+    }</code></pre>
 <h2 id="serialized-test-cases"><a class="header" href="#serialized-test-cases">Serialized test cases</a></h2>
-<p>Some test cases need functions only available when they are run serialized, especially when they affect the whole process.
+<p>Some test cases need functions only available when they are run serialized,
+especially when they affect the whole process.
 An example is changing user (<code>SerializedTestContext::as_user</code>).
 To have access to these functions, the test should be declared with a <code>SerializedTestContext</code>
 parameter in place of <code>TestContext</code> and the <code>serialized</code> keyword should be prepended before features.</p>

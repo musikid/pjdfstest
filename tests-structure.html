@@ -198,17 +198,17 @@ TC2 --&gt; TC2F2[Test case]
 <pre><code>src/tests
 ├── chmod (syscall)
 │   ├── errno.rs (aspect)
-│   ├── mod.rs (syscall declaration)
 │   └── permission.rs (aspect)
 └── mod.rs (glues syscalls together)
+└── chmod.rs (syscall declaration)
 </code></pre>
 <h4 id="testsmodrs"><a class="header" href="#testsmodrs">tests/mod.rs</a></h4>
 <p>All the modules for the test groups should be declared in this file.</p>
 <pre><code class="language-rust ignore">pub mod chmod;</code></pre>
 <h2 id="syscall-module"><a class="header" href="#syscall-module">Syscall module</a></h2>
 <p>A syscall module contains test cases related to a specific syscall.
-Its declaration should be in the <code>mod.rs</code> file
-of the relevant folder (<code>chmod/</code> in our case).
+Its declaration should be in the <code>&lt;syscall_name&gt;.rs</code> file at the root of the
+<code>tests/</code> directory.
 Common syscall-specific helpers can go here.</p>
 <h3 id="aspect"><a class="header" href="#aspect">Aspect</a></h3>
 <p>An optional aspect module contains test cases that all relate to a common
@@ -217,7 +217,7 @@ Here "aspect" is a subjective area of related functionality.
 The aspect module may be either:</p>
 <ul>
 <li>in a single file, which contains all the test functions,</li>
-<li>in a folder, which contains multiple modules for the test functions and a <code>mod.rs</code> file, in which the case is declared.</li>
+<li>in a folder, which contains multiple modules for the test functions, in which the case is declared.</li>
 </ul>
 <p>Except in the case of a very large set of test functions, the first style
 should be preferred.</p>
