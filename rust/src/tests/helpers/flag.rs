@@ -66,7 +66,7 @@ mod t {
     fn support_flags_test_empty() {
         let config = Config::default();
         let tc: &TestCase = inventory::iter::<TestCase>()
-            .find(|tc| tc.name == "pjdfstest::tests::t::support_flags_empty")
+            .find(|tc| tc.name == "pjdfstest::tests::helpers::flag::t::support_flags_empty")
             .unwrap();
         assert_eq!(tc.guards.len(), 1);
 
@@ -84,7 +84,7 @@ mod t {
 
         let mut config = Config::default();
         let tc: &TestCase = inventory::iter::<TestCase>()
-            .find(|tc| tc.name == "pjdfstest::tests::t::support_flags_unique")
+            .find(|tc| tc.name == "pjdfstest::tests::helpers::flag::t::support_flags_unique")
             .unwrap();
         assert_eq!(tc.guards.len(), 1);
 
@@ -108,7 +108,7 @@ mod t {
 
         let mut config = Config::default();
         let tc: &TestCase = inventory::iter::<TestCase>()
-            .find(|tc| tc.name == "pjdfstest::tests::t::support_flags_not_empty")
+            .find(|tc| tc.name == "pjdfstest::tests::helpers::flag::t::support_flags_not_empty")
             .unwrap();
         assert_eq!(tc.guards.len(), 1);
 
