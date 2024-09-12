@@ -19,7 +19,7 @@ build: &BUILD
 task:
   name: FreeBSD
   freebsd_instance:
-    image: freebsd-12-3-release-amd64
+    image: freebsd-13-3-release-amd64
   env:
     CFG: ci/freebsd-ufs.toml
     SU_ARGS: -m nobody -c
