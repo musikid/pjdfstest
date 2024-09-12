@@ -1,3 +1,7 @@
+//! Provides a context for tests through the [`TestContext`] and [`SerializedTestContext`] structs.
+//! 
+//! The [`TestContext`] struct allows to create files, directories, get auth entries, and sleep for the amount of time specified in the configuration.
+//! Its [`SerializedTestContext`] counterpart allows to execute functions as another user/group(s) and with another umask.
 use nix::{
     fcntl::{open, OFlag},
     sys::{
@@ -28,7 +32,7 @@ use crate::{
     utils::{chmod, lchmod, symlink},
 };
 
-/// File type, mainly used with [TestContext::create].
+/// File type, mainly used with [TestContext::create] and parameterized tests.
 #[derive(Debug, Clone, Eq, PartialEq, EnumIter)]
 pub enum FileType {
     Regular,
@@ -47,6 +51,7 @@ impl FileType {
 }
 
 const NUM_RAND_CHARS: usize = 32;
+
 /// Auth entries which are composed of a [`User`] and its associated [`Group`].
 /// Allows to retrieve the auth entries.
 #[derive(Debug)]
@@ -72,15 +77,81 @@ impl<'a> DummyAuthEntries<'a> {
     }
 }
 
+/// Test context which allows to create files, directories, get auth entries,
+/// and sleep for the amount of time specified in the configuration.
+///
+/// # Note
+///
+/// The context will automatically remove all files and directories created during the test.
+///
+/// # Example
+///
+/// ```ignore
+/// use nix::sys::stat::Mode;
+/// use tempfile::TempDir;
+///
+/// use crate::{
+///    config::{Config, DummyAuthEntry},
+///    context::{FileType, TestContext},
+/// };
+///
+/// let config = Config::default();
+/// let temp_dir = TempDir::new().unwrap();
+/// let entries = vec![DummyAuthEntry::new("user", "group")];
+/// let ctx = TestContext::new(&config, &entries, temp_dir.path());
+///
+/// let (user, group) = ctx.get_new_entry();
+/// assert_eq!(user.name, "user");
+/// assert_eq!(group.name, "group");
+///
+/// let file = ctx.create(FileType::Regular).unwrap();
+/// let file_stat = nix::sys::stat::stat(&file).unwrap();
+/// assert_eq!(file_stat.st_mode & Mode::S_IFMT.bits(), nix::libc::S_IFREG);
+/// ```
+///
 pub struct TestContext<'a> {
+    /// Duration to sleep, used to wait for file system timestamps to change.
     naptime: Duration,
+    /// Temporary directory where the test will be executed and files will be created.
     temp_dir: &'a Path,
+    /// Features configuration, used to determine which features are enabled.
     features_config: &'a FeaturesConfig,
+    /// Auth entries which are composed of a [`User`] and its associated [`Group`].
     auth_entries: DummyAuthEntries<'a>,
+    /// Jail, used to isolate the test environment on FreeBSD.
     #[cfg(target_os = "freebsd")]
     jail: Option<jail::RunningJail>,
 }
 
+/// Serialized test context which allows to execute functions as another user/group(s) and with another umask.
+///
+/// # Example
+///
+/// ```ignore
+/// use nix::sys::stat::Mode;
+/// use tempfile::TempDir;
+///
+/// use crate::{
+///   config::{Config, DummyAuthEntry},
+///   context::{FileType, SerializedTestContext},
+/// };
+///
+/// let config = Config::default();
+/// let temp_dir = TempDir::new().unwrap();
+/// let entries = vec![DummyAuthEntry::new("user", "group")];
+/// let ctx = SerializedTestContext::new(&config, &entries, temp_dir.path());
+///
+/// let (user, group) = ctx.get_new_entry();
+/// assert_eq!(user.name, "user");
+/// assert_eq!(group.name, "group");
+///
+/// ctx.as_user(user, None, || {
+///    let file = ctx.create(FileType::Regular).unwrap();
+///    let file_stat = nix::sys::stat::stat(&file).unwrap();
+///    assert_eq!(file_stat.st_mode & Mode::S_IFMT.bits(), nix::libc::S_IFREG);
+/// });
+/// ```
+///
 pub struct SerializedTestContext<'a> {
     ctx: TestContext<'a>,
 }
@@ -413,7 +484,7 @@ impl FileBuilder {
     }
 
     /// Create the file according to the provided information and open it.
-    /// This function automatically adds [`O_CREAT`](nix::fcntl::OFlag::O_CREAT) to the [`open`](nix::fcntl::open) flags when creating a regular file.
+    /// This function automatically adds [`O_CREAT`](nix::fcntl::OFlag::O_CREAT) to the [`open`] flags when creating a regular file.
     pub fn open(mut self, oflags: OFlag) -> nix::Result<(PathBuf, RawFd)> {
         match self.file_type {
             FileType::Regular => {

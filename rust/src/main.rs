@@ -1,5 +1,21 @@
-// https://github.com/rust-lang/rust-clippy/issues/1553
-#![allow(clippy::redundant_closure_call)]
+//! This is the main entry point for the test suite. It is responsible for parsing
+//! command line arguments, reading the configuration file, and running the tests.
+//! The test suite is composed of a set of test cases, each of which is a function
+//! that takes a [`TestContext`] as an argument. The [`TestContext`] provides access to
+//! the configuration, the dummy authentication entries, and a temporary directory
+//! for the test to use.
+//!
+//! The test suite is built using the `inventory` crate, which
+//! allows test cases to be registered at compile time. The test suite is run by
+//! iterating over the registered test cases and running each one in turn.
+//!
+//! The [`TestContext`] is created for each test case, and the test case function is called
+//! with the [`TestContext`] as an argument. The test case function can then use the
+//! [`TestContext`] to access the configuration, the dummy authentication entries, and
+//! the temporary directory. The test case function can perform whatever tests are
+//! necessary, and panic if the test fails. The test suite catches the panic, prints
+//! an error message, and continues running the remaining test cases. At the end of
+//! the test suite, the number of failed, skipped, and passed tests is printed.
 
 use std::{
     backtrace::{Backtrace, BacktraceStatus},
@@ -8,7 +24,7 @@ use std::{
     io::{stdout, Write},
     panic::{catch_unwind, set_hook},
     path::PathBuf,
-    sync::Mutex
+    sync::Mutex,
 };
 
 use config::Config;
@@ -29,7 +45,10 @@ mod config;
 mod context;
 mod features;
 mod flags;
+
 mod macros;
+pub(crate) use macros::*;
+
 mod test;
 mod tests;
 mod utils;
@@ -110,7 +129,8 @@ fn main() -> anyhow::Result<()> {
                         case.name.contains(pat)
                     }
                 })
-        }).map(|tc: &TestCase| TestCase {
+        })
+        .map(|tc: &TestCase| TestCase {
             // Ideally trim_start_matches could be done in test_case!, but only
             // const functions are allowed there.
             name: tc.name.trim_start_matches("pjdfstest::tests::"),
@@ -193,11 +213,13 @@ fn run_test_cases(
             .any(|guard| guard(config, temp_dir.path()).is_err())
         {
             should_skip = true;
-            skip_reasons.extend(test_case
-                .guards
-                .iter()
-                .filter_map(|guard| guard(config, base_dir.path()).err())
-                .map(|err| err.to_string()));
+            skip_reasons.extend(
+                test_case
+                    .guards
+                    .iter()
+                    .filter_map(|guard| guard(config, base_dir.path()).err())
+                    .map(|err| err.to_string()),
+            );
         }
 
         // TODO: ;decide what to do about verbose
@@ -235,15 +257,17 @@ fn run_test_cases(
                 succeeded_tests_count += 1;
             }
             Err(e) => {
-                let backtrace = BACKTRACE.lock().unwrap()
+                let backtrace = BACKTRACE
+                    .lock()
+                    .unwrap()
                     .take()
                     .filter(|bt| bt.status() == BacktraceStatus::Captured);
                 let panic_information = match e.downcast::<String>() {
                     Ok(v) => *v,
                     Err(e) => match e.downcast::<&str>() {
                         Ok(v) => v.to_string(),
-                        _ => "Unknown Source of Error".to_owned()
-                    }
+                        _ => "Unknown Source of Error".to_owned(),
+                    },
                 };
                 println!("{:73} FAILED\n\t{}", test_case.name, panic_information);
                 if let Some(backtrace) = backtrace {

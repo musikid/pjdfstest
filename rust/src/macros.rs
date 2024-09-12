@@ -1,20 +1,42 @@
-#[macro_export]
+/// The `test_case` macro is used to define test cases for a test suite.
+/// 
+/// The macro is used to define a test case for a test suite. 
+/// The test case can be serialized or non-serialized, require root privileges, and can be run on specific file types.
+/// It can also require specific features to be enabled, and have guards which are run before the test case is executed to determine if conditions are met.
+/// 
+/// The macro supports mutiple parameters which can be combined in a specific order:
+/// 
+/// ```rust,ignore
+/// // Non-serialized test case
+/// test_case! {
+///    /// description
+///   basic
+/// }
+/// ```
+/// 
+/// ```rust,ignore
+/// // Non-serialized test case with required features, guards, and root privileges
+/// test_case! {
+///   /// description
+///  features, FileSystemFeature::Chflags, FileSystemFeature::PosixFallocate; guard_example, root
+/// }
+/// ```
 macro_rules! test_case {
     ($(#[doc = $docs:expr])*
-        $f:ident, serialized, root $(,)* $( $features:expr ),* $(,)* $(; $( $flags:expr ),+)? $(=> $ftypes: tt )?) => {
-        $crate::test_case! {@serialized $f, &[$( $features ),*], &[$( $( $flags ),+ )?], concat!($($docs),*), true $(=> $ftypes)?}
+        $f:ident, serialized, root $(,)* $( $features:expr ),* $(,)* $(; $( $flags:expr ),+)? $(=> $guards: tt )?) => {
+        $crate::test_case! {@serialized $f, &[$( $features ),*], &[$( $( $flags ),+ )?], concat!($($docs),*), true $(=> $guards)?}
     };
     ($(#[doc = $docs:expr])*
-        $f:ident, serialized $(,)* $( $features:expr ),* $(,)* $(; $( $flags:expr ),+)? $(=> $ftypes: tt )?) => {
-        $crate::test_case! {@serialized $f, &[$( $features ),*], &[$( $( $flags ),+ )?], concat!($($docs),*), false $(=> $ftypes)?}
+        $f:ident, serialized $(,)* $( $features:expr ),* $(,)* $(; $( $flags:expr ),+)? $(=> $guards: tt )?) => {
+        $crate::test_case! {@serialized $f, &[$( $features ),*], &[$( $( $flags ),+ )?], concat!($($docs),*), false $(=> $guards)?}
     };
     ($(#[doc = $docs:expr])*
-        $f:ident, root $(,)* $( $features:expr ),* $(,)* $(; $( $flags:expr ),+)? $(=> $ftypes: tt )?) => {
-        $crate::test_case! {@ $f, &[$( $features ),*], &[$( $( $flags ),+ )?], true, concat!($($docs),*) $(=> $ftypes)?}
+        $f:ident, root $(,)* $( $features:expr ),* $(,)* $(; $( $flags:expr ),+)? $(=> $guards: tt )?) => {
+        $crate::test_case! {@ $f, &[$( $features ),*], &[$( $( $flags ),+ )?], true, concat!($($docs),*) $(=> $guards)?}
     };
     ($(#[doc = $docs:expr])*
-        $f:ident $(,)* $( $features:expr ),* $(,)* $(; $( $flags:expr ),+)? $(=> $ftypes: tt )?) => {
-        $crate::test_case! {@ $f, &[$( $features ),*], &[$( $( $flags ),+ )?], false, concat!($($docs),*) $(=> $ftypes)?}
+        $f:ident $(,)* $( $features:expr ),* $(,)* $(; $( $flags:expr ),+)? $(=> $guards: tt )?) => {
+        $crate::test_case! {@ $f, &[$( $features ),*], &[$( $( $flags ),+ )?], false, concat!($($docs),*) $(=> $guards)?}
     };
 
 
@@ -77,6 +99,8 @@ macro_rules! test_case {
         )+
     };
 }
+
+pub(crate) use test_case;
 
 #[cfg(test)]
 mod t {

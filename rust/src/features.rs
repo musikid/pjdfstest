@@ -1,3 +1,8 @@
+//! File-system features which are not available on every file system and can be tested for.
+//! 
+//! This module defines an enum which represents features which are not available on every file system,
+//! but can be tested for. The features are used to define which tests should be run on which file systems.
+
 use serde::{Deserialize, Serialize};
 
 /// Features which are not available for every file system.

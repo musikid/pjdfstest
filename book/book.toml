@@ -14,3 +14,9 @@ command = "mdbook-mermaid"
 
 [output.html]
 additional-js = ["mermaid.min.js", "mermaid-init.js"]
+git-repository-url = "https://github.com/saidsay-so/pjdfstest"
+
+[build]
+build-dir = "../build"
+create-missing = false
+use-default-preprocessors = true
