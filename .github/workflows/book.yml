@@ -25,6 +25,11 @@ jobs:
         with:
           crate: mdbook-mermaid
 
+      - name: Install mdbook-cmdrun
+        uses: baptiste0928/cargo-install@v1
+        with:
+          crate: mdbook-cmdrun
+
       - run: cd book && ./build.sh
 
       - name: Deploy

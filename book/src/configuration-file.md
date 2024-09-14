@@ -25,9 +25,13 @@ posix_fallocate = {}
 [features.posix_fallocate]
 ```
 
-#### Feature configuration
+#### Feature list
 
-TODO
+The following features can be enabled but do not require any additional configuration:
+
+<!-- cmdrun python3 ../list_features.py -->
+
+Following features require additional configuration.
 
 #### file_flags
 

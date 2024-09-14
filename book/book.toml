@@ -10,6 +10,9 @@ title = "PJDFSTest"
 [preprocessor.mermaid]
 command = "mdbook-mermaid"
 
+[preprocessor.cmdrun]
+
+
 [output]
 
 [output.html]
