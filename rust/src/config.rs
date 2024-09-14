@@ -1,3 +1,10 @@
+//! Configuration for the test suite.
+//! 
+//! This module contains the configuration for the test suite. It is used to configure the test suite
+//! and to define which tests should be run on which file systems.
+//! 
+//! The configuration is loaded from a TOML file, which is passed as a command line argument to the test suite.
+
 use std::collections::HashMap;
 use std::collections::HashSet;
 use std::path::PathBuf;
@@ -9,6 +16,7 @@ use serde::{Deserialize, Serialize};
 mod auth;
 pub use auth::*;
 
+/// Configuration for dummy authentication.
 #[derive(Debug, Default, Serialize, Deserialize)]
 pub struct CommonFeatureConfig {}
 

@@ -1,3 +1,7 @@
+//! Macros for defining test cases.
+//! 
+//! The `test_case` macro is used to define test cases.
+
 /// The `test_case` macro is used to define test cases for a test suite.
 /// 
 /// The macro is used to define a test case for a test suite. 

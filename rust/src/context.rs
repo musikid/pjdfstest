@@ -1,7 +1,8 @@
 //! Provides a context for tests through the [`TestContext`] and [`SerializedTestContext`] structs.
-//! 
+//!
 //! The [`TestContext`] struct allows to create files, directories, get auth entries, and sleep for the amount of time specified in the configuration.
 //! Its [`SerializedTestContext`] counterpart allows to execute functions as another user/group(s) and with another umask.
+
 use nix::{
     fcntl::{open, OFlag},
     sys::{
