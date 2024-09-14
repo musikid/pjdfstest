@@ -22,3 +22,9 @@ cargo run
 cd rust
 cargo build && sudo ./target/debug/pjdfstest
 ```
+
+## Contributing
+
+Please read the [CONTRIBUTING.md](CONTRIBUTING.md) file on how to contribute to this project.
+In addition to this book, you can also find the crate documentation by running `cargo doc --open`
+in the `rust` directory or by visiting the [documentation](/doc/pjdfstest).
