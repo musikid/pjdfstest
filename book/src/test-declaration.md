@@ -27,7 +27,7 @@ fn ctime(ctx: &mut TestContext, f_type: FileType) {
 
 All the structures and functions needed are documented in the `pjdfstest` crate,
 which you can obtain by running `cargo doc --open` in the `rust` directory
-or by visiting the [online documentation](/doc/pjdfstest).
+or by visiting the [documentation](/doc/pjdfstest).
 
 ## Test context
 
