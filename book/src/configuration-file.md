@@ -22,7 +22,7 @@ For example, with `posix_fallocate`:
 posix_fallocate = {}
 
 # Can also be specified by using key notation
-[features.posix_fallocate]
+# [features.posix_fallocate]
 ```
 
 #### Feature list
