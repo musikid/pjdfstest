@@ -29,6 +29,10 @@ jobs:
         uses: baptiste0928/cargo-install@v1
         with:
           crate: mdbook-cmdrun
+      
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Build the suite to retrieve its features
+        run: cargo build
 
       - run: cd book && ./build.sh
 
