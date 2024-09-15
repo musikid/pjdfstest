@@ -32,7 +32,7 @@ jobs:
       
       - uses: dtolnay/rust-toolchain@stable
       - name: Build the suite to retrieve its features
-        run: cargo build
+        run: cd rust && cargo build
 
       - run: cd book && ./build.sh
 
