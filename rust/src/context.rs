@@ -5,8 +5,7 @@ use nix::{
         stat::{lstat, mknod, mode_t, umask, Mode, SFlag},
     },
     unistd::{
-        close, getgroups, mkdir, mkfifo, pathconf, setegid, seteuid, setgroups, Gid, Group, Uid,
-        User,
+        getgroups, mkdir, mkfifo, pathconf, setegid, seteuid, setgroups, Gid, Group, Uid, User,
     },
 };
 
@@ -375,9 +374,7 @@ impl FileBuilder {
         let path = self.final_path();
 
         match self.file_type {
-            FileType::Regular => {
-                open(&path, OFlag::O_CREAT, mode).and_then(|fd| close(fd.as_raw_fd()))
-            }
+            FileType::Regular => open(&path, OFlag::O_CREAT, mode).map(drop),
             FileType::Dir => mkdir(&path, mode),
             FileType::Fifo => mkfifo(&path, mode),
             FileType::Block => mknod(&path, SFlag::S_IFBLK, mode, 0),
