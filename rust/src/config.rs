@@ -41,7 +41,7 @@ pub struct FeaturesConfig {
 /// Please see the book for more details.
 #[derive(Debug, Serialize, Deserialize)]
 pub struct SettingsConfig {
-    /// Time to sleep within tests (in milliseconds)
+    /// Time to sleep within tests (in seconds)
     /// between modifications to the file system.
     /// It should be set to a value that is at least greater than
     /// the timestamp granularity of the file system under test.

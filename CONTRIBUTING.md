@@ -138,7 +138,6 @@ Enhancement suggestions are tracked as [GitHub issues](https://github.com/saidsa
 - Use a **clear and descriptive title** for the issue to identify the suggestion.
 - Provide a **step-by-step description of the suggested enhancement** in as many details as possible.
 - **Describe the current behavior** and **explain which behavior you expected to see instead** and why. At this point you can also tell which alternatives do not work for you.
-- You may want to **include screenshots and animated GIFs** which help you demonstrate the steps or point out the part which the suggestion is related to. You can use [this tool](https://www.cockos.com/licecap/) to record GIFs on macOS and Windows, and [this tool](https://github.com/colinkeenan/silentcast) or [this tool](https://github.com/GNOME/byzanz) on Linux. <!-- this should only be included if the project has a GUI -->
 - **Explain why this enhancement would be useful** to most pjdfstest users. You may also want to point out the other projects that solved it better and which could serve as inspiration.
 
 <!-- You might want to create an issue template for enhancement suggestions that can be used as a guide and that defines the structure of the information to be included. If you do so, reference it here in the description. -->
@@ -149,12 +148,30 @@ The project team welcomes your contributions.
 Before you start, we want to make sure that you have read the [documentation](https://saidsay-so.github.io/pjdfstest/)
 and that you have followed the steps in the [Reporting Bugs](#reporting-bugs) section.
 
+To get started, you need to set up your development environment. You can find instructions on how to do this in the [README](README.md).
+
 ### Improving the documentation
 
 The documentation is a crucial part of the project. It is the first place users will look when they want to understand a feature, and the first place they will go when they are looking for help. Therefore, it is important that the documentation is up-to-date, accurate, and easy to understand.
 
 The book is written in Markdown and is located in the `book` directory. It is built using mdbook.
 You can find instructions on how to install it in the [mdbook documentation](https://rust-lang.github.io/mdBook/cli/index.html).
+
+You can preview the book by running the following command:
+
+```bash
+cd book
+mdbook serve
+```
+
+To build the book, run the following command:
+
+```bash
+cd book
+./build.sh
+```
+
+This will generate the book in the `build` directory and add the crate documentation alongside it.
 
 ## Styleguides
 
@@ -172,8 +189,8 @@ Commit messages should follow the [Conventional Commits](https://www.conventiona
 
 The `type` must be one of the following:
 
-- `build`: Changes that affect the build system or external dependencies (example scopes: gulp, broccoli, npm)
-- `ci`: Changes to our CI configuration files and scripts (example scopes: Travis, Circle, BrowserStack, SauceLabs)
+- `build`: Changes that affect the build system or external dependencies (cargo metadata)
+- `ci`: Changes to our CI configuration files and scripts (GitHub Actions, Cirrus CI)
 - `docs`: Documentation only changes
 - `feat`: A new feature
 - `fix`: A bug fix
@@ -195,11 +212,11 @@ The `footer` is optional and can be used to reference issues or pull requests.
 
 Here are some examples of commit messages:
 
-```
+```conventionalcommit
 feat(parser): add support for arrays
 ```
 
-```
+```conventionalcommit
 fix(parser): handle empty values
 ```
 
