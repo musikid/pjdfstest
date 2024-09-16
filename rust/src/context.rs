@@ -15,7 +15,7 @@ use std::{
     cell::Cell,
     fs::create_dir_all,
     ops::{Deref, DerefMut},
-    os::fd::{AsRawFd, FromRawFd, OwnedFd},
+    os::fd::{AsRawFd, OwnedFd},
     panic::{catch_unwind, resume_unwind, AssertUnwindSafe},
     path::{Path, PathBuf},
     thread,
