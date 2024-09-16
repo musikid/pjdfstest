@@ -23,12 +23,12 @@ Example: `pjdfstest -c pjdfstest.toml chmod`
 
 ## Filter tests
 
-It is possible to filter which tests should be ran, by specifying which parts should match.
+It is possible to filter which tests should be run by specifying which parts should match.
 Tests are usually identified by syscall and optionally the file type on which it operates.
 
 ## Rootless running
 
-The test suite can be ran without privileges.
+The test suite can be run without privileges.
 However, not all tests can be completed without privileges,
 therefore the coverage will be incomplete.
 For example, tests which need to switch users will not be run.

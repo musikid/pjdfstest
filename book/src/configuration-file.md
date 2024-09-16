@@ -56,7 +56,7 @@ secondary_fs = "/mnt/ISO"
 
 ### [dummy_auth]
 
-This section allows to modify the mecanism for switching users, which is required by some tests.
+This section allows to modify the mechanism for switching users, which is required by some tests.
 
 ```toml
 [dummy_auth]
@@ -70,7 +70,7 @@ entries = [
 ```
 
 - `entries` - An entry is composed of a username and its associated group.
-  Exactly 3 entries need to be specified if the runner default ones cannot be used.
+  Exactly 3 entries need to be specified if the default ones cannot be used.
 
 ### [settings]
 
