@@ -20,8 +20,8 @@ The test suite has been tested and is actively maintained on the following opera
 
 The test suite has not been tested on the following operating systems, but should work:
 
-- macOS
-- netBSD
+- MacOS
+- NetBSD
 - OpenBSD
 - Solaris
 - DragonFly BSD
