@@ -90,5 +90,7 @@ pub fn lchflags<P: ?Sized + nix::NixPath>(
 
 /// Wrapper for open which returns [`Ownedfd`] instead of [`RawFd`].
 pub fn open<P: ?Sized + nix::NixPath>(path: &P, oflag: OFlag, mode: Mode) -> nix::Result<OwnedFd> {
+    // SAFETY: The file descriptor was initialized only by open and isn't used anywhere else, 
+    // leaving the ownership to the caller.
     nix::fcntl::open(path, oflag, mode).map(|fd| unsafe { OwnedFd::from_raw_fd(fd) })
 }

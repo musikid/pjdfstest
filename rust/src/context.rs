@@ -1,5 +1,5 @@
 use nix::{
-    fcntl::{open, OFlag},
+    fcntl::OFlag,
     sys::{
         socket::{bind, socket, SockFlag, UnixAddr},
         stat::{lstat, mknod, mode_t, umask, Mode, SFlag},
@@ -25,7 +25,7 @@ use strum_macros::EnumIter;
 
 use crate::{
     config::{Config, DummyAuthEntry, FeaturesConfig},
-    utils::{chmod, lchmod, symlink},
+    utils::{chmod, lchmod, open, symlink},
 };
 
 /// File type, mainly used with [TestContext::create].
@@ -375,7 +375,9 @@ impl FileBuilder {
         let path = self.final_path();
 
         match self.file_type {
-            FileType::Regular => open(&path, OFlag::O_CREAT, mode).and_then(close),
+            FileType::Regular => {
+                open(&path, OFlag::O_CREAT, mode).and_then(|fd| close(fd.as_raw_fd()))
+            }
             FileType::Dir => mkdir(&path, mode),
             FileType::Fifo => mkfifo(&path, mode),
             FileType::Block => mknod(&path, SFlag::S_IFBLK, mode, 0),
@@ -423,13 +425,11 @@ impl FileBuilder {
                     OFlag::O_CREAT | oflags,
                     self.mode.unwrap_or_else(|| Mode::from_bits_truncate(0o644)),
                 )
-                // SAFETY: The file descriptor was initialized only by open and isn't used anywhere else, leaving the ownership
-                .map(|fd| (path, unsafe { OwnedFd::from_raw_fd(fd) }))
+                .map(|fd| (path, fd))
             }
-            _ => self.create().and_then(|p| {
-                // SAFETY: The file descriptor was initialized only by open and isn't used anywhere else, leaving the ownership
-                open(&p, oflags, Mode::empty()).map(|fd| (p, unsafe { OwnedFd::from_raw_fd(fd) }))
-            }),
+            _ => self
+                .create()
+                .and_then(|p| open(&p, oflags, Mode::empty()).map(|fd| (p, fd))),
         }
     }
 
