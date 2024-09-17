@@ -9,15 +9,15 @@ supported by the file system/operating system.
 
 ## Command-line interface
 
-*`pjdfstest [OPTIONS] [--] TEST_PATTERNS`*
+_`pjdfstest [OPTIONS] [--] TEST_PATTERNS`_
 
-* `-h, --help` - Print help message
-* `-c, --configuration-file CONFIGURATION-FILE` - Path of the configuration file
-* `-l, --list-features` - List opt-in features
-* `-e, --exact` - Match names exactly
-* `-v, --verbose` - Verbose mode
-* `-p, --path PATH` - Path where the test suite will be executed
-* `[--] TEST_PATTERNS` - Filter tests which match against the provided patterns
+- `-h, --help` - Print help message
+- `-c, --configuration-file CONFIGURATION-FILE` - Path of the configuration file
+- `-l, --list-features` - List opt-in features
+- `-e, --exact` - Match names exactly
+- `-v, --verbose` - Verbose mode
+- `-p, --path PATH` - Path where the test suite will be executed
+- `[--] TEST_PATTERNS` - Filter tests which match against the provided patterns
 
 Example: `pjdfstest -c pjdfstest.toml chmod`
 
@@ -35,7 +35,7 @@ For example, tests which need to switch users will not be run.
 
 ## Dummy users/groups
 
-The test suite needs dummy users and groups to be set up. 
+The test suite needs dummy users and groups to be set up.
 This should be handled automatically when installing it via a package,
 but they need to be created otherwise.
 By default, the users (with the same name for the group associated to each of them) to create are:

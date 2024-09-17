@@ -22,12 +22,16 @@ For example, with `posix_fallocate`:
 posix_fallocate = {}
 
 # Can also be specified by using key notation
-[features.posix_fallocate]
+# [features.posix_fallocate]
 ```
 
-#### Feature configuration
+#### Feature list
 
-TODO
+The following features can be enabled but do not require any additional configuration:
+
+<!-- cmdrun python3 ../list_features.py -->
+
+Following features require additional configuration.
 
 #### file_flags
 

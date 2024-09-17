@@ -1,3 +1,5 @@
+//! Test framework for testing the filesystem implementation.
+
 use std::path::Path;
 
 use crate::config::Config;
@@ -8,6 +10,8 @@ pub use crate::flags::*;
 /// Function which indicates if the test should be skipped by returning an error.
 pub type Guard = fn(&Config, &Path) -> Result<(), anyhow::Error>;
 
+/// Function which runs the test.
+/// The function is passed a context object which can be used to interact with the filesystem.
 #[derive(Clone, Copy)]
 pub enum TestFn {
     Serialized(fn(&mut SerializedTestContext)),

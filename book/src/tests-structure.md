@@ -6,7 +6,7 @@ The package is made of the tests, and a test runner to launch them.
 
 To present how tests are organized, we take the `chmod` syscall as example.
 
-There is a separate module for each syscall being tested.  Within each of those
+There is a separate module for each syscall being tested. Within each of those
 modules, there may be either a single file, or a separate file for each aspect
 of the syscall.
 
@@ -29,13 +29,13 @@ TC2 --> TC2F2[Test case]
 
 ### Layout
 
-```
+```bash
 src/tests
 ├── chmod (syscall)
 │   ├── errno.rs (aspect)
 │   └── permission.rs (aspect)
-└── mod.rs (glues syscalls together)
-└── chmod.rs (syscall declaration)
+├── mod.rs (glues syscalls together)
+└── chmod.rs (syscall declaration and simple test cases)
 ```
 
 #### tests/mod.rs
@@ -72,17 +72,19 @@ Each test case exercises a minimal piece of the syscall's functionality.
 Each must be registered with the `test_case!` macro.
 
 ```rust,ignore
-crate::test_case! {ctime => [Regular, Fifo, Block, Char, Socket]}
-fn ctime(ctx: &mut TestContext, f_type: FileType) {
-    let path = ctx.create(f_type).unwrap();
-    let ctime_before = stat(&path).unwrap().st_ctime;
+crate::test_case! {
+    /// open do not update parent directory ctime and mtime fields if
+    /// the file previously existed.
+    exists_no_update
+}
+fn exists_no_update(ctx: &mut TestContext) {
+    let file = ctx.create(FileType::Regular).unwrap();
 
-    sleep(Duration::from_secs(1));
-
-    chmod(&path, Mode::from_bits_truncate(0o111)).unwrap();
-
-    let ctime_after = stat(&path).unwrap().st_ctime;
-    assert!(ctime_after > ctime_before);
+    assert_times_unchanged()
+        .path(ctx.base_path(), CTIME | MTIME)
+        .execute(ctx, false, || {
+            assert!(open_wrapper(&file, Mode::from_bits_truncate(0o755)).is_ok());
+        });
 }
 ```
 
