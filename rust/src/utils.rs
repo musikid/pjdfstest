@@ -1,3 +1,7 @@
+//! Utility functions for filesystem operations.
+//! 
+//! This module provides utility functions for filesystem operations which are not available in the standard library.
+
 use std::{
     os::fd::{FromRawFd, OwnedFd},
     path::Path,
@@ -30,6 +34,7 @@ pub fn lchown<P: ?Sized + nix::NixPath>(
     fchownat(None, path, owner, group, AtFlags::AT_SYMLINK_NOFOLLOW)
 }
 
+/// Wrapper for `rmdir`.
 pub fn rmdir<P: ?Sized + nix::NixPath>(path: &P) -> nix::Result<()> {
     let res = path.with_nix_path(|cstr| unsafe { nix::libc::rmdir(cstr.as_ptr()) })?;
     nix::errno::Errno::result(res).map(std::mem::drop)

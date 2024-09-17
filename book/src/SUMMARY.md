@@ -5,6 +5,7 @@
 # Running tests
 
 - [Getting started](getting-started.md)
+- [Compatibility](compatibility.md)
 - [Configuration file](configuration-file.md)
 
 # Writing tests
