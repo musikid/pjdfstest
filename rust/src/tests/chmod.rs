@@ -1,3 +1,5 @@
+use std::{fs::metadata, os::unix::fs::MetadataExt};
+
 use crate::{
     context::{FileType, SerializedTestContext},
     test::TestContext,
@@ -5,12 +7,11 @@ use crate::{
     utils::{chmod, ALLPERMS},
 };
 
-#[cfg(lchmod)]
-use crate::utils::lchmod;
-
 use nix::{
+    errno::Errno,
+    libc::mode_t,
     sys::stat::{lstat, stat, Mode},
-    unistd::chown,
+    unistd::{chown, Uid, User},
 };
 
 use super::errors::{
@@ -23,6 +24,9 @@ use super::errors::{
     enotdir::enotdir_comp_test_case,
     erofs::erofs_named_test_case,
 };
+
+#[cfg(lchmod)]
+mod lchmod;
 
 #[cfg(any(target_os = "freebsd", target_os = "dragonfly"))]
 const ALLPERMS_STICKY: nix::libc::mode_t = ALLPERMS | Mode::S_ISVTX.bits();
@@ -138,6 +142,84 @@ eloop_comp_test_case!(chmod(~path, Mode::empty()));
 // chmod/06.t
 eloop_final_comp_test_case!(chmod(~path, Mode::empty()));
 
+crate::test_case! {
+    /// chmod returns EPERM if the operation would change the ownership, but the effective user ID is not the super-user
+    // chmod/07.t
+    chmod_not_owner, serialized, root
+}
+fn chmod_not_owner(ctx: &mut SerializedTestContext) {
+    let user = ctx.get_new_user();
+    chown(ctx.base_path(), Some(user.uid), Some(user.gid)).unwrap();
+
+    let file = ctx.create(FileType::Regular).unwrap();
+    chown(&file, Some(user.uid), Some(user.gid)).unwrap();
+
+    let mode = Mode::from_bits_truncate(0o642);
+    let new_mode = Mode::from_bits_truncate(0o641);
+
+    ctx.as_user(user, None, || {
+        assert!(chmod(&file, mode).is_ok());
+        let file_stat = metadata(&file).unwrap();
+        assert_eq!(file_stat.mode() as mode_t & ALLPERMS, mode.bits());
+    });
+
+    let other_user = ctx.get_new_user();
+    ctx.as_user(other_user, None, || {
+        assert_eq!(chmod(&file, new_mode), Err(Errno::EPERM));
+        let file_stat = metadata(&file).unwrap();
+        assert_eq!(file_stat.mode() as mode_t & ALLPERMS, mode.bits());
+    });
+
+    let current = User::from_uid(Uid::effective()).unwrap().unwrap();
+    chown(&file, Some(current.uid), Some(current.gid)).unwrap();
+
+    ctx.as_user(user, None, || {
+        assert_eq!(chmod(&file, new_mode), Err(Errno::EPERM));
+        let file_stat = metadata(&file).unwrap();
+        assert_eq!(file_stat.mode() as mode_t & ALLPERMS, mode.bits());
+    });
+
+    // symlink
+    let link = ctx.create(FileType::Symlink(Some(file.clone()))).unwrap();
+    chown(&link, Some(user.uid), Some(user.gid)).unwrap();
+    chown(&file, Some(user.uid), Some(user.gid)).unwrap();
+
+    ctx.as_user(user, None, || {
+        assert!(chmod(&link, mode).is_ok());
+        let link_stat = metadata(&link).unwrap();
+        assert_eq!(link_stat.mode() as mode_t & ALLPERMS, mode.bits());
+    });
+
+    let other_user = ctx.get_new_user();
+    ctx.as_user(other_user, None, || {
+        assert_eq!(chmod(&link, new_mode), Err(Errno::EPERM));
+        let link_stat = metadata(&link).unwrap();
+        assert_eq!(link_stat.mode() as mode_t & ALLPERMS, mode.bits());
+    });
+
+    chown(&link, Some(current.uid), Some(current.gid)).unwrap();
+
+    ctx.as_user(user, None, || {
+        assert_eq!(chmod(&link, new_mode), Err(Errno::EPERM));
+        let link_stat = metadata(&link).unwrap();
+        assert_eq!(link_stat.mode() as mode_t & ALLPERMS, mode.bits());
+    });
+}
+
+#[cfg(file_flags)]
+mod flag {
+    use super::*;
+    use crate::tests::errors::eperm::flag::immutable_append_named_test_case;
+
+    const EXPECTED_MODE: Mode = Mode::from_bits_truncate(0o100);
+    // chmod/08.t
+    immutable_append_named_test_case!(chmod, |path| chmod(path, EXPECTED_MODE), |path| metadata(
+        path
+    )
+    .map_or(false, |m| m.mode() as mode_t & ALLPERMS
+        == EXPECTED_MODE.bits()));
+}
+
 // chmod/09.t
 erofs_named_test_case!(chmod(~path, Mode::empty()));
 
@@ -149,12 +231,12 @@ crate::test_case! {
     /// chmod returns EFTYPE if the effective user ID is not the super-user,
     /// the mode includes the sticky bit (S_ISVTX),
     /// and path does not refer to a directory
-    // chmod/12.t
+    // chmod/11.t
     eftype, serialized, root => [Regular, Fifo, Block, Char, Socket]
 }
 #[cfg(any(target_os = "freebsd", target_os = "dragonfly"))]
 fn eftype(ctx: &mut SerializedTestContext, ft: FileType) {
-    use nix::errno::Errno;
+    use crate::utils::lchmod;
 
     let user = ctx.get_new_user();
 
@@ -192,31 +274,4 @@ fn eftype(ctx: &mut SerializedTestContext, ft: FileType) {
 
     let file_stat = lstat(&file).unwrap();
     assert_eq!(file_stat.st_mode & ALLPERMS_STICKY, original_mode.bits());
-}
-
-#[cfg(lchmod)]
-mod lchmod {
-    use super::*;
-
-    enotdir_comp_test_case!(lchmod(~path, Mode::empty()));
-    enoent_named_file_test_case!(lchmod(~path, Mode::empty()));
-    enoent_comp_test_case!(lchmod(~path, Mode::empty()));
-
-    // chmod/06.t#L25
-    eloop_comp_test_case!(lchmod(~path, Mode::empty()));
-
-    enametoolong_comp_test_case!(lchmod(~path, Mode::empty()));
-    enametoolong_path_test_case!(lchmod(~path, Mode::empty()));
-
-    // chmod/09.t
-    erofs_named_test_case!(lchmod(~path, Mode::empty()));
-
-    // chmod/10.t
-    // TODO: lchmod is missing in libc
-    efault_path_test_case!(lchmod, |ptr| nix::libc::fchmodat(
-        0,
-        ptr,
-        0,
-        nix::libc::AT_SYMLINK_NOFOLLOW
-    ));
 }

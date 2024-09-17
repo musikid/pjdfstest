@@ -187,3 +187,13 @@ pub enum FileFlags {
     SF_SNAPINVAL,
 }
 }
+
+#[cfg(file_flags)]
+impl FileFlags {
+    pub const IMMUTABLE_FLAGS: &'static [FileFlags] =
+        &[FileFlags::UF_IMMUTABLE, FileFlags::SF_IMMUTABLE];
+    pub const APPEND_ONLY_FLAGS: &'static [FileFlags] =
+        &[FileFlags::UF_APPEND, FileFlags::SF_APPEND];
+    pub const UNDELETABLE_FLAGS: &'static [FileFlags] =
+        &[FileFlags::UF_NOUNLINK, FileFlags::SF_NOUNLINK];
+}

@@ -103,8 +103,8 @@ fn has_mount_cap(_: &Config, _: &Path) -> anyhow::Result<()> {
     if !Uid::effective().is_root() && ctl.value()? == CtlValue::Int(0) {
         anyhow::bail!("process doesn't have the rights to mount the dummy file system")
     }
-    if !Uid::effective().is_root() &&
-        !OsStr::from_bytes(&Command::new("lsvfs").output().unwrap().stdout)
+    if !Uid::effective().is_root()
+        && !OsStr::from_bytes(&Command::new("lsvfs").output().unwrap().stdout)
             .to_string_lossy()
             .contains("nullfs")
     {
@@ -198,3 +198,30 @@ erofs_named_test_case!(rmdir);
 
 // rmdir/15.t
 efault_path_test_case!(rmdir, nix::libc::rmdir);
+
+#[cfg(file_flags)]
+mod flag {
+    use crate::tests::errors::eperm::flag::{
+        immutable_append_parent_test_case, immutable_append_undeletable_named_test_case,
+    };
+
+    use super::*;
+
+    // rmdir/09.t
+    // TODO: Failure on ZFS
+    immutable_append_undeletable_named_test_case!(
+        rmdir,
+        rmdir,
+        |path| !path.exists(),
+        crate::context::FileType::Dir
+    );
+
+    // rmdir/10.t
+    // TODO: Failure on ZFS
+    immutable_append_parent_test_case!(
+        rmdir,
+        rmdir,
+        |path| !path.exists(),
+        crate::context::FileType::Dir
+    );
+}

@@ -17,12 +17,17 @@ use nix::sys::time::TimeSpec;
 
 use crate::test::TestContext;
 
+#[doc(inline)]
+#[cfg(file_flags)]
+pub(crate) use helpers::flag::{supports_any_flag, supports_any_flag_helper, supports_file_flags};
+
 #[cfg(chflags)]
 pub mod chflags;
 pub mod chmod;
 pub mod chown;
 pub mod errors;
 pub mod ftruncate;
+pub(crate) mod helpers;
 pub mod link;
 pub mod mkdir;
 pub mod mkfifo;

@@ -213,6 +213,75 @@ enoent_either_named_file_test_case!(link);
 // link/08.t
 eloop_either_test_case!(link);
 
+crate::test_case! {
+    /// link returns EPERM if the source file is a directory
+    // link/11.t
+    link_source_dir, serialized, root
+}
+fn link_source_dir(ctx: &mut SerializedTestContext) {
+    let src = ctx.create(FileType::Dir).unwrap();
+    // TODO: Doesn't seem to be an error for SunOS with UFS?
+    assert_eq!(link(&src, &ctx.gen_path()), Err(Errno::EPERM));
+
+    let user = ctx.get_new_user();
+    chown(ctx.base_path(), Some(user.uid), Some(user.gid)).unwrap();
+    chown(&src, Some(user.uid), Some(user.gid)).unwrap();
+
+    ctx.as_user(user, None, || {
+        assert_eq!(link(&src, &ctx.gen_path()), Err(Errno::EPERM));
+    })
+}
+
+#[cfg(file_flags)]
+mod flag {
+    use std::{fs::metadata, os::unix::fs::MetadataExt};
+
+    use super::*;
+    use crate::{
+        features::FileSystemFeature,
+        flags::FileFlags,
+        tests::{
+            errors::eperm::flag::{immutable_append_named_helper, immutable_parent_helper},
+            supports_any_flag,
+        },
+    };
+
+    crate::test_case! {
+        /// link returns EPERM if the named file has its immutable or append-only flag set
+        // link/12.t
+        immutable_append_named, root, FileSystemFeature::Chflags;
+        supports_any_flag!(FileFlags::IMMUTABLE_FLAGS),
+        supports_any_flag!(FileFlags::APPEND_ONLY_FLAGS)
+    }
+    fn immutable_append_named(ctx: &mut crate::context::TestContext) {
+        immutable_append_named_helper(
+            ctx,
+            |src| {
+                let dest = ctx.gen_path();
+                link(src, &dest)
+            },
+            |src| metadata(src).map_or(false, |m| m.nlink() == 2),
+        )
+    }
+
+    crate::test_case! {
+        /// link returns EPERM if the parent directory of the named file has its immutable or append-only flag set
+        // link/13.t
+        immutable_parent, root, FileSystemFeature::Chflags;
+        supports_any_flag!(FileFlags::IMMUTABLE_FLAGS)
+    }
+    fn immutable_parent(ctx: &mut TestContext) {
+        immutable_parent_helper(
+            ctx,
+            |dest| {
+                let from = ctx.create(FileType::Regular).unwrap();
+                link(from.as_path(), dest)
+            },
+            |dest| metadata(dest).map_or(false, |m| m.nlink() == 2),
+        )
+    }
+}
+
 // link/16.t
 erofs_named_test_case!(link, |ctx: &mut TestContext, file| {
     let path = ctx.gen_path();

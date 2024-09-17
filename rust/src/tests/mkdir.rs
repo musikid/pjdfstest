@@ -73,3 +73,18 @@ eexist_file_exists_test_case!(mkdir(~path, Mode::empty()));
 
 // mkdir/12.t
 efault_path_test_case!(mkdir, |ptr| nix::libc::mkdir(ptr, 0o755));
+
+#[cfg(file_flags)]
+mod flag {
+    use std::path::Path;
+
+    use super::*;
+    use crate::tests::errors::eperm::flag::immutable_parent_test_case;
+
+    // mkdir/08.t
+    immutable_parent_test_case!(
+        mkdir,
+        |path| mkdir(path, Mode::from_bits_truncate(0o755)),
+        Path::is_dir
+    );
+}

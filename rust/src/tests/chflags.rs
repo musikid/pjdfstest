@@ -24,6 +24,9 @@ use super::{
     errors::erofs::erofs_named_test_case,
 };
 
+mod eperm;
+mod lchflags;
+
 //TODO: Split tests with unprivileged tests for user flags
 
 fn get_flags(ctx: &TestContext) -> (FileFlag, FileFlag, FileFlag) {

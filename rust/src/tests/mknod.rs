@@ -234,3 +234,18 @@ mod privileged {
     // mknod/08.t
     eexist_file_exists_test_case!(mknod, mknod_block_wrapper, mknod_char_wrapper; root);
 }
+
+#[cfg(file_flags)]
+mod flag {
+    use std::fs::metadata;
+
+    use super::*;
+    use crate::tests::errors::eperm::flag::immutable_parent_test_case;
+
+    // mknod/09.t
+    immutable_parent_test_case!(
+        mknod,
+        |path| mknod(path, SFlag::S_IFIFO, Mode::from_bits_truncate(0o644), 0),
+        |path| { metadata(path).map_or(false, |m| m.file_type().is_fifo()) }
+    );
+}

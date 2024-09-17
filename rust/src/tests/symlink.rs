@@ -105,3 +105,17 @@ erofs_new_file_test_case!(symlink(Path::new("test"), ~path));
 
 // symlink/13.t
 efault_either_test_case!(symlink, nix::libc::symlink);
+
+#[cfg(file_flags)]
+mod flag {
+    use crate::tests::errors::eperm::flag::immutable_parent_test_case;
+
+    use super::*;
+
+    // symlink/09.t
+    immutable_parent_test_case!(
+        symlink,
+        |path| symlink(Path::new("test"), path),
+        Path::is_symlink
+    );
+}

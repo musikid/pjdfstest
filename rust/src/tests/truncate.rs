@@ -106,6 +106,20 @@ enoent_comp_test_case!(truncate(~path, 0));
 // truncate/07.t
 eloop_comp_test_case!(truncate(~path, 0));
 
+#[cfg(file_flags)]
+mod flag {
+    use crate::tests::errors::eperm::flag::immutable_append_named_test_case;
+    use std::{fs::metadata, os::unix::fs::MetadataExt};
+
+    use super::*;
+    // truncate/08.t
+    // TODO: Failure on ZFS with SF_APPEND
+    const SIZE: nix::libc::off_t = 123;
+    immutable_append_named_test_case!(truncate, |path| truncate(path, SIZE), |path| {
+        metadata(path).map_or(false, |s| s.size() == SIZE as u64)
+    });
+}
+
 crate::test_case! {
     /// truncate returns EISDIR if the named file is a directory
     // truncate/09.t

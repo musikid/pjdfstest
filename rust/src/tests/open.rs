@@ -216,6 +216,9 @@ fn open_flag_wrapper_ctx(flags: OFlag) -> impl Fn(&mut TestContext, &Path) -> ni
     move |_, path| open(path, flags, Mode::empty())
 }
 
+#[cfg(file_flags)]
+mod flag;
+
 // open/14.t
 erofs_named_test_case!(
     open,
