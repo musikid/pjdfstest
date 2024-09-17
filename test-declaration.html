@@ -88,7 +88,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded affix "><a href="introduction.html">Introduction</a></li><li class="chapter-item expanded affix "><li class="part-title">Running tests</li><li class="chapter-item expanded "><a href="getting-started.html"><strong aria-hidden="true">1.</strong> Getting started</a></li><li class="chapter-item expanded "><a href="configuration-file.html"><strong aria-hidden="true">2.</strong> Configuration file</a></li><li class="chapter-item expanded affix "><li class="part-title">Writing tests</li><li class="chapter-item expanded "><a href="tests-structure.html"><strong aria-hidden="true">3.</strong> Structure</a></li><li class="chapter-item expanded "><a href="test-declaration.html" class="active"><strong aria-hidden="true">4.</strong> Declaration</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="introduction.html">Introduction</a></li><li class="chapter-item expanded affix "><li class="part-title">Running tests</li><li class="chapter-item expanded "><a href="getting-started.html"><strong aria-hidden="true">1.</strong> Getting started</a></li><li class="chapter-item expanded "><a href="compatibility.html"><strong aria-hidden="true">2.</strong> Compatibility</a></li><li class="chapter-item expanded "><a href="configuration-file.html"><strong aria-hidden="true">3.</strong> Configuration file</a></li><li class="chapter-item expanded affix "><li class="part-title">Writing tests</li><li class="chapter-item expanded "><a href="tests-structure.html"><strong aria-hidden="true">4.</strong> Structure</a></li><li class="chapter-item expanded "><a href="test-declaration.html" class="active"><strong aria-hidden="true">5.</strong> Declaration</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle">
                 <div class="sidebar-resize-indicator"></div>
@@ -147,6 +147,9 @@
                         <a href="print.html" title="Print this book" aria-label="Print this book">
                             <i id="print-button" class="fa fa-print"></i>
                         </a>
+                        <a href="https://github.com/saidsay-so/pjdfstest" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
 
                     </div>
                 </div>
@@ -182,39 +185,42 @@ It also needs an additional declaration with the <code>test_case!</code> macro a
 with the function name being the only mandatory argument.</p>
 <p>For example:</p>
 <pre><code class="language-rust ignore">// chmod/00.t:L58
-crate::test_case! {ctime =&gt; [Regular, Fifo, Block, Char, Socket]}
-fn ctime(ctx: &amp;mut TestContext, f_type: FileType) {
+crate::test_case! {
+    /// chmod updates ctime when it succeeds
+    update_ctime =&gt; [Regular, Dir, Fifo, Block, Char, Socket]
+}
+fn update_ctime(ctx: &amp;mut TestContext, f_type: FileType) {
     let path = ctx.create(f_type).unwrap();
-    let ctime_before = stat(&amp;path).unwrap().st_ctime;
-
-    ctx.nap();
-
-    chmod(&amp;path, Mode::from_bits_truncate(0o111)).unwrap();
-
-    let ctime_after = stat(&amp;path).unwrap().st_ctime;
-    assert!(ctime_after &gt; ctime_before);
+    assert_ctime_changed(ctx, &amp;path, || {
+        assert!(chmod(&amp;path, Mode::from_bits_truncate(0o111)).is_ok());
+    });
 }</code></pre>
 <p>All the structures and functions needed are documented in the <code>pjdfstest</code> crate,
 which you can obtain by running <code>cargo doc --open</code> in the <code>rust</code> directory
-or by visiting the <a href="/doc/pjdfstest">online documentation</a>.</p>
+or by visiting the <a href="/doc/pjdfstest">documentation</a>.</p>
 <h2 id="test-context"><a class="header" href="#test-context">Test context</a></h2>
-<p>The <code>TestContext</code> struct is a helper struct which provides methods
-to create files, sleep, change user, etc.
+<p>The <a href="doc/pjdfstest/context/struct.TestContext.html"><code>TestContext</code></a>
+struct is a helper struct which provides methods to create files,
+sleep, change user, etc.
 It is passed as a parameter to the test functions and should be used
 to interact with the system in order to ensure that the tests are isolated
 and do not interfere with each other.</p>
 <h3 id="serialization"><a class="header" href="#serialization">Serialization</a></h3>
-<p>When a test case needs to be run in a serialized manner, the <code>SerializedTestContext</code> struct should be used instead.
-It provides additional methods to change the user, group, supplementary groups, or umask of the process.
+<p>When a test case needs to be run in a serialized manner, the
+<a href="doc/pjdfstest/context/struct.SerializedTestContext.html"><code>SerializedTestContext</code></a>
+struct should be used instead.
+It provides additional methods to change the user, group,
+supplementary groups, or umask of the process.
 Please see the <a href="#serialized-test-cases">Serialized test cases</a> section for more information.</p>
 <h2 id="assertions"><a class="header" href="#assertions">Assertions</a></h2>
 <p>The <code>assert</code> and <code>assert_eq</code> macros should be used to check the results of the tests.
 The <code>assert</code> macro should be used when the test is checking a condition,
-while the <code>assert_eq</code> macro should be used when the test is checking that two values are equal.
-In addition to these macros, the suite provides some additional assertion macros which
+while the <code>assert_eq</code> macro should be used when the test is checking
+that two values are equal.
+In addition to these macros, the suite provides some additional assertion functions which
 should be used when appropriate.
-<code>assert_ctime_changed</code> should be used when checking that the ctime of a file has changed,
-and <code>assert_mtime_changed</code> should be used when checking that the mtime of a file has changed.</p>
+The tests <a href="doc/pjdfstest/tests/index.html#functions">module</a> documentation provides
+a list of these functions.</p>
 <h2 id="description"><a class="header" href="#description">Description</a></h2>
 <p>It is possible to provide doc comments which will be used as documentation for developers
 but also be displayed to users when they run the test.
@@ -285,8 +291,7 @@ The file types should be added at the end of the test case declaration,
 within brackets and with a fat arrow before (<code>=&gt; [Regular]</code>).
 The test function should also accept a <code>FileType</code> parameter to operate on.</p>
 <p>For example:</p>
-<pre><code class="language-rust ignore">crate::test_case! {change_perm, root, FileSystemFeature::Chflags; FileFlags::SF_IMMUTABLE, FileFlags::UF_IMMUTABLE
-=&gt; [Regular, Fifo, Block, Char, Socket]}
+<pre><code class="language-rust ignore">crate::test_case! {change_perm, root, FileSystemFeature::Chflags =&gt; [Regular, Fifo, Block, Char, Socket]}
 fn change_perm(ctx: &amp;mut TestContext, f_type: FileType) {</code></pre>
 <h2 id="platform-specific-features"><a class="header" href="#platform-specific-features">Platform-specific features</a></h2>
 <p>Some features (like <code>lchmod</code>) are not supported on every operating system.
@@ -310,21 +315,32 @@ With <code>lchmod</code>, we would get:</p>
 <p>Some test cases need functions only available when they are run serialized,
 especially when they affect the whole process.
 An example is changing user (<code>SerializedTestContext::as_user</code>).
-To have access to these functions, the test should be declared with a <code>SerializedTestContext</code>
-parameter in place of <code>TestContext</code> and the <code>serialized</code> keyword should be prepended before features.</p>
+To have access to these functions, the test should be declared with a
+<a href="doc/pjdfstest/context/struct.SerializedTestContext.html"><code>SerializedTestContext</code></a>
+parameter in place of <code>TestContext</code> and the <code>serialized</code> keyword
+should be prepended before features and <code>root</code> requirement.</p>
 <p>For example:</p>
 <pre><code class="language-rust ignore">crate::test_case! {
-    /// The file mode of a newly created file should not affect whether
-    /// posix_fallocate will work, only the create args
-    /// https://bugs.freebsd.org/bugzilla/show_bug.cgi?id=154873
-    affected_only_create_flags, serialized, root, FileSystemFeature::PosixFallocate
+    /// link changes neither ctime of file nor ctime or mtime of parent when it fails
+    // link/00.t#77
+    unchanged_ctime_fails, serialized, root =&gt; [Regular, Fifo, Block, Char, Socket]
 }
-fn affected_only_create_flags(ctx: &amp;mut SerializedTestContext) {
-    ctx.as_user(Some(Uid::from_raw(65534)), None, || {
-        let path = subdir.join("test1");
-        let file = open(&amp;path, OFlag::O_CREAT | OFlag::O_RDWR, Mode::empty()).unwrap();
-        assert!(posix_fallocate(file, 0, 1).is_ok());
-    });
+fn unchanged_ctime_fails(ctx: &amp;mut SerializedTestContext, ft: FileType) {
+    let file = ctx.create(ft).unwrap();
+    let new_path = ctx.gen_path();
+
+    let user = ctx.get_new_user();
+    assert_times_unchanged()
+        .path(&amp;file, CTIME)
+        .path(ctx.base_path(), CTIME | MTIME)
+        .execute(ctx, false, || {
+            ctx.as_user(user, None, || {
+                assert!(matches!(
+                    link(&amp;file, &amp;new_path),
+                    Err(Errno::EPERM | Errno::EACCES)
+                ));
+            })
+        });
 }</code></pre>
 
                     </main>

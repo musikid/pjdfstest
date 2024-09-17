@@ -88,7 +88,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded affix "><a href="introduction.html">Introduction</a></li><li class="chapter-item expanded affix "><li class="part-title">Running tests</li><li class="chapter-item expanded "><a href="getting-started.html"><strong aria-hidden="true">1.</strong> Getting started</a></li><li class="chapter-item expanded "><a href="configuration-file.html"><strong aria-hidden="true">2.</strong> Configuration file</a></li><li class="chapter-item expanded affix "><li class="part-title">Writing tests</li><li class="chapter-item expanded "><a href="tests-structure.html" class="active"><strong aria-hidden="true">3.</strong> Structure</a></li><li class="chapter-item expanded "><a href="test-declaration.html"><strong aria-hidden="true">4.</strong> Declaration</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="introduction.html">Introduction</a></li><li class="chapter-item expanded affix "><li class="part-title">Running tests</li><li class="chapter-item expanded "><a href="getting-started.html"><strong aria-hidden="true">1.</strong> Getting started</a></li><li class="chapter-item expanded "><a href="compatibility.html"><strong aria-hidden="true">2.</strong> Compatibility</a></li><li class="chapter-item expanded "><a href="configuration-file.html"><strong aria-hidden="true">3.</strong> Configuration file</a></li><li class="chapter-item expanded affix "><li class="part-title">Writing tests</li><li class="chapter-item expanded "><a href="tests-structure.html" class="active"><strong aria-hidden="true">4.</strong> Structure</a></li><li class="chapter-item expanded "><a href="test-declaration.html"><strong aria-hidden="true">5.</strong> Declaration</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle">
                 <div class="sidebar-resize-indicator"></div>
@@ -147,6 +147,9 @@
                         <a href="print.html" title="Print this book" aria-label="Print this book">
                             <i id="print-button" class="fa fa-print"></i>
                         </a>
+                        <a href="https://github.com/saidsay-so/pjdfstest" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
 
                     </div>
                 </div>
@@ -177,7 +180,7 @@
 <p>The package is made of the tests, and a test runner to launch them.</p>
 <h2 id="tests-tests"><a class="header" href="#tests-tests">Tests (tests/)</a></h2>
 <p>To present how tests are organized, we take the <code>chmod</code> syscall as example.</p>
-<p>There is a separate module for each syscall being tested.  Within each of those
+<p>There is a separate module for each syscall being tested. Within each of those
 modules, there may be either a single file, or a separate file for each aspect
 of the syscall.</p>
 <p>The hierarchy is like this:</p>
@@ -195,12 +198,12 @@ TC2 --&gt; TC2F1[Test case]
 TC2 --&gt; TC2F2[Test case]
 </pre>
 <h3 id="layout"><a class="header" href="#layout">Layout</a></h3>
-<pre><code>src/tests
+<pre><code class="language-bash">src/tests
 ├── chmod (syscall)
 │   ├── errno.rs (aspect)
 │   └── permission.rs (aspect)
-└── mod.rs (glues syscalls together)
-└── chmod.rs (syscall declaration)
+├── mod.rs (glues syscalls together)
+└── chmod.rs (syscall declaration and simple test cases)
 </code></pre>
 <h4 id="testsmodrs"><a class="header" href="#testsmodrs">tests/mod.rs</a></h4>
 <p>All the modules for the test groups should be declared in this file.</p>
@@ -224,17 +227,19 @@ should be preferred.</p>
 <h3 id="test-case"><a class="header" href="#test-case">Test case</a></h3>
 <p>Each test case exercises a minimal piece of the syscall's functionality.
 Each must be registered with the <code>test_case!</code> macro.</p>
-<pre><code class="language-rust ignore">crate::test_case! {ctime =&gt; [Regular, Fifo, Block, Char, Socket]}
-fn ctime(ctx: &amp;mut TestContext, f_type: FileType) {
-    let path = ctx.create(f_type).unwrap();
-    let ctime_before = stat(&amp;path).unwrap().st_ctime;
+<pre><code class="language-rust ignore">crate::test_case! {
+    /// open do not update parent directory ctime and mtime fields if
+    /// the file previously existed.
+    exists_no_update
+}
+fn exists_no_update(ctx: &amp;mut TestContext) {
+    let file = ctx.create(FileType::Regular).unwrap();
 
-    sleep(Duration::from_secs(1));
-
-    chmod(&amp;path, Mode::from_bits_truncate(0o111)).unwrap();
-
-    let ctime_after = stat(&amp;path).unwrap().st_ctime;
-    assert!(ctime_after &gt; ctime_before);
+    assert_times_unchanged()
+        .path(ctx.base_path(), CTIME | MTIME)
+        .execute(ctx, false, || {
+            assert!(open_wrapper(&amp;file, Mode::from_bits_truncate(0o755)).is_ok());
+        });
 }</code></pre>
 <h2 id="test-runner-mainrs"><a class="header" href="#test-runner-mainrs">Test runner (main.rs)</a></h2>
 <p>The test runner has to run the tests, and provide a command-line interface to allow the user to modify how the tests should be run.

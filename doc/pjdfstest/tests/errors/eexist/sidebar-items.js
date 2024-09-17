@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"macro":["eexist_file_exists_test_case"]};

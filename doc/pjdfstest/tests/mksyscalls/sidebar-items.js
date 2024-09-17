@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["assert_perms_from_mode_and_umask","assert_uid_gid"]};

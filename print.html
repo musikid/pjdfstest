@@ -89,7 +89,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded affix "><a href="introduction.html">Introduction</a></li><li class="chapter-item expanded affix "><li class="part-title">Running tests</li><li class="chapter-item expanded "><a href="getting-started.html"><strong aria-hidden="true">1.</strong> Getting started</a></li><li class="chapter-item expanded "><a href="configuration-file.html"><strong aria-hidden="true">2.</strong> Configuration file</a></li><li class="chapter-item expanded affix "><li class="part-title">Writing tests</li><li class="chapter-item expanded "><a href="tests-structure.html"><strong aria-hidden="true">3.</strong> Structure</a></li><li class="chapter-item expanded "><a href="test-declaration.html"><strong aria-hidden="true">4.</strong> Declaration</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="introduction.html">Introduction</a></li><li class="chapter-item expanded affix "><li class="part-title">Running tests</li><li class="chapter-item expanded "><a href="getting-started.html"><strong aria-hidden="true">1.</strong> Getting started</a></li><li class="chapter-item expanded "><a href="compatibility.html"><strong aria-hidden="true">2.</strong> Compatibility</a></li><li class="chapter-item expanded "><a href="configuration-file.html"><strong aria-hidden="true">3.</strong> Configuration file</a></li><li class="chapter-item expanded affix "><li class="part-title">Writing tests</li><li class="chapter-item expanded "><a href="tests-structure.html"><strong aria-hidden="true">4.</strong> Structure</a></li><li class="chapter-item expanded "><a href="test-declaration.html"><strong aria-hidden="true">5.</strong> Declaration</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle">
                 <div class="sidebar-resize-indicator"></div>
@@ -148,6 +148,9 @@
                         <a href="print.html" title="Print this book" aria-label="Print this book">
                             <i id="print-button" class="fa fa-print"></i>
                         </a>
+                        <a href="https://github.com/saidsay-so/pjdfstest" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
 
                     </div>
                 </div>
@@ -175,11 +178,12 @@
                 <div id="content" class="content">
                     <main>
                         <h1 id="introduction"><a class="header" href="#introduction">Introduction</a></h1>
-<p>PJDFSTest is a file system test suite.
+<p>PJDFSTest is a file system test suite focused on POSIX compliance,
+primarily for FreeBSD file systems.
 It was originally written to validate the ZFS port to FreeBSD,
-but it now supports multiple operating systems and file systems.
-This is a complete rewrite of the original test suite in Rust.</p>
-<h3 id="note-the-documentation-is-still-a-work-in-progress"><a class="header" href="#note-the-documentation-is-still-a-work-in-progress">NOTE: The documentation is still a work-in-progress.</a></h3>
+but it now supports multiple operating systems and file systems.</p>
+<p>This is a complete rewrite of the original test suite in Rust.</p>
+<p><strong>NOTE: The documentation is still a work-in-progress</strong></p>
 <h2 id="build"><a class="header" href="#build">Build</a></h2>
 <pre><code class="language-bash">cd rust
 cargo run
@@ -188,6 +192,10 @@ cargo run
 <pre><code class="language-bash">cd rust
 cargo build &amp;&amp; sudo ./target/debug/pjdfstest
 </code></pre>
+<h2 id="contributing"><a class="header" href="#contributing">Contributing</a></h2>
+<p>Please read the <a href="CONTRIBUTING.html">CONTRIBUTING.md</a> file on how to contribute to this project.
+In addition to this book, you can also find the crate documentation by running <code>cargo doc --open</code>
+in the <code>rust</code> directory or by visiting the <a href="/doc/pjdfstest">documentation</a>.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="getting-started"><a class="header" href="#getting-started">Getting started</a></h1>
 <p>The test suite is as file system agnostic as possible
 and tries to comply with the POSIX specification.
@@ -208,10 +216,10 @@ supported by the file system/operating system.</p>
 </ul>
 <p>Example: <code>pjdfstest -c pjdfstest.toml chmod</code></p>
 <h2 id="filter-tests"><a class="header" href="#filter-tests">Filter tests</a></h2>
-<p>It is possible to filter which tests should be ran, by specifying which parts should match.
+<p>It is possible to filter which tests should be run by specifying which parts should match.
 Tests are usually identified by syscall and optionally the file type on which it operates.</p>
 <h2 id="rootless-running"><a class="header" href="#rootless-running">Rootless running</a></h2>
-<p>The test suite can be ran without privileges.
+<p>The test suite can be run without privileges.
 However, not all tests can be completed without privileges,
 therefore the coverage will be incomplete.
 For example, tests which need to switch users will not be run.</p>
@@ -238,6 +246,1395 @@ tests:x:::Dummy User for pjdfstest:/:/usr/bin/nologin
 pjdfstest:x:::Dummy User for pjdfstest:/:/usr/bin/nologin
 EOF
 </code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="compatibility"><a class="header" href="#compatibility">Compatibility</a></h1>
+<p>The test suite is designed to be compatible with multiple operating systems and file systems.
+It is primarily focused on POSIX compliance for FreeBSD file systems, but is also compatible with other operating systems and file systems
+in addition of supplementary tests.</p>
+<h2 id="supported-operating-systems"><a class="header" href="#supported-operating-systems">Supported operating systems</a></h2>
+<h3 id="active-support"><a class="header" href="#active-support">Active support</a></h3>
+<p>The test suite has been tested and is actively maintained on the following operating systems:</p>
+<ul>
+<li>FreeBSD (main development platform)
+<ul>
+<li>UFS</li>
+<li>ZFS</li>
+</ul>
+</li>
+<li>Linux
+<ul>
+<li>ext4</li>
+</ul>
+</li>
+</ul>
+<h3 id="experimental-support"><a class="header" href="#experimental-support">Experimental support</a></h3>
+<p>The test suite has not been tested on the following operating systems, but should work:</p>
+<ul>
+<li>MacOS</li>
+<li>NetBSD</li>
+<li>OpenBSD</li>
+<li>Solaris</li>
+<li>DragonFly BSD</li>
+<li>Illumos</li>
+<li>Android</li>
+<li>iOS</li>
+</ul>
+<h2 id="missing-tests"><a class="header" href="#missing-tests">Missing tests</a></h2>
+<p>The test suite is a complete rewrite of the original test suite in Rust. Many tests have been ported, but some tests are still missing.</p>
+<details>
+<summary>chflags <progress value='7' max='14'></progress></summary>
+<table>
+<tr>
+<th>Test</th>
+<th>Description</th>
+<th>Converted</th>
+</tr>
+<tr>
+<td>00.t</td>
+<td>chflags changes flags</td>
+<td>No</td>
+</tr>
+<tr>
+<td>01.t</td>
+<td>chflags returns ENOTDIR if a component of the path prefix is not a directory</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>02.t</td>
+<td>chflags returns ENAMETOOLONG if a component of a pathname exceeded {NAME_MAX} characters</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>03.t</td>
+<td>chflags returns ENAMETOOLONG if an entire path name exceeded {PATH_MAX} characters</td>
+<td>No</td>
+</tr>
+<tr>
+<td>04.t</td>
+<td>chflags returns ENOENT if the named file does not exist</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>05.t</td>
+<td>chflags returns EACCES when search permission is denied for a component of the path prefix</td>
+<td>No</td>
+</tr>
+<tr>
+<td>06.t</td>
+<td>chflags returns ELOOP if too many symbolic links were encountered in translating the pathname</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>07.t</td>
+<td>chflags returns EPERM when the effective user ID does not match the owner of the file and the effective user ID is not the super-user</td>
+<td>No</td>
+</tr>
+<tr>
+<td>08.t</td>
+<td>chflags returns EPERM when one of SF_IMMUTABLE, SF_APPEND, or SF_NOUNLINK is set and the user is not the super-user</td>
+<td>No</td>
+</tr>
+<tr>
+<td>09.t</td>
+<td>chflags returns EPERM when one of SF_IMMUTABLE, SF_APPEND, or SF_NOUNLINK is set and securelevel is greater than 0</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>10.t</td>
+<td>chflags returns EPERM if non-super-user tries to set one of SF_IMMUTABLE, SF_APPEND, or SF_NOUNLINK</td>
+<td>No</td>
+</tr>
+<tr>
+<td>11.t</td>
+<td>chflags returns EPERM if a user tries to set or remove the SF_SNAPSHOT flag</td>
+<td>No</td>
+</tr>
+<tr>
+<td>12.t</td>
+<td>chflags returns EROFS if the named file resides on a read-only file system</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>13.t</td>
+<td>chflags returns EFAULT if the path argument points outside the process's allocated address space</td>
+<td>Yes</td>
+</tr>
+</table>
+</details>
+<details>
+<summary>chmod <progress value='9' max='13'></progress></summary>
+<table>
+<tr>
+<th>Test</th>
+<th>Description</th>
+<th>Converted</th>
+</tr>
+<tr>
+<td>00.t</td>
+<td>chmod changes permission</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>01.t</td>
+<td>chmod returns ENOTDIR if a component of the path prefix is not a directory</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>02.t</td>
+<td>chmod returns ENAMETOOLONG if a component of a pathname exceeded {NAME_MAX} characters</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>03.t</td>
+<td>chmod returns ENAMETOOLONG if an entire path name exceeded {PATH_MAX} characters</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>04.t</td>
+<td>chmod returns ENOENT if the named file does not exist</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>05.t</td>
+<td>chmod returns EACCES when search permission is denied for a component of the path prefix</td>
+<td>No</td>
+</tr>
+<tr>
+<td>06.t</td>
+<td>chmod returns ELOOP if too many symbolic links were encountered in translating the pathname</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>07.t</td>
+<td>chmod returns EPERM if the operation would change the ownership, but the effective user ID is not the super-user</td>
+<td>No</td>
+</tr>
+<tr>
+<td>08.t</td>
+<td>chmod returns EPERM if the named file has its immutable or append-only flag set</td>
+<td>No</td>
+</tr>
+<tr>
+<td>09.t</td>
+<td>chmod returns EROFS if the named file resides on a read-only file system</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>10.t</td>
+<td>chmod returns EFAULT if the path argument points outside the process's allocated address space</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>11.t</td>
+<td>chmod returns EFTYPE if the effective user ID is not the super-user, the mode includes the sticky bit (S_ISVTX), and path does not refer to a directory</td>
+<td>No</td>
+</tr>
+<tr>
+<td>12.t</td>
+<td>verify SUID/SGID bit behaviour</td>
+<td>Yes</td>
+</tr>
+</table>
+</details>
+<details>
+<summary>chown <progress value='6' max='11'></progress></summary>
+<table>
+<tr>
+<th>Test</th>
+<th>Description</th>
+<th>Converted</th>
+</tr>
+<tr>
+<td>00.t</td>
+<td>chown changes ownership</td>
+<td>No</td>
+</tr>
+<tr>
+<td>01.t</td>
+<td>chown returns ENOTDIR if a component of the path prefix is not a directory</td>
+<td>No</td>
+</tr>
+<tr>
+<td>02.t</td>
+<td>chown returns ENAMETOOLONG if a component of a pathname exceeded ${NAME_MAX} characters</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>03.t</td>
+<td>chown returns ENAMETOOLONG if an entire path name exceeded {PATH_MAX} characters</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>04.t</td>
+<td>chown returns ENOENT if the named file does not exist</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>05.t</td>
+<td>chown returns EACCES when search permission is denied for a component of the path prefix</td>
+<td>No</td>
+</tr>
+<tr>
+<td>06.t</td>
+<td>chown returns ELOOP if too many symbolic links were encountered in translating the pathname</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>07.t</td>
+<td>chown returns EPERM if the operation would change the ownership, but the effective user ID is not the super-user and the process is not an owner of the file</td>
+<td>No</td>
+</tr>
+<tr>
+<td>08.t</td>
+<td>chown returns EPERM if the named file has its immutable or append-only flag set</td>
+<td>No</td>
+</tr>
+<tr>
+<td>09.t</td>
+<td>chown returns EROFS if the named file resides on a read-only file system</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>10.t</td>
+<td>chown returns EFAULT if the path argument points outside the process's allocated address space</td>
+<td>Yes</td>
+</tr>
+</table>
+</details>
+<details>
+<summary>ftruncate <progress value='1' max='15'></progress></summary>
+<table>
+<tr>
+<th>Test</th>
+<th>Description</th>
+<th>Converted</th>
+</tr>
+<tr>
+<td>00.t</td>
+<td>ftruncate descrease/increase file size</td>
+<td>No</td>
+</tr>
+<tr>
+<td>01.t</td>
+<td>truncate returns ENOTDIR if a component of the path prefix is not a directory</td>
+<td>No</td>
+</tr>
+<tr>
+<td>02.t</td>
+<td>truncate returns ENAMETOOLONG if a component of a pathname exceeded {NAME_MAX} characters</td>
+<td>No</td>
+</tr>
+<tr>
+<td>03.t</td>
+<td>truncate returns ENAMETOOLONG if an entire path name exceeded {PATH_MAX} characters</td>
+<td>No</td>
+</tr>
+<tr>
+<td>04.t</td>
+<td>truncate returns ENOENT if the named file does not exist</td>
+<td>No</td>
+</tr>
+<tr>
+<td>05.t</td>
+<td>truncate returns EACCES when search permission is denied for a component of the path prefix</td>
+<td>No</td>
+</tr>
+<tr>
+<td>06.t</td>
+<td>truncate returns EACCES if the named file is not writable by the user</td>
+<td>No</td>
+</tr>
+<tr>
+<td>07.t</td>
+<td>truncate returns ELOOP if too many symbolic links were encountered in translating the pathname</td>
+<td>No</td>
+</tr>
+<tr>
+<td>08.t</td>
+<td>truncate returns EPERM if the named file has its immutable or append-only flag set</td>
+<td>No</td>
+</tr>
+<tr>
+<td>09.t</td>
+<td>truncate returns EISDIR if the named file is a directory</td>
+<td>No</td>
+</tr>
+<tr>
+<td>10.t</td>
+<td>truncate returns EROFS if the named file resides on a read-only file system</td>
+<td>No</td>
+</tr>
+<tr>
+<td>11.t</td>
+<td>truncate returns ETXTBSY the file is a pure procedure (shared text) file that is being executed</td>
+<td>No</td>
+</tr>
+<tr>
+<td>12.t</td>
+<td>truncate returns EFBIG or EINVAL if the length argument was greater than the maximum file size</td>
+<td>No</td>
+</tr>
+<tr>
+<td>13.t</td>
+<td>ftruncate returns EINVAL if the length argument was less than 0</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>14.t</td>
+<td>truncate returns EFAULT if the path argument points outside the process's allocated address space</td>
+<td>No</td>
+</tr>
+</table>
+</details>
+<details>
+<summary>granular <progress value='7' max='7'></progress></summary>
+<table>
+<tr>
+<th>Test</th>
+<th>Description</th>
+<th>Converted</th>
+</tr>
+<tr>
+<td>00.t</td>
+<td>NFSv4 granular permissions checking - WRITE_DATA vs APPEND_DATA on directories</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>01.t</td>
+<td>NFSv4 granular permissions checking - ACL_READ_ATTRIBUTES and ACL_WRITE_ATTRIBUTES</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>02.t</td>
+<td>NFSv4 granular permissions checking - ACL_READ_ACL and ACL_WRITE_ACL</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>03.t</td>
+<td>NFSv4 granular permissions checking - DELETE and DELETE_CHILD</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>04.t</td>
+<td>NFSv4 granular permissions checking - ACL_WRITE_OWNER</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>05.t</td>
+<td>NFSv4 granular permissions checking - DELETE and DELETE_CHILD with directories</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>06.t</td>
+<td>NFSv4 granular permissions checking - setuid and setgid are cleared when non-owner calls chown</td>
+<td>Yes</td>
+</tr>
+</table>
+</details>
+<details>
+<summary>link <progress value='14' max='18'></progress></summary>
+<table>
+<tr>
+<th>Test</th>
+<th>Description</th>
+<th>Converted</th>
+</tr>
+<tr>
+<td>00.t</td>
+<td>link creates hardlinks</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>01.t</td>
+<td>link returns ENOTDIR if a component of either path prefix is not a directory</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>02.t</td>
+<td>link returns ENAMETOOLONG if a component of either pathname exceeded {NAME_MAX} characters</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>03.t</td>
+<td>link returns ENAMETOOLONG if an entire length of either path name exceeded {PATH_MAX} characters</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>04.t</td>
+<td>link returns ENOENT if a component of either path prefix does not exist</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>05.t</td>
+<td>link returns EMLINK if the link count of the file named by name1 would exceed 32767</td>
+<td>No</td>
+</tr>
+<tr>
+<td>06.t</td>
+<td>link returns EACCES when a component of either path prefix denies search permission</td>
+<td>No</td>
+</tr>
+<tr>
+<td>07.t</td>
+<td>link returns EACCES when the requested link requires writing in a directory with a mode that denies write permission</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>08.t</td>
+<td>link returns ELOOP if too many symbolic links were encountered in translating one of the pathnames</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>09.t</td>
+<td>link returns ENOENT if the source file does not exist</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>10.t</td>
+<td>link returns EEXIST if the destination file does exist</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>11.t</td>
+<td>link returns EPERM if the source file is a directory</td>
+<td>No</td>
+</tr>
+<tr>
+<td>12.t</td>
+<td>link returns EPERM if the source file has its immutable or append-only flag set</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>13.t</td>
+<td>link returns EPERM if the parent directory of the destination file has its immutable flag set</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>14.t</td>
+<td>link returns EXDEV if the source and the destination files are on different file systems</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>15.t</td>
+<td>link returns ENOSPC if the directory in which the entry for the new link is being placed cannot be extended because there is no space left on the file system containing the directory</td>
+<td>No</td>
+</tr>
+<tr>
+<td>16.t</td>
+<td>link returns EROFS if the requested link requires writing in a directory on a read-only file system</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>17.t</td>
+<td>link returns EFAULT if one of the pathnames specified is outside the process's allocated address space</td>
+<td>Yes</td>
+</tr>
+</table>
+</details>
+<details>
+<summary>mkdir <progress value='7' max='13'></progress></summary>
+<table>
+<tr>
+<th>Test</th>
+<th>Description</th>
+<th>Converted</th>
+</tr>
+<tr>
+<td>00.t</td>
+<td>mkdir creates directories</td>
+<td>No</td>
+</tr>
+<tr>
+<td>01.t</td>
+<td>mkdir returns ENOTDIR if a component of the path prefix is not a directory</td>
+<td>No</td>
+</tr>
+<tr>
+<td>02.t</td>
+<td>mkdir returns ENAMETOOLONG if a component of a pathname exceeded {NAME_MAX} characters</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>03.t</td>
+<td>mkdir returns ENAMETOOLONG if an entire path name exceeded {PATH_MAX} characters</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>04.t</td>
+<td>mkdir returns ENOENT if a component of the path prefix does not exist</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>05.t</td>
+<td>mkdir returns EACCES when search permission is denied for a component of the path prefix</td>
+<td>No</td>
+</tr>
+<tr>
+<td>06.t</td>
+<td>mkdir returns EACCES when write permission is denied on the parent directory of the directory to be created</td>
+<td>No</td>
+</tr>
+<tr>
+<td>07.t</td>
+<td>mkdir returns ELOOP if too many symbolic links were encountered in translating the pathname</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>08.t</td>
+<td>mkdir returns EPERM if the parent directory of the directory to be created has its immutable flag set</td>
+<td>No</td>
+</tr>
+<tr>
+<td>09.t</td>
+<td>mkdir returns EROFS if the named file resides on a read-only file system</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>10.t</td>
+<td>mkdir returns EEXIST if the named file exists</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>11.t</td>
+<td>mkdir returns ENOSPC if there are no free inodes on the file system on which the directory is being created</td>
+<td>No</td>
+</tr>
+<tr>
+<td>12.t</td>
+<td>mkdir returns EFAULT if the path argument points outside the process's allocated address space</td>
+<td>Yes</td>
+</tr>
+</table>
+</details>
+<details>
+<summary>mkfifo <progress value='8' max='13'></progress></summary>
+<table>
+<tr>
+<th>Test</th>
+<th>Description</th>
+<th>Converted</th>
+</tr>
+<tr>
+<td>00.t</td>
+<td>mkfifo creates fifo files</td>
+<td>No</td>
+</tr>
+<tr>
+<td>01.t</td>
+<td>mkfifo returns ENOTDIR if a component of the path prefix is not a directory</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>02.t</td>
+<td>mkfifo returns ENAMETOOLONG if a component of a pathname exceeded {NAME_MAX} characters</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>03.t</td>
+<td>mkfifo returns ENAMETOOLONG if an entire path name exceeded {PATH_MAX} characters</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>04.t</td>
+<td>mkfifo returns ENOENT if a component of the path prefix does not exist</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>05.t</td>
+<td>mkfifo returns EACCES when search permission is denied for a component of the path prefix</td>
+<td>No</td>
+</tr>
+<tr>
+<td>06.t</td>
+<td>mkfifo returns EACCES when write permission is denied on the parent directory of the file to be created</td>
+<td>No</td>
+</tr>
+<tr>
+<td>07.t</td>
+<td>mkfifo returns ELOOP if too many symbolic links were encountered in translating the pathname</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>08.t</td>
+<td>mkfifo returns EROFS if the named file resides on a read-only file system</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>09.t</td>
+<td>mkfifo returns EEXIST if the named file exists</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>10.t</td>
+<td>mkfifo returns EPERM if the parent directory of the file to be created has its immutable flag set</td>
+<td>No</td>
+</tr>
+<tr>
+<td>11.t</td>
+<td>mkfifo returns ENOSPC if there are no free inodes on the file system on which the file is being created</td>
+<td>No</td>
+</tr>
+<tr>
+<td>12.t</td>
+<td>mkfifo returns EFAULT if the path argument points outside the process's allocated address space</td>
+<td>Yes</td>
+</tr>
+</table>
+</details>
+<details>
+<summary>mknod <progress value='8' max='12'></progress></summary>
+<table>
+<tr>
+<th>Test</th>
+<th>Description</th>
+<th>Converted</th>
+</tr>
+<tr>
+<td>00.t</td>
+<td>mknod creates fifo files</td>
+<td>No</td>
+</tr>
+<tr>
+<td>01.t</td>
+<td>mknod returns ENOTDIR if a component of the path prefix is not a directory</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>02.t</td>
+<td>mknod returns ENAMETOOLONG if a component of a pathname exceeded {NAME_MAX} characters</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>03.t</td>
+<td>mknod returns ENAMETOOLONG if an entire path name exceeded {PATH_MAX} characters</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>04.t</td>
+<td>mknod returns ENOENT if a component of the path prefix does not exist</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>05.t</td>
+<td>mknod returns EACCES when search permission is denied for a component of the path prefix</td>
+<td>No</td>
+</tr>
+<tr>
+<td>06.t</td>
+<td>mknod returns EACCES when write permission is denied on the parent directory of the file to be created</td>
+<td>No</td>
+</tr>
+<tr>
+<td>07.t</td>
+<td>mknod returns ELOOP if too many symbolic links were encountered in translating the pathname</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>08.t</td>
+<td>mknod returns EEXIST if the named file exists</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>09.t</td>
+<td>mknod returns EPERM if the parent directory of the file to be created has its immutable flag set</td>
+<td>No</td>
+</tr>
+<tr>
+<td>10.t</td>
+<td>mknod returns EFAULT if the path argument points outside the process's allocated address space</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>11.t</td>
+<td>mknod creates device files</td>
+<td>Yes</td>
+</tr>
+</table>
+</details>
+<details>
+<summary>open <progress value='14' max='26'></progress></summary>
+<table>
+<tr>
+<th>Test</th>
+<th>Description</th>
+<th>Converted</th>
+</tr>
+<tr>
+<td>00.t</td>
+<td>open opens (and eventually creates) a file</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>01.t</td>
+<td>open returns ENOTDIR if a component of the path prefix is not a directory</td>
+<td>No</td>
+</tr>
+<tr>
+<td>02.t</td>
+<td>open returns ENAMETOOLONG if a component of a pathname exceeded {NAME_MAX} characters</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>03.t</td>
+<td>open returns ENAMETOOLONG if an entire path name exceeded ${PATH_MAX} characters</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>04.t</td>
+<td>open returns ENOENT if a component of the path name that must exist does not exist or O_CREAT is not set and the named file does not exist</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>05.t</td>
+<td>open returns EACCES when search permission is denied for a component of the path prefix</td>
+<td>No</td>
+</tr>
+<tr>
+<td>06.t</td>
+<td>open returns EACCES when the required permissions (for reading and/or writing) are denied for the given flags</td>
+<td>No</td>
+</tr>
+<tr>
+<td>07.t</td>
+<td>open returns EACCES when O_TRUNC is specified and write permission is denied</td>
+<td>No</td>
+</tr>
+<tr>
+<td>08.t</td>
+<td>open returns EACCES when O_CREAT is specified, the file does not exist, and the directory in which it is to be created does not permit writing</td>
+<td>No</td>
+</tr>
+<tr>
+<td>09.t</td>
+<td>O_CREAT is specified, the file does not exist, and the directory in which it is to be created has its immutable flag set</td>
+<td>No</td>
+</tr>
+<tr>
+<td>10.t</td>
+<td>open returns EPERM when the named file has its immutable flag set and the file is to be modified</td>
+<td>No</td>
+</tr>
+<tr>
+<td>11.t</td>
+<td>open returns EPERM when the named file has its append-only flag set, the file is to be modified, and O_TRUNC is specified or O_APPEND is not specified</td>
+<td>No</td>
+</tr>
+<tr>
+<td>12.t</td>
+<td>open returns ELOOP if too many symbolic links were encountered in translating the pathname</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>13.t</td>
+<td>open returns EISDIR when trying to open a directory for writing</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>14.t</td>
+<td>open returns EROFS if the named file resides on a read-only file system, and the file is to be modified</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>15.t</td>
+<td>open returns EROFS when O_CREAT is specified and the named file would reside on a read-only file system</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>16.t</td>
+<td>open returns $error when O_NOFOLLOW was specified and the target is a symbolic link</td>
+<td>No</td>
+</tr>
+<tr>
+<td>17.t</td>
+<td>open returns ENXIO when O_NONBLOCK is set, the named file is a fifo, O_WRONLY is set, and no process has the file open for reading</td>
+<td>No</td>
+</tr>
+<tr>
+<td>18.t</td>
+<td>open returns EWOULDBLOCK when O_NONBLOCK and one of O_SHLOCK or O_EXLOCK is specified and the file is locked</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>19.t</td>
+<td>open returns ENOSPC when O_CREAT is specified, the file does not exist, and there are no free inodes on the file system on which the file is being created</td>
+<td>No</td>
+</tr>
+<tr>
+<td>20.t</td>
+<td>open returns ETXTBSY when the file is a pure procedure (shared text) file that is being executed and the open() system call requests write access</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>21.t</td>
+<td>open returns EFAULT if the path argument points outside the process's allocated address space</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>22.t</td>
+<td>open returns EEXIST when O_CREAT and O_EXCL were specified and the file exists</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>23.t</td>
+<td>open may return EINVAL when an attempt was made to open a descriptor with an illegal combination of O_RDONLY, O_WRONLY, and O_RDWR</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>24.t</td>
+<td>open returns $expected_error when trying to open UNIX domain socket</td>
+<td>No</td>
+</tr>
+<tr>
+<td>25.t</td>
+<td>interact with > 2 GB files</td>
+<td>Yes</td>
+</tr>
+</table>
+</details>
+<details>
+<summary>posix_fallocate <progress value='0' max='1'></progress></summary>
+<table>
+<tr>
+<th>Test</th>
+<th>Description</th>
+<th>Converted</th>
+</tr>
+<tr>
+<td>00.t</td>
+<td>posix_fallocate descrease/increase file size</td>
+<td>No</td>
+</tr>
+</table>
+</details>
+<details>
+<summary>rename <progress value='17' max='25'></progress></summary>
+<table>
+<tr>
+<th>Test</th>
+<th>Description</th>
+<th>Converted</th>
+</tr>
+<tr>
+<td>00.t</td>
+<td>rename changes file name</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>01.t</td>
+<td>rename returns ENAMETOOLONG if a component of either pathname exceeded {NAME_MAX} characters</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>02.t</td>
+<td>rename returns ENAMETOOLONG if an entire length of either path name exceeded {PATH_MAX} characters</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>03.t</td>
+<td>rename returns ENOENT if a component of the 'from' path does not exist, or a path prefix of 'to' does not exist</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>04.t</td>
+<td>rename returns EACCES when a component of either path prefix denies search permission</td>
+<td>No</td>
+</tr>
+<tr>
+<td>05.t</td>
+<td>rename returns EACCES when the requested link requires writing in a directory with a mode that denies write permission</td>
+<td>No</td>
+</tr>
+<tr>
+<td>06.t</td>
+<td>rename returns EPERM if the file pointed at by the 'from' argument has its immutable, undeletable or append-only flag set</td>
+<td>No</td>
+</tr>
+<tr>
+<td>07.t</td>
+<td>rename returns EPERM if the parent directory of the file pointed at by the 'from' argument has its immutable or append-only flag set</td>
+<td>No</td>
+</tr>
+<tr>
+<td>08.t</td>
+<td>rename returns EPERM if the parent directory of the file pointed at by the 'to' argument has its immutable flag set</td>
+<td>No</td>
+</tr>
+<tr>
+<td>09.t</td>
+<td>rename returns EACCES or EPERM if the directory containing 'from' is marked sticky, and neither the containing directory nor 'from' are owned by the effective user ID</td>
+<td>No</td>
+</tr>
+<tr>
+<td>10.t</td>
+<td>rename returns EACCES or EPERM if the file pointed at by the 'to' argument exists, the directory containing 'to' is marked sticky, and neither the containing directory nor 'to' are owned by the effective user ID</td>
+<td>No</td>
+</tr>
+<tr>
+<td>11.t</td>
+<td>rename returns ELOOP if too many symbolic links were encountered in translating one of the pathnames</td>
+<td>No</td>
+</tr>
+<tr>
+<td>12.t</td>
+<td>rename returns ENOTDIR if a component of either path prefix is not a directory</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>13.t</td>
+<td>rename returns ENOTDIR when the 'from' argument is a directory, but 'to' is not a directory</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>14.t</td>
+<td>rename returns EISDIR when the 'to' argument is a directory, but 'from' is not a directory</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>15.t</td>
+<td>rename returns EXDEV if the link named by 'to' and the file named by 'from' are on different file systems</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>16.t</td>
+<td>rename returns EROFS if the requested link requires writing in a directory on a read-only file system</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>17.t</td>
+<td>rename returns EFAULT if one of the pathnames specified is outside the process's allocated address space</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>18.t</td>
+<td>rename returns EINVAL when the 'from' argument is a parent directory of 'to'</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>19.t</td>
+<td>rename returns EINVAL/EBUSY when an attempt is made to rename '.' or '..'</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>20.t</td>
+<td>rename returns EEXIST or ENOTEMPTY if the 'to' argument is a directory and is not empty</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>21.t</td>
+<td>write access to subdirectory is required to move it to another directory</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>22.t</td>
+<td>rename changes file ctime</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>23.t</td>
+<td>rename succeeds when to is multiply linked</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>24.t</td>
+<td>rename of a directory updates its .. link</td>
+<td>Yes</td>
+</tr>
+</table>
+</details>
+<details>
+<summary>rmdir <progress value='10' max='16'></progress></summary>
+<table>
+<tr>
+<th>Test</th>
+<th>Description</th>
+<th>Converted</th>
+</tr>
+<tr>
+<td>00.t</td>
+<td>rmdir removes directories</td>
+<td>No</td>
+</tr>
+<tr>
+<td>01.t</td>
+<td>rmdir returns ENOTDIR if a component of the path is not a directory</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>02.t</td>
+<td>rmdir returns ENAMETOOLONG if a component of a pathname exceeded {NAME_MAX} characters</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>03.t</td>
+<td>rmdir returns ENAMETOOLONG if an entire path name exceeded ${PATH_MAX} characters</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>04.t</td>
+<td>rmdir returns ENOENT if the named directory does not exist</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>05.t</td>
+<td>rmdir returns ELOOP if too many symbolic links were encountered in translating the pathname</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>06.t</td>
+<td>rmdir returns EEXIST or ENOTEMPTY the named directory contains files other than '.' and '..' in it</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>07.t</td>
+<td>rmdir returns EACCES when search permission is denied for a component of the path prefix</td>
+<td>No</td>
+</tr>
+<tr>
+<td>08.t</td>
+<td>rmdir returns EACCES when write permission is denied on the directory containing the link to be removed</td>
+<td>No</td>
+</tr>
+<tr>
+<td>09.t</td>
+<td>rmdir returns EPERM if the named directory has its immutable, undeletable or append-only flag set</td>
+<td>No</td>
+</tr>
+<tr>
+<td>10.t</td>
+<td>rmdir returns EPERM if the parent directory of the named file has its immutable or append-only flag set</td>
+<td>No</td>
+</tr>
+<tr>
+<td>11.t</td>
+<td>rmdir returns EACCES or EPERM if the directory containing the directory to be removed is marked sticky, and neither the containing directory nor the directory to be removed are owned by the effective user ID</td>
+<td>No</td>
+</tr>
+<tr>
+<td>12.t</td>
+<td>rmdir returns EINVAL if the last component of the path is '.' and EEXIST or ENOTEMPTY if the last component of the path is '..'</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>13.t</td>
+<td>rmdir returns EBUSY if the directory to be removed is the mount point for a mounted file system</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>14.t</td>
+<td>rmdir returns EROFS if the named file resides on a read-only file system</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>15.t</td>
+<td>rmdir returns EFAULT if the path argument points outside the process's allocated address space</td>
+<td>Yes</td>
+</tr>
+</table>
+</details>
+<details>
+<summary>symlink <progress value='7' max='13'></progress></summary>
+<table>
+<tr>
+<th>Test</th>
+<th>Description</th>
+<th>Converted</th>
+</tr>
+<tr>
+<td>00.t</td>
+<td>symlink creates symbolic links</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>01.t</td>
+<td>symlink returns ENOTDIR if a component of the name2 path prefix is not a directory</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>02.t</td>
+<td>symlink returns ENAMETOOLONG if a component of the name2 pathname exceeded {NAME_MAX} characters</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>03.t</td>
+<td>symlink returns ENAMETOOLONG if an entire length of either path name exceeded {PATH_MAX} characters</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>04.t</td>
+<td>symlink returns ENOENT if a component of the name2 path prefix does not exist</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>05.t</td>
+<td>symlink returns EACCES when a component of the name2 path prefix denies search permission</td>
+<td>No</td>
+</tr>
+<tr>
+<td>06.t</td>
+<td>symlink returns EACCES if the parent directory of the file to be created denies write permission</td>
+<td>No</td>
+</tr>
+<tr>
+<td>07.t</td>
+<td>symlink returns ELOOP if too many symbolic links were encountered in translating the name2 path name</td>
+<td>No</td>
+</tr>
+<tr>
+<td>08.t</td>
+<td>symlink returns EEXIST if the name2 argument already exists</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>09.t</td>
+<td>symlink returns EPERM if the parent directory of the file named by name2 has its immutable flag set</td>
+<td>No</td>
+</tr>
+<tr>
+<td>10.t</td>
+<td>symlink returns EROFS if the file name2 would reside on a read-only file system</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>11.t</td>
+<td>symlink returns ENOSPC if there are no free inodes on the file system on which the symbolic link is being created</td>
+<td>No</td>
+</tr>
+<tr>
+<td>12.t</td>
+<td>symlink returns EFAULT if one of the pathnames specified is outside the process's allocated address space</td>
+<td>No</td>
+</tr>
+</table>
+</details>
+<details>
+<summary>truncate <progress value='11' max='15'></progress></summary>
+<table>
+<tr>
+<th>Test</th>
+<th>Description</th>
+<th>Converted</th>
+</tr>
+<tr>
+<td>00.t</td>
+<td>truncate descrease/increase file size</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>01.t</td>
+<td>truncate returns ENOTDIR if a component of the path prefix is not a directory</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>02.t</td>
+<td>truncate returns ENAMETOOLONG if a component of a pathname exceeded {NAME_MAX} characters</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>03.t</td>
+<td>truncate returns ENAMETOOLONG if an entire path name exceeded {PATH_MAX} characters</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>04.t</td>
+<td>truncate returns ENOENT if the named file does not exist</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>05.t</td>
+<td>truncate returns EACCES when search permission is denied for a component of the path prefix</td>
+<td>No</td>
+</tr>
+<tr>
+<td>06.t</td>
+<td>truncate returns EACCES if the named file is not writable by the user</td>
+<td>No</td>
+</tr>
+<tr>
+<td>07.t</td>
+<td>truncate returns ELOOP if too many symbolic links were encountered in translating the pathname</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>08.t</td>
+<td>truncate returns EPERM if the named file has its immutable or append-only flag set</td>
+<td>No</td>
+</tr>
+<tr>
+<td>09.t</td>
+<td>truncate returns EISDIR if the named file is a directory</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>10.t</td>
+<td>truncate returns EROFS if the named file resides on a read-only file system</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>11.t</td>
+<td>truncate returns ETXTBSY the file is a pure procedure (shared text) file that is being executed</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>12.t</td>
+<td>truncate returns EFBIG or EINVAL if the length argument was greater than the maximum file size</td>
+<td>No</td>
+</tr>
+<tr>
+<td>13.t</td>
+<td>truncate returns EINVAL if the length argument was less than 0</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>14.t</td>
+<td>truncate returns EFAULT if the path argument points outside the process's allocated address space</td>
+<td>Yes</td>
+</tr>
+</table>
+</details>
+<details>
+<summary>unlink <progress value='9' max='15'></progress></summary>
+<table>
+<tr>
+<th>Test</th>
+<th>Description</th>
+<th>Converted</th>
+</tr>
+<tr>
+<td>00.t</td>
+<td>unlink removes regular files, symbolic links, fifos and sockets</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>01.t</td>
+<td>unlink returns ENOTDIR if a component of the path prefix is not a directory</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>02.t</td>
+<td>unlink returns ENAMETOOLONG if a component of a pathname exceeded {NAME_MAX} characters</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>03.t</td>
+<td>unlink returns ENAMETOOLONG if an entire path name exceeded {PATH_MAX} characters</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>04.t</td>
+<td>unlink returns ENOENT if the named file does not exist</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>05.t</td>
+<td>unlink returns EACCES when search permission is denied for a component of the path prefix</td>
+<td>No</td>
+</tr>
+<tr>
+<td>06.t</td>
+<td>unlink returns EACCES when write permission is denied on the directory containing the link to be removed</td>
+<td>No</td>
+</tr>
+<tr>
+<td>07.t</td>
+<td>unlink returns ELOOP if too many symbolic links were encountered in translating the pathname</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>08.t</td>
+<td>unlink may return EPERM if the named file is a directory</td>
+<td>No</td>
+</tr>
+<tr>
+<td>09.t</td>
+<td>unlink returns EPERM if the named file has its immutable, undeletable or append-only flag set</td>
+<td>No</td>
+</tr>
+<tr>
+<td>10.t</td>
+<td>unlink returns EPERM if the parent directory of the named file has its immutable or append-only flag set</td>
+<td>No</td>
+</tr>
+<tr>
+<td>11.t</td>
+<td>unlink returns EACCES or EPERM if the directory containing the file is marked sticky, and neither the containing directory nor the file to be removed are owned by the effective user ID</td>
+<td>No</td>
+</tr>
+<tr>
+<td>12.t</td>
+<td>unlink returns EROFS if the named file resides on a read-only file system</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>13.t</td>
+<td>unlink returns EFAULT if the path argument points outside the process's allocated address space</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>14.t</td>
+<td>An open file will not be immediately freed by unlink</td>
+<td>Yes</td>
+</tr>
+</table>
+</details>
+<details>
+<summary>utimensat <progress value='10' max='10'></progress></summary>
+<table>
+<tr>
+<th>Test</th>
+<th>Description</th>
+<th>Converted</th>
+</tr>
+<tr>
+<td>00.t</td>
+<td>utimensat changes timestamps on any type of file</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>01.t</td>
+<td>utimensat with UTIME_NOW will set the will set typestamps to now</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>02.t</td>
+<td>utimensat with UTIME_OMIT will leave the time unchanged</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>03.t</td>
+<td>utimensat can update birthtimes</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>04.t</td>
+<td>utimensat can set mtime < atime or vice versa</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>05.t</td>
+<td>utimensat can follow symlinks</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>06.t</td>
+<td>utimensat with UTIME_NOW will work if the caller has write permission</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>07.t</td>
+<td>utimensat will work if the caller is the owner or root</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>08.t</td>
+<td>utimensat can set timestamps with subsecond precision</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>09.t</td>
+<td>utimensat is y2038 compliant</td>
+<td>Yes</td>
+</tr>
+</table>
+</details>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="configuration-file"><a class="header" href="#configuration-file">Configuration file</a></h1>
 <p>The test runner can read a configuration file. For now, only the TOML format is supported.
 Its path can be specified by using the <code>-c PATH</code> flag.</p>
@@ -255,10 +1652,21 @@ when executing the runner with <code>-l</code> argument.</p>
 posix_fallocate = {}
 
 # Can also be specified by using key notation
-[features.posix_fallocate]
+# [features.posix_fallocate]
 </code></pre>
-<h4 id="feature-configuration"><a class="header" href="#feature-configuration">Feature configuration</a></h4>
-<p>TODO</p>
+<h4 id="feature-list"><a class="header" href="#feature-list">Feature list</a></h4>
+<p>The following features can be enabled but do not require any additional configuration:</p>
+<ul>
+<li><strong>chflags</strong> - The <a href="https://man.freebsd.org/cgi/man.cgi?chflags(1)"><code>chflags</code></a> command is available</li>
+<li><strong>nfsv4_acls</strong> - NFSv4 style Access Control Lists are available</li>
+<li><strong>posix_fallocate</strong> - The <a href="https://pubs.opengroup.org/onlinepubs/007904975/functions/posix_fallocate.html"><code>posix_fallocate</code></a> syscall is available</li>
+<li><strong>rename_ctime</strong> - <a href="https://pubs.opengroup.org/onlinepubs/9699919799/functions/rename.html"><code>rename</code></a> changes <code>st_ctime</code> on success (POSIX does not require a file system to update a file's ctime when it gets renamed, but some file systems choose to do it anyway)</li>
+<li><strong>stat_st_birthtime</strong> - <code>struct stat</code> contains an <a href="https://man.freebsd.org/cgi/man.cgi?stat(2)"><code>st_birthtime</code></a> field</li>
+<li><strong>chflags_sf_snapshot</strong> - The <a href="https://man.freebsd.org/cgi/man.cgi?chflags(2)"><code>SF_SNAPSHOT</code></a> flag can be set with <code>chflags</code></li>
+<li><strong>utime_now</strong> - The <a href="https://pubs.opengroup.org/onlinepubs/9699919799.orig/functions/futimens.html"><code>UTIME_NOW</code></a> constant is available</li>
+<li><strong>utimensat</strong> - The <a href="https://pubs.opengroup.org/onlinepubs/9699919799.orig/functions/utimensat.html"><code>utimensat</code></a> syscall is available</li>
+</ul>
+<p>Following features require additional configuration.</p>
 <h4 id="file_flags"><a class="header" href="#file_flags">file_flags</a></h4>
 <p>Some tests are related to file flags.
 However, not all file systems and operating systems support all flags.
@@ -277,7 +1685,7 @@ The argument takes precedence over the configuration.</p>
 secondary_fs = "/mnt/ISO"
 </code></pre>
 <h3 id="dummy_auth"><a class="header" href="#dummy_auth">[dummy_auth]</a></h3>
-<p>This section allows to modify the mecanism for switching users, which is required by some tests.</p>
+<p>This section allows to modify the mechanism for switching users, which is required by some tests.</p>
 <pre><code class="language-toml">[dummy_auth]
 entries = [
   ["nobody", "nobody"],
@@ -289,7 +1697,7 @@ entries = [
 </code></pre>
 <ul>
 <li><code>entries</code> - An entry is composed of a username and its associated group.
-Exactly 3 entries need to be specified if the runner default ones cannot be used.</li>
+Exactly 3 entries need to be specified if the default ones cannot be used.</li>
 </ul>
 <h3 id="settings"><a class="header" href="#settings">[settings]</a></h3>
 <pre><code class="language-toml">[settings]
@@ -308,7 +1716,7 @@ pjdsfstest is run as read-only.</li>
 <p>The package is made of the tests, and a test runner to launch them.</p>
 <h2 id="tests-tests"><a class="header" href="#tests-tests">Tests (tests/)</a></h2>
 <p>To present how tests are organized, we take the <code>chmod</code> syscall as example.</p>
-<p>There is a separate module for each syscall being tested.  Within each of those
+<p>There is a separate module for each syscall being tested. Within each of those
 modules, there may be either a single file, or a separate file for each aspect
 of the syscall.</p>
 <p>The hierarchy is like this:</p>
@@ -326,12 +1734,12 @@ TC2 --&gt; TC2F1[Test case]
 TC2 --&gt; TC2F2[Test case]
 </pre>
 <h3 id="layout"><a class="header" href="#layout">Layout</a></h3>
-<pre><code>src/tests
+<pre><code class="language-bash">src/tests
 ├── chmod (syscall)
 │   ├── errno.rs (aspect)
 │   └── permission.rs (aspect)
-└── mod.rs (glues syscalls together)
-└── chmod.rs (syscall declaration)
+├── mod.rs (glues syscalls together)
+└── chmod.rs (syscall declaration and simple test cases)
 </code></pre>
 <h4 id="testsmodrs"><a class="header" href="#testsmodrs">tests/mod.rs</a></h4>
 <p>All the modules for the test groups should be declared in this file.</p>
@@ -355,17 +1763,19 @@ should be preferred.</p>
 <h3 id="test-case"><a class="header" href="#test-case">Test case</a></h3>
 <p>Each test case exercises a minimal piece of the syscall's functionality.
 Each must be registered with the <code>test_case!</code> macro.</p>
-<pre><code class="language-rust ignore">crate::test_case! {ctime =&gt; [Regular, Fifo, Block, Char, Socket]}
-fn ctime(ctx: &amp;mut TestContext, f_type: FileType) {
-    let path = ctx.create(f_type).unwrap();
-    let ctime_before = stat(&amp;path).unwrap().st_ctime;
+<pre><code class="language-rust ignore">crate::test_case! {
+    /// open do not update parent directory ctime and mtime fields if
+    /// the file previously existed.
+    exists_no_update
+}
+fn exists_no_update(ctx: &amp;mut TestContext) {
+    let file = ctx.create(FileType::Regular).unwrap();
 
-    sleep(Duration::from_secs(1));
-
-    chmod(&amp;path, Mode::from_bits_truncate(0o111)).unwrap();
-
-    let ctime_after = stat(&amp;path).unwrap().st_ctime;
-    assert!(ctime_after &gt; ctime_before);
+    assert_times_unchanged()
+        .path(ctx.base_path(), CTIME | MTIME)
+        .execute(ctx, false, || {
+            assert!(open_wrapper(&amp;file, Mode::from_bits_truncate(0o755)).is_ok());
+        });
 }</code></pre>
 <h2 id="test-runner-mainrs"><a class="header" href="#test-runner-mainrs">Test runner (main.rs)</a></h2>
 <p>The test runner has to run the tests, and provide a command-line interface to allow the user to modify how the tests should be run.
@@ -379,39 +1789,42 @@ It also needs an additional declaration with the <code>test_case!</code> macro a
 with the function name being the only mandatory argument.</p>
 <p>For example:</p>
 <pre><code class="language-rust ignore">// chmod/00.t:L58
-crate::test_case! {ctime =&gt; [Regular, Fifo, Block, Char, Socket]}
-fn ctime(ctx: &amp;mut TestContext, f_type: FileType) {
+crate::test_case! {
+    /// chmod updates ctime when it succeeds
+    update_ctime =&gt; [Regular, Dir, Fifo, Block, Char, Socket]
+}
+fn update_ctime(ctx: &amp;mut TestContext, f_type: FileType) {
     let path = ctx.create(f_type).unwrap();
-    let ctime_before = stat(&amp;path).unwrap().st_ctime;
-
-    ctx.nap();
-
-    chmod(&amp;path, Mode::from_bits_truncate(0o111)).unwrap();
-
-    let ctime_after = stat(&amp;path).unwrap().st_ctime;
-    assert!(ctime_after &gt; ctime_before);
+    assert_ctime_changed(ctx, &amp;path, || {
+        assert!(chmod(&amp;path, Mode::from_bits_truncate(0o111)).is_ok());
+    });
 }</code></pre>
 <p>All the structures and functions needed are documented in the <code>pjdfstest</code> crate,
 which you can obtain by running <code>cargo doc --open</code> in the <code>rust</code> directory
-or by visiting the <a href="/doc/pjdfstest">online documentation</a>.</p>
+or by visiting the <a href="/doc/pjdfstest">documentation</a>.</p>
 <h2 id="test-context"><a class="header" href="#test-context">Test context</a></h2>
-<p>The <code>TestContext</code> struct is a helper struct which provides methods
-to create files, sleep, change user, etc.
+<p>The <a href="doc/pjdfstest/context/struct.TestContext.html"><code>TestContext</code></a>
+struct is a helper struct which provides methods to create files,
+sleep, change user, etc.
 It is passed as a parameter to the test functions and should be used
 to interact with the system in order to ensure that the tests are isolated
 and do not interfere with each other.</p>
 <h3 id="serialization"><a class="header" href="#serialization">Serialization</a></h3>
-<p>When a test case needs to be run in a serialized manner, the <code>SerializedTestContext</code> struct should be used instead.
-It provides additional methods to change the user, group, supplementary groups, or umask of the process.
+<p>When a test case needs to be run in a serialized manner, the
+<a href="doc/pjdfstest/context/struct.SerializedTestContext.html"><code>SerializedTestContext</code></a>
+struct should be used instead.
+It provides additional methods to change the user, group,
+supplementary groups, or umask of the process.
 Please see the <a href="test-declaration.html#serialized-test-cases">Serialized test cases</a> section for more information.</p>
 <h2 id="assertions"><a class="header" href="#assertions">Assertions</a></h2>
 <p>The <code>assert</code> and <code>assert_eq</code> macros should be used to check the results of the tests.
 The <code>assert</code> macro should be used when the test is checking a condition,
-while the <code>assert_eq</code> macro should be used when the test is checking that two values are equal.
-In addition to these macros, the suite provides some additional assertion macros which
+while the <code>assert_eq</code> macro should be used when the test is checking
+that two values are equal.
+In addition to these macros, the suite provides some additional assertion functions which
 should be used when appropriate.
-<code>assert_ctime_changed</code> should be used when checking that the ctime of a file has changed,
-and <code>assert_mtime_changed</code> should be used when checking that the mtime of a file has changed.</p>
+The tests <a href="doc/pjdfstest/tests/index.html#functions">module</a> documentation provides
+a list of these functions.</p>
 <h2 id="description"><a class="header" href="#description">Description</a></h2>
 <p>It is possible to provide doc comments which will be used as documentation for developers
 but also be displayed to users when they run the test.
@@ -482,8 +1895,7 @@ The file types should be added at the end of the test case declaration,
 within brackets and with a fat arrow before (<code>=&gt; [Regular]</code>).
 The test function should also accept a <code>FileType</code> parameter to operate on.</p>
 <p>For example:</p>
-<pre><code class="language-rust ignore">crate::test_case! {change_perm, root, FileSystemFeature::Chflags; FileFlags::SF_IMMUTABLE, FileFlags::UF_IMMUTABLE
-=&gt; [Regular, Fifo, Block, Char, Socket]}
+<pre><code class="language-rust ignore">crate::test_case! {change_perm, root, FileSystemFeature::Chflags =&gt; [Regular, Fifo, Block, Char, Socket]}
 fn change_perm(ctx: &amp;mut TestContext, f_type: FileType) {</code></pre>
 <h2 id="platform-specific-features"><a class="header" href="#platform-specific-features">Platform-specific features</a></h2>
 <p>Some features (like <code>lchmod</code>) are not supported on every operating system.
@@ -507,21 +1919,32 @@ With <code>lchmod</code>, we would get:</p>
 <p>Some test cases need functions only available when they are run serialized,
 especially when they affect the whole process.
 An example is changing user (<code>SerializedTestContext::as_user</code>).
-To have access to these functions, the test should be declared with a <code>SerializedTestContext</code>
-parameter in place of <code>TestContext</code> and the <code>serialized</code> keyword should be prepended before features.</p>
+To have access to these functions, the test should be declared with a
+<a href="doc/pjdfstest/context/struct.SerializedTestContext.html"><code>SerializedTestContext</code></a>
+parameter in place of <code>TestContext</code> and the <code>serialized</code> keyword
+should be prepended before features and <code>root</code> requirement.</p>
 <p>For example:</p>
 <pre><code class="language-rust ignore">crate::test_case! {
-    /// The file mode of a newly created file should not affect whether
-    /// posix_fallocate will work, only the create args
-    /// https://bugs.freebsd.org/bugzilla/show_bug.cgi?id=154873
-    affected_only_create_flags, serialized, root, FileSystemFeature::PosixFallocate
+    /// link changes neither ctime of file nor ctime or mtime of parent when it fails
+    // link/00.t#77
+    unchanged_ctime_fails, serialized, root =&gt; [Regular, Fifo, Block, Char, Socket]
 }
-fn affected_only_create_flags(ctx: &amp;mut SerializedTestContext) {
-    ctx.as_user(Some(Uid::from_raw(65534)), None, || {
-        let path = subdir.join("test1");
-        let file = open(&amp;path, OFlag::O_CREAT | OFlag::O_RDWR, Mode::empty()).unwrap();
-        assert!(posix_fallocate(file, 0, 1).is_ok());
-    });
+fn unchanged_ctime_fails(ctx: &amp;mut SerializedTestContext, ft: FileType) {
+    let file = ctx.create(ft).unwrap();
+    let new_path = ctx.gen_path();
+
+    let user = ctx.get_new_user();
+    assert_times_unchanged()
+        .path(&amp;file, CTIME)
+        .path(ctx.base_path(), CTIME | MTIME)
+        .execute(ctx, false, || {
+            ctx.as_user(user, None, || {
+                assert!(matches!(
+                    link(&amp;file, &amp;new_path),
+                    Err(Errno::EPERM | Errno::EACCES)
+                ));
+            })
+        });
 }</code></pre>
 
                     </main>

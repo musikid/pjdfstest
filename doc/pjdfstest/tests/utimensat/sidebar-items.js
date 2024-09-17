@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["UTIME_NOW","UTIME_OMIT"],"fn":["changes_timestamps","follow_symlink","nobody","order","owner","root","subsecond","utime_now","utime_now_nobody","utime_now_owner","utime_now_root","utime_now_write_perm","utime_omit","write_perm","y2038"]};

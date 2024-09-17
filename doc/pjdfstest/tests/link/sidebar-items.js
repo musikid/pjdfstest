@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["LINK_MAX_LIMIT"],"fn":["changed_ctime_success","eexist_dest_exists","efault_either","eloop_comp","enametoolong_component","enametoolong_path","enoent_named_file","enoent_source_not_exists","enotdir_component_either","erofs_named","exdev_target","has_reasonable_link_max","link_count_max","remove_link","share_metadata","unchanged_ctime_fails"]};

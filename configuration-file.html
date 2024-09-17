@@ -88,7 +88,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded affix "><a href="introduction.html">Introduction</a></li><li class="chapter-item expanded affix "><li class="part-title">Running tests</li><li class="chapter-item expanded "><a href="getting-started.html"><strong aria-hidden="true">1.</strong> Getting started</a></li><li class="chapter-item expanded "><a href="configuration-file.html" class="active"><strong aria-hidden="true">2.</strong> Configuration file</a></li><li class="chapter-item expanded affix "><li class="part-title">Writing tests</li><li class="chapter-item expanded "><a href="tests-structure.html"><strong aria-hidden="true">3.</strong> Structure</a></li><li class="chapter-item expanded "><a href="test-declaration.html"><strong aria-hidden="true">4.</strong> Declaration</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="introduction.html">Introduction</a></li><li class="chapter-item expanded affix "><li class="part-title">Running tests</li><li class="chapter-item expanded "><a href="getting-started.html"><strong aria-hidden="true">1.</strong> Getting started</a></li><li class="chapter-item expanded "><a href="compatibility.html"><strong aria-hidden="true">2.</strong> Compatibility</a></li><li class="chapter-item expanded "><a href="configuration-file.html" class="active"><strong aria-hidden="true">3.</strong> Configuration file</a></li><li class="chapter-item expanded affix "><li class="part-title">Writing tests</li><li class="chapter-item expanded "><a href="tests-structure.html"><strong aria-hidden="true">4.</strong> Structure</a></li><li class="chapter-item expanded "><a href="test-declaration.html"><strong aria-hidden="true">5.</strong> Declaration</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle">
                 <div class="sidebar-resize-indicator"></div>
@@ -147,6 +147,9 @@
                         <a href="print.html" title="Print this book" aria-label="Print this book">
                             <i id="print-button" class="fa fa-print"></i>
                         </a>
+                        <a href="https://github.com/saidsay-so/pjdfstest" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
 
                     </div>
                 </div>
@@ -190,10 +193,21 @@ when executing the runner with <code>-l</code> argument.</p>
 posix_fallocate = {}
 
 # Can also be specified by using key notation
-[features.posix_fallocate]
+# [features.posix_fallocate]
 </code></pre>
-<h4 id="feature-configuration"><a class="header" href="#feature-configuration">Feature configuration</a></h4>
-<p>TODO</p>
+<h4 id="feature-list"><a class="header" href="#feature-list">Feature list</a></h4>
+<p>The following features can be enabled but do not require any additional configuration:</p>
+<ul>
+<li><strong>chflags</strong> - The <a href="https://man.freebsd.org/cgi/man.cgi?chflags(1)"><code>chflags</code></a> command is available</li>
+<li><strong>nfsv4_acls</strong> - NFSv4 style Access Control Lists are available</li>
+<li><strong>posix_fallocate</strong> - The <a href="https://pubs.opengroup.org/onlinepubs/007904975/functions/posix_fallocate.html"><code>posix_fallocate</code></a> syscall is available</li>
+<li><strong>rename_ctime</strong> - <a href="https://pubs.opengroup.org/onlinepubs/9699919799/functions/rename.html"><code>rename</code></a> changes <code>st_ctime</code> on success (POSIX does not require a file system to update a file's ctime when it gets renamed, but some file systems choose to do it anyway)</li>
+<li><strong>stat_st_birthtime</strong> - <code>struct stat</code> contains an <a href="https://man.freebsd.org/cgi/man.cgi?stat(2)"><code>st_birthtime</code></a> field</li>
+<li><strong>chflags_sf_snapshot</strong> - The <a href="https://man.freebsd.org/cgi/man.cgi?chflags(2)"><code>SF_SNAPSHOT</code></a> flag can be set with <code>chflags</code></li>
+<li><strong>utime_now</strong> - The <a href="https://pubs.opengroup.org/onlinepubs/9699919799.orig/functions/futimens.html"><code>UTIME_NOW</code></a> constant is available</li>
+<li><strong>utimensat</strong> - The <a href="https://pubs.opengroup.org/onlinepubs/9699919799.orig/functions/utimensat.html"><code>utimensat</code></a> syscall is available</li>
+</ul>
+<p>Following features require additional configuration.</p>
 <h4 id="file_flags"><a class="header" href="#file_flags">file_flags</a></h4>
 <p>Some tests are related to file flags.
 However, not all file systems and operating systems support all flags.
@@ -212,7 +226,7 @@ The argument takes precedence over the configuration.</p>
 secondary_fs = "/mnt/ISO"
 </code></pre>
 <h3 id="dummy_auth"><a class="header" href="#dummy_auth">[dummy_auth]</a></h3>
-<p>This section allows to modify the mecanism for switching users, which is required by some tests.</p>
+<p>This section allows to modify the mechanism for switching users, which is required by some tests.</p>
 <pre><code class="language-toml">[dummy_auth]
 entries = [
   ["nobody", "nobody"],
@@ -224,7 +238,7 @@ entries = [
 </code></pre>
 <ul>
 <li><code>entries</code> - An entry is composed of a username and its associated group.
-Exactly 3 entries need to be specified if the runner default ones cannot be used.</li>
+Exactly 3 entries need to be specified if the default ones cannot be used.</li>
 </ul>
 <h3 id="settings"><a class="header" href="#settings">[settings]</a></h3>
 <pre><code class="language-toml">[settings]
@@ -244,7 +258,7 @@ pjdsfstest is run as read-only.</li>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="getting-started.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="compatibility.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <i class="fa fa-angle-left"></i>
                             </a>
 
@@ -258,7 +272,7 @@ pjdsfstest is run as read-only.</li>
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="getting-started.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="compatibility.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <i class="fa fa-angle-left"></i>
                     </a>
 

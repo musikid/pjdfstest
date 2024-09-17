@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["chown_wrapper","efault_path","eloop_comp","eloop_final_comp","enametoolong_component","enametoolong_path","enoent_comp","enoent_named_file","enoent_symlink","enotdir_component","erofs_named"],"mod":["lchown"]};

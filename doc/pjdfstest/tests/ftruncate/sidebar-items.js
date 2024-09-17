@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["affected_create_flags_only","einval_negative_length","extend_file_shrink_sparse","shrink_not_empty","unchanged_ctime_failed","update_ctime_success"]};

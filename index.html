@@ -88,7 +88,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded affix "><a href="introduction.html" class="active">Introduction</a></li><li class="chapter-item expanded affix "><li class="part-title">Running tests</li><li class="chapter-item expanded "><a href="getting-started.html"><strong aria-hidden="true">1.</strong> Getting started</a></li><li class="chapter-item expanded "><a href="configuration-file.html"><strong aria-hidden="true">2.</strong> Configuration file</a></li><li class="chapter-item expanded affix "><li class="part-title">Writing tests</li><li class="chapter-item expanded "><a href="tests-structure.html"><strong aria-hidden="true">3.</strong> Structure</a></li><li class="chapter-item expanded "><a href="test-declaration.html"><strong aria-hidden="true">4.</strong> Declaration</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="introduction.html" class="active">Introduction</a></li><li class="chapter-item expanded affix "><li class="part-title">Running tests</li><li class="chapter-item expanded "><a href="getting-started.html"><strong aria-hidden="true">1.</strong> Getting started</a></li><li class="chapter-item expanded "><a href="compatibility.html"><strong aria-hidden="true">2.</strong> Compatibility</a></li><li class="chapter-item expanded "><a href="configuration-file.html"><strong aria-hidden="true">3.</strong> Configuration file</a></li><li class="chapter-item expanded affix "><li class="part-title">Writing tests</li><li class="chapter-item expanded "><a href="tests-structure.html"><strong aria-hidden="true">4.</strong> Structure</a></li><li class="chapter-item expanded "><a href="test-declaration.html"><strong aria-hidden="true">5.</strong> Declaration</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle">
                 <div class="sidebar-resize-indicator"></div>
@@ -147,6 +147,9 @@
                         <a href="print.html" title="Print this book" aria-label="Print this book">
                             <i id="print-button" class="fa fa-print"></i>
                         </a>
+                        <a href="https://github.com/saidsay-so/pjdfstest" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
 
                     </div>
                 </div>
@@ -174,11 +177,12 @@
                 <div id="content" class="content">
                     <main>
                         <h1 id="introduction"><a class="header" href="#introduction">Introduction</a></h1>
-<p>PJDFSTest is a file system test suite.
+<p>PJDFSTest is a file system test suite focused on POSIX compliance,
+primarily for FreeBSD file systems.
 It was originally written to validate the ZFS port to FreeBSD,
-but it now supports multiple operating systems and file systems.
-This is a complete rewrite of the original test suite in Rust.</p>
-<h3 id="note-the-documentation-is-still-a-work-in-progress"><a class="header" href="#note-the-documentation-is-still-a-work-in-progress">NOTE: The documentation is still a work-in-progress.</a></h3>
+but it now supports multiple operating systems and file systems.</p>
+<p>This is a complete rewrite of the original test suite in Rust.</p>
+<p><strong>NOTE: The documentation is still a work-in-progress</strong></p>
 <h2 id="build"><a class="header" href="#build">Build</a></h2>
 <pre><code class="language-bash">cd rust
 cargo run
@@ -187,6 +191,10 @@ cargo run
 <pre><code class="language-bash">cd rust
 cargo build &amp;&amp; sudo ./target/debug/pjdfstest
 </code></pre>
+<h2 id="contributing"><a class="header" href="#contributing">Contributing</a></h2>
+<p>Please read the <a href="CONTRIBUTING.html">CONTRIBUTING.md</a> file on how to contribute to this project.
+In addition to this book, you can also find the crate documentation by running <code>cargo doc --open</code>
+in the <code>rust</code> directory or by visiting the <a href="/doc/pjdfstest">documentation</a>.</p>
 
                     </main>
 

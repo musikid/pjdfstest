@@ -1,0 +1,1621 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Compatibility - PJDFSTest</title>
+
+
+        <!-- Custom HTML head -->
+        
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="favicon.svg">
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+    </head>
+    <body class="sidebar-visible no-js">
+    <div id="body-container">
+        <!-- Provide site root to javascript -->
+        <script>
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('light')
+            html.classList.add(theme);
+            var body = document.querySelector('body');
+            body.classList.remove('no-js')
+            body.classList.add('js');
+        </script>
+
+        <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            var body = document.querySelector('body');
+            var sidebar = null;
+            var sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+            }
+            sidebar_toggle.checked = sidebar === 'visible';
+            body.classList.remove('sidebar-visible');
+            body.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="introduction.html">Introduction</a></li><li class="chapter-item expanded affix "><li class="part-title">Running tests</li><li class="chapter-item expanded "><a href="getting-started.html"><strong aria-hidden="true">1.</strong> Getting started</a></li><li class="chapter-item expanded "><a href="compatibility.html" class="active"><strong aria-hidden="true">2.</strong> Compatibility</a></li><li class="chapter-item expanded "><a href="configuration-file.html"><strong aria-hidden="true">3.</strong> Configuration file</a></li><li class="chapter-item expanded affix "><li class="part-title">Writing tests</li><li class="chapter-item expanded "><a href="tests-structure.html"><strong aria-hidden="true">4.</strong> Structure</a></li><li class="chapter-item expanded "><a href="test-declaration.html"><strong aria-hidden="true">5.</strong> Declaration</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <!-- Track and set sidebar scroll position -->
+        <script>
+            var sidebarScrollbox = document.querySelector('#sidebar .sidebar-scrollbox');
+            sidebarScrollbox.addEventListener('click', function(e) {
+                if (e.target.tagName === 'A') {
+                    sessionStorage.setItem('sidebar-scroll', sidebarScrollbox.scrollTop);
+                }
+            }, { passive: true });
+            var sidebarScrollTop = sessionStorage.getItem('sidebar-scroll');
+            sessionStorage.removeItem('sidebar-scroll');
+            if (sidebarScrollTop) {
+                // preserve sidebar scroll position when navigating via links within sidebar
+                sidebarScrollbox.scrollTop = sidebarScrollTop;
+            } else {
+                // scroll sidebar to current active section when navigating via "next/previous chapter" buttons
+                var activeSection = document.querySelector('#sidebar .active');
+                if (activeSection) {
+                    activeSection.scrollIntoView({ block: 'center' });
+                }
+            }
+        </script>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </label>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">PJDFSTest</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/saidsay-so/pjdfstest" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="compatibility"><a class="header" href="#compatibility">Compatibility</a></h1>
+<p>The test suite is designed to be compatible with multiple operating systems and file systems.
+It is primarily focused on POSIX compliance for FreeBSD file systems, but is also compatible with other operating systems and file systems
+in addition of supplementary tests.</p>
+<h2 id="supported-operating-systems"><a class="header" href="#supported-operating-systems">Supported operating systems</a></h2>
+<h3 id="active-support"><a class="header" href="#active-support">Active support</a></h3>
+<p>The test suite has been tested and is actively maintained on the following operating systems:</p>
+<ul>
+<li>FreeBSD (main development platform)
+<ul>
+<li>UFS</li>
+<li>ZFS</li>
+</ul>
+</li>
+<li>Linux
+<ul>
+<li>ext4</li>
+</ul>
+</li>
+</ul>
+<h3 id="experimental-support"><a class="header" href="#experimental-support">Experimental support</a></h3>
+<p>The test suite has not been tested on the following operating systems, but should work:</p>
+<ul>
+<li>MacOS</li>
+<li>NetBSD</li>
+<li>OpenBSD</li>
+<li>Solaris</li>
+<li>DragonFly BSD</li>
+<li>Illumos</li>
+<li>Android</li>
+<li>iOS</li>
+</ul>
+<h2 id="missing-tests"><a class="header" href="#missing-tests">Missing tests</a></h2>
+<p>The test suite is a complete rewrite of the original test suite in Rust. Many tests have been ported, but some tests are still missing.</p>
+<details>
+<summary>chflags <progress value='7' max='14'></progress></summary>
+<table>
+<tr>
+<th>Test</th>
+<th>Description</th>
+<th>Converted</th>
+</tr>
+<tr>
+<td>00.t</td>
+<td>chflags changes flags</td>
+<td>No</td>
+</tr>
+<tr>
+<td>01.t</td>
+<td>chflags returns ENOTDIR if a component of the path prefix is not a directory</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>02.t</td>
+<td>chflags returns ENAMETOOLONG if a component of a pathname exceeded {NAME_MAX} characters</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>03.t</td>
+<td>chflags returns ENAMETOOLONG if an entire path name exceeded {PATH_MAX} characters</td>
+<td>No</td>
+</tr>
+<tr>
+<td>04.t</td>
+<td>chflags returns ENOENT if the named file does not exist</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>05.t</td>
+<td>chflags returns EACCES when search permission is denied for a component of the path prefix</td>
+<td>No</td>
+</tr>
+<tr>
+<td>06.t</td>
+<td>chflags returns ELOOP if too many symbolic links were encountered in translating the pathname</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>07.t</td>
+<td>chflags returns EPERM when the effective user ID does not match the owner of the file and the effective user ID is not the super-user</td>
+<td>No</td>
+</tr>
+<tr>
+<td>08.t</td>
+<td>chflags returns EPERM when one of SF_IMMUTABLE, SF_APPEND, or SF_NOUNLINK is set and the user is not the super-user</td>
+<td>No</td>
+</tr>
+<tr>
+<td>09.t</td>
+<td>chflags returns EPERM when one of SF_IMMUTABLE, SF_APPEND, or SF_NOUNLINK is set and securelevel is greater than 0</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>10.t</td>
+<td>chflags returns EPERM if non-super-user tries to set one of SF_IMMUTABLE, SF_APPEND, or SF_NOUNLINK</td>
+<td>No</td>
+</tr>
+<tr>
+<td>11.t</td>
+<td>chflags returns EPERM if a user tries to set or remove the SF_SNAPSHOT flag</td>
+<td>No</td>
+</tr>
+<tr>
+<td>12.t</td>
+<td>chflags returns EROFS if the named file resides on a read-only file system</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>13.t</td>
+<td>chflags returns EFAULT if the path argument points outside the process's allocated address space</td>
+<td>Yes</td>
+</tr>
+</table>
+</details>
+<details>
+<summary>chmod <progress value='9' max='13'></progress></summary>
+<table>
+<tr>
+<th>Test</th>
+<th>Description</th>
+<th>Converted</th>
+</tr>
+<tr>
+<td>00.t</td>
+<td>chmod changes permission</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>01.t</td>
+<td>chmod returns ENOTDIR if a component of the path prefix is not a directory</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>02.t</td>
+<td>chmod returns ENAMETOOLONG if a component of a pathname exceeded {NAME_MAX} characters</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>03.t</td>
+<td>chmod returns ENAMETOOLONG if an entire path name exceeded {PATH_MAX} characters</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>04.t</td>
+<td>chmod returns ENOENT if the named file does not exist</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>05.t</td>
+<td>chmod returns EACCES when search permission is denied for a component of the path prefix</td>
+<td>No</td>
+</tr>
+<tr>
+<td>06.t</td>
+<td>chmod returns ELOOP if too many symbolic links were encountered in translating the pathname</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>07.t</td>
+<td>chmod returns EPERM if the operation would change the ownership, but the effective user ID is not the super-user</td>
+<td>No</td>
+</tr>
+<tr>
+<td>08.t</td>
+<td>chmod returns EPERM if the named file has its immutable or append-only flag set</td>
+<td>No</td>
+</tr>
+<tr>
+<td>09.t</td>
+<td>chmod returns EROFS if the named file resides on a read-only file system</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>10.t</td>
+<td>chmod returns EFAULT if the path argument points outside the process's allocated address space</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>11.t</td>
+<td>chmod returns EFTYPE if the effective user ID is not the super-user, the mode includes the sticky bit (S_ISVTX), and path does not refer to a directory</td>
+<td>No</td>
+</tr>
+<tr>
+<td>12.t</td>
+<td>verify SUID/SGID bit behaviour</td>
+<td>Yes</td>
+</tr>
+</table>
+</details>
+<details>
+<summary>chown <progress value='6' max='11'></progress></summary>
+<table>
+<tr>
+<th>Test</th>
+<th>Description</th>
+<th>Converted</th>
+</tr>
+<tr>
+<td>00.t</td>
+<td>chown changes ownership</td>
+<td>No</td>
+</tr>
+<tr>
+<td>01.t</td>
+<td>chown returns ENOTDIR if a component of the path prefix is not a directory</td>
+<td>No</td>
+</tr>
+<tr>
+<td>02.t</td>
+<td>chown returns ENAMETOOLONG if a component of a pathname exceeded ${NAME_MAX} characters</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>03.t</td>
+<td>chown returns ENAMETOOLONG if an entire path name exceeded {PATH_MAX} characters</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>04.t</td>
+<td>chown returns ENOENT if the named file does not exist</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>05.t</td>
+<td>chown returns EACCES when search permission is denied for a component of the path prefix</td>
+<td>No</td>
+</tr>
+<tr>
+<td>06.t</td>
+<td>chown returns ELOOP if too many symbolic links were encountered in translating the pathname</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>07.t</td>
+<td>chown returns EPERM if the operation would change the ownership, but the effective user ID is not the super-user and the process is not an owner of the file</td>
+<td>No</td>
+</tr>
+<tr>
+<td>08.t</td>
+<td>chown returns EPERM if the named file has its immutable or append-only flag set</td>
+<td>No</td>
+</tr>
+<tr>
+<td>09.t</td>
+<td>chown returns EROFS if the named file resides on a read-only file system</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>10.t</td>
+<td>chown returns EFAULT if the path argument points outside the process's allocated address space</td>
+<td>Yes</td>
+</tr>
+</table>
+</details>
+<details>
+<summary>ftruncate <progress value='1' max='15'></progress></summary>
+<table>
+<tr>
+<th>Test</th>
+<th>Description</th>
+<th>Converted</th>
+</tr>
+<tr>
+<td>00.t</td>
+<td>ftruncate descrease/increase file size</td>
+<td>No</td>
+</tr>
+<tr>
+<td>01.t</td>
+<td>truncate returns ENOTDIR if a component of the path prefix is not a directory</td>
+<td>No</td>
+</tr>
+<tr>
+<td>02.t</td>
+<td>truncate returns ENAMETOOLONG if a component of a pathname exceeded {NAME_MAX} characters</td>
+<td>No</td>
+</tr>
+<tr>
+<td>03.t</td>
+<td>truncate returns ENAMETOOLONG if an entire path name exceeded {PATH_MAX} characters</td>
+<td>No</td>
+</tr>
+<tr>
+<td>04.t</td>
+<td>truncate returns ENOENT if the named file does not exist</td>
+<td>No</td>
+</tr>
+<tr>
+<td>05.t</td>
+<td>truncate returns EACCES when search permission is denied for a component of the path prefix</td>
+<td>No</td>
+</tr>
+<tr>
+<td>06.t</td>
+<td>truncate returns EACCES if the named file is not writable by the user</td>
+<td>No</td>
+</tr>
+<tr>
+<td>07.t</td>
+<td>truncate returns ELOOP if too many symbolic links were encountered in translating the pathname</td>
+<td>No</td>
+</tr>
+<tr>
+<td>08.t</td>
+<td>truncate returns EPERM if the named file has its immutable or append-only flag set</td>
+<td>No</td>
+</tr>
+<tr>
+<td>09.t</td>
+<td>truncate returns EISDIR if the named file is a directory</td>
+<td>No</td>
+</tr>
+<tr>
+<td>10.t</td>
+<td>truncate returns EROFS if the named file resides on a read-only file system</td>
+<td>No</td>
+</tr>
+<tr>
+<td>11.t</td>
+<td>truncate returns ETXTBSY the file is a pure procedure (shared text) file that is being executed</td>
+<td>No</td>
+</tr>
+<tr>
+<td>12.t</td>
+<td>truncate returns EFBIG or EINVAL if the length argument was greater than the maximum file size</td>
+<td>No</td>
+</tr>
+<tr>
+<td>13.t</td>
+<td>ftruncate returns EINVAL if the length argument was less than 0</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>14.t</td>
+<td>truncate returns EFAULT if the path argument points outside the process's allocated address space</td>
+<td>No</td>
+</tr>
+</table>
+</details>
+<details>
+<summary>granular <progress value='7' max='7'></progress></summary>
+<table>
+<tr>
+<th>Test</th>
+<th>Description</th>
+<th>Converted</th>
+</tr>
+<tr>
+<td>00.t</td>
+<td>NFSv4 granular permissions checking - WRITE_DATA vs APPEND_DATA on directories</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>01.t</td>
+<td>NFSv4 granular permissions checking - ACL_READ_ATTRIBUTES and ACL_WRITE_ATTRIBUTES</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>02.t</td>
+<td>NFSv4 granular permissions checking - ACL_READ_ACL and ACL_WRITE_ACL</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>03.t</td>
+<td>NFSv4 granular permissions checking - DELETE and DELETE_CHILD</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>04.t</td>
+<td>NFSv4 granular permissions checking - ACL_WRITE_OWNER</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>05.t</td>
+<td>NFSv4 granular permissions checking - DELETE and DELETE_CHILD with directories</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>06.t</td>
+<td>NFSv4 granular permissions checking - setuid and setgid are cleared when non-owner calls chown</td>
+<td>Yes</td>
+</tr>
+</table>
+</details>
+<details>
+<summary>link <progress value='14' max='18'></progress></summary>
+<table>
+<tr>
+<th>Test</th>
+<th>Description</th>
+<th>Converted</th>
+</tr>
+<tr>
+<td>00.t</td>
+<td>link creates hardlinks</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>01.t</td>
+<td>link returns ENOTDIR if a component of either path prefix is not a directory</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>02.t</td>
+<td>link returns ENAMETOOLONG if a component of either pathname exceeded {NAME_MAX} characters</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>03.t</td>
+<td>link returns ENAMETOOLONG if an entire length of either path name exceeded {PATH_MAX} characters</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>04.t</td>
+<td>link returns ENOENT if a component of either path prefix does not exist</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>05.t</td>
+<td>link returns EMLINK if the link count of the file named by name1 would exceed 32767</td>
+<td>No</td>
+</tr>
+<tr>
+<td>06.t</td>
+<td>link returns EACCES when a component of either path prefix denies search permission</td>
+<td>No</td>
+</tr>
+<tr>
+<td>07.t</td>
+<td>link returns EACCES when the requested link requires writing in a directory with a mode that denies write permission</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>08.t</td>
+<td>link returns ELOOP if too many symbolic links were encountered in translating one of the pathnames</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>09.t</td>
+<td>link returns ENOENT if the source file does not exist</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>10.t</td>
+<td>link returns EEXIST if the destination file does exist</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>11.t</td>
+<td>link returns EPERM if the source file is a directory</td>
+<td>No</td>
+</tr>
+<tr>
+<td>12.t</td>
+<td>link returns EPERM if the source file has its immutable or append-only flag set</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>13.t</td>
+<td>link returns EPERM if the parent directory of the destination file has its immutable flag set</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>14.t</td>
+<td>link returns EXDEV if the source and the destination files are on different file systems</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>15.t</td>
+<td>link returns ENOSPC if the directory in which the entry for the new link is being placed cannot be extended because there is no space left on the file system containing the directory</td>
+<td>No</td>
+</tr>
+<tr>
+<td>16.t</td>
+<td>link returns EROFS if the requested link requires writing in a directory on a read-only file system</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>17.t</td>
+<td>link returns EFAULT if one of the pathnames specified is outside the process's allocated address space</td>
+<td>Yes</td>
+</tr>
+</table>
+</details>
+<details>
+<summary>mkdir <progress value='7' max='13'></progress></summary>
+<table>
+<tr>
+<th>Test</th>
+<th>Description</th>
+<th>Converted</th>
+</tr>
+<tr>
+<td>00.t</td>
+<td>mkdir creates directories</td>
+<td>No</td>
+</tr>
+<tr>
+<td>01.t</td>
+<td>mkdir returns ENOTDIR if a component of the path prefix is not a directory</td>
+<td>No</td>
+</tr>
+<tr>
+<td>02.t</td>
+<td>mkdir returns ENAMETOOLONG if a component of a pathname exceeded {NAME_MAX} characters</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>03.t</td>
+<td>mkdir returns ENAMETOOLONG if an entire path name exceeded {PATH_MAX} characters</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>04.t</td>
+<td>mkdir returns ENOENT if a component of the path prefix does not exist</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>05.t</td>
+<td>mkdir returns EACCES when search permission is denied for a component of the path prefix</td>
+<td>No</td>
+</tr>
+<tr>
+<td>06.t</td>
+<td>mkdir returns EACCES when write permission is denied on the parent directory of the directory to be created</td>
+<td>No</td>
+</tr>
+<tr>
+<td>07.t</td>
+<td>mkdir returns ELOOP if too many symbolic links were encountered in translating the pathname</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>08.t</td>
+<td>mkdir returns EPERM if the parent directory of the directory to be created has its immutable flag set</td>
+<td>No</td>
+</tr>
+<tr>
+<td>09.t</td>
+<td>mkdir returns EROFS if the named file resides on a read-only file system</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>10.t</td>
+<td>mkdir returns EEXIST if the named file exists</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>11.t</td>
+<td>mkdir returns ENOSPC if there are no free inodes on the file system on which the directory is being created</td>
+<td>No</td>
+</tr>
+<tr>
+<td>12.t</td>
+<td>mkdir returns EFAULT if the path argument points outside the process's allocated address space</td>
+<td>Yes</td>
+</tr>
+</table>
+</details>
+<details>
+<summary>mkfifo <progress value='8' max='13'></progress></summary>
+<table>
+<tr>
+<th>Test</th>
+<th>Description</th>
+<th>Converted</th>
+</tr>
+<tr>
+<td>00.t</td>
+<td>mkfifo creates fifo files</td>
+<td>No</td>
+</tr>
+<tr>
+<td>01.t</td>
+<td>mkfifo returns ENOTDIR if a component of the path prefix is not a directory</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>02.t</td>
+<td>mkfifo returns ENAMETOOLONG if a component of a pathname exceeded {NAME_MAX} characters</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>03.t</td>
+<td>mkfifo returns ENAMETOOLONG if an entire path name exceeded {PATH_MAX} characters</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>04.t</td>
+<td>mkfifo returns ENOENT if a component of the path prefix does not exist</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>05.t</td>
+<td>mkfifo returns EACCES when search permission is denied for a component of the path prefix</td>
+<td>No</td>
+</tr>
+<tr>
+<td>06.t</td>
+<td>mkfifo returns EACCES when write permission is denied on the parent directory of the file to be created</td>
+<td>No</td>
+</tr>
+<tr>
+<td>07.t</td>
+<td>mkfifo returns ELOOP if too many symbolic links were encountered in translating the pathname</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>08.t</td>
+<td>mkfifo returns EROFS if the named file resides on a read-only file system</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>09.t</td>
+<td>mkfifo returns EEXIST if the named file exists</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>10.t</td>
+<td>mkfifo returns EPERM if the parent directory of the file to be created has its immutable flag set</td>
+<td>No</td>
+</tr>
+<tr>
+<td>11.t</td>
+<td>mkfifo returns ENOSPC if there are no free inodes on the file system on which the file is being created</td>
+<td>No</td>
+</tr>
+<tr>
+<td>12.t</td>
+<td>mkfifo returns EFAULT if the path argument points outside the process's allocated address space</td>
+<td>Yes</td>
+</tr>
+</table>
+</details>
+<details>
+<summary>mknod <progress value='8' max='12'></progress></summary>
+<table>
+<tr>
+<th>Test</th>
+<th>Description</th>
+<th>Converted</th>
+</tr>
+<tr>
+<td>00.t</td>
+<td>mknod creates fifo files</td>
+<td>No</td>
+</tr>
+<tr>
+<td>01.t</td>
+<td>mknod returns ENOTDIR if a component of the path prefix is not a directory</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>02.t</td>
+<td>mknod returns ENAMETOOLONG if a component of a pathname exceeded {NAME_MAX} characters</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>03.t</td>
+<td>mknod returns ENAMETOOLONG if an entire path name exceeded {PATH_MAX} characters</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>04.t</td>
+<td>mknod returns ENOENT if a component of the path prefix does not exist</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>05.t</td>
+<td>mknod returns EACCES when search permission is denied for a component of the path prefix</td>
+<td>No</td>
+</tr>
+<tr>
+<td>06.t</td>
+<td>mknod returns EACCES when write permission is denied on the parent directory of the file to be created</td>
+<td>No</td>
+</tr>
+<tr>
+<td>07.t</td>
+<td>mknod returns ELOOP if too many symbolic links were encountered in translating the pathname</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>08.t</td>
+<td>mknod returns EEXIST if the named file exists</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>09.t</td>
+<td>mknod returns EPERM if the parent directory of the file to be created has its immutable flag set</td>
+<td>No</td>
+</tr>
+<tr>
+<td>10.t</td>
+<td>mknod returns EFAULT if the path argument points outside the process's allocated address space</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>11.t</td>
+<td>mknod creates device files</td>
+<td>Yes</td>
+</tr>
+</table>
+</details>
+<details>
+<summary>open <progress value='14' max='26'></progress></summary>
+<table>
+<tr>
+<th>Test</th>
+<th>Description</th>
+<th>Converted</th>
+</tr>
+<tr>
+<td>00.t</td>
+<td>open opens (and eventually creates) a file</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>01.t</td>
+<td>open returns ENOTDIR if a component of the path prefix is not a directory</td>
+<td>No</td>
+</tr>
+<tr>
+<td>02.t</td>
+<td>open returns ENAMETOOLONG if a component of a pathname exceeded {NAME_MAX} characters</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>03.t</td>
+<td>open returns ENAMETOOLONG if an entire path name exceeded ${PATH_MAX} characters</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>04.t</td>
+<td>open returns ENOENT if a component of the path name that must exist does not exist or O_CREAT is not set and the named file does not exist</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>05.t</td>
+<td>open returns EACCES when search permission is denied for a component of the path prefix</td>
+<td>No</td>
+</tr>
+<tr>
+<td>06.t</td>
+<td>open returns EACCES when the required permissions (for reading and/or writing) are denied for the given flags</td>
+<td>No</td>
+</tr>
+<tr>
+<td>07.t</td>
+<td>open returns EACCES when O_TRUNC is specified and write permission is denied</td>
+<td>No</td>
+</tr>
+<tr>
+<td>08.t</td>
+<td>open returns EACCES when O_CREAT is specified, the file does not exist, and the directory in which it is to be created does not permit writing</td>
+<td>No</td>
+</tr>
+<tr>
+<td>09.t</td>
+<td>O_CREAT is specified, the file does not exist, and the directory in which it is to be created has its immutable flag set</td>
+<td>No</td>
+</tr>
+<tr>
+<td>10.t</td>
+<td>open returns EPERM when the named file has its immutable flag set and the file is to be modified</td>
+<td>No</td>
+</tr>
+<tr>
+<td>11.t</td>
+<td>open returns EPERM when the named file has its append-only flag set, the file is to be modified, and O_TRUNC is specified or O_APPEND is not specified</td>
+<td>No</td>
+</tr>
+<tr>
+<td>12.t</td>
+<td>open returns ELOOP if too many symbolic links were encountered in translating the pathname</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>13.t</td>
+<td>open returns EISDIR when trying to open a directory for writing</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>14.t</td>
+<td>open returns EROFS if the named file resides on a read-only file system, and the file is to be modified</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>15.t</td>
+<td>open returns EROFS when O_CREAT is specified and the named file would reside on a read-only file system</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>16.t</td>
+<td>open returns $error when O_NOFOLLOW was specified and the target is a symbolic link</td>
+<td>No</td>
+</tr>
+<tr>
+<td>17.t</td>
+<td>open returns ENXIO when O_NONBLOCK is set, the named file is a fifo, O_WRONLY is set, and no process has the file open for reading</td>
+<td>No</td>
+</tr>
+<tr>
+<td>18.t</td>
+<td>open returns EWOULDBLOCK when O_NONBLOCK and one of O_SHLOCK or O_EXLOCK is specified and the file is locked</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>19.t</td>
+<td>open returns ENOSPC when O_CREAT is specified, the file does not exist, and there are no free inodes on the file system on which the file is being created</td>
+<td>No</td>
+</tr>
+<tr>
+<td>20.t</td>
+<td>open returns ETXTBSY when the file is a pure procedure (shared text) file that is being executed and the open() system call requests write access</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>21.t</td>
+<td>open returns EFAULT if the path argument points outside the process's allocated address space</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>22.t</td>
+<td>open returns EEXIST when O_CREAT and O_EXCL were specified and the file exists</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>23.t</td>
+<td>open may return EINVAL when an attempt was made to open a descriptor with an illegal combination of O_RDONLY, O_WRONLY, and O_RDWR</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>24.t</td>
+<td>open returns $expected_error when trying to open UNIX domain socket</td>
+<td>No</td>
+</tr>
+<tr>
+<td>25.t</td>
+<td>interact with > 2 GB files</td>
+<td>Yes</td>
+</tr>
+</table>
+</details>
+<details>
+<summary>posix_fallocate <progress value='0' max='1'></progress></summary>
+<table>
+<tr>
+<th>Test</th>
+<th>Description</th>
+<th>Converted</th>
+</tr>
+<tr>
+<td>00.t</td>
+<td>posix_fallocate descrease/increase file size</td>
+<td>No</td>
+</tr>
+</table>
+</details>
+<details>
+<summary>rename <progress value='17' max='25'></progress></summary>
+<table>
+<tr>
+<th>Test</th>
+<th>Description</th>
+<th>Converted</th>
+</tr>
+<tr>
+<td>00.t</td>
+<td>rename changes file name</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>01.t</td>
+<td>rename returns ENAMETOOLONG if a component of either pathname exceeded {NAME_MAX} characters</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>02.t</td>
+<td>rename returns ENAMETOOLONG if an entire length of either path name exceeded {PATH_MAX} characters</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>03.t</td>
+<td>rename returns ENOENT if a component of the 'from' path does not exist, or a path prefix of 'to' does not exist</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>04.t</td>
+<td>rename returns EACCES when a component of either path prefix denies search permission</td>
+<td>No</td>
+</tr>
+<tr>
+<td>05.t</td>
+<td>rename returns EACCES when the requested link requires writing in a directory with a mode that denies write permission</td>
+<td>No</td>
+</tr>
+<tr>
+<td>06.t</td>
+<td>rename returns EPERM if the file pointed at by the 'from' argument has its immutable, undeletable or append-only flag set</td>
+<td>No</td>
+</tr>
+<tr>
+<td>07.t</td>
+<td>rename returns EPERM if the parent directory of the file pointed at by the 'from' argument has its immutable or append-only flag set</td>
+<td>No</td>
+</tr>
+<tr>
+<td>08.t</td>
+<td>rename returns EPERM if the parent directory of the file pointed at by the 'to' argument has its immutable flag set</td>
+<td>No</td>
+</tr>
+<tr>
+<td>09.t</td>
+<td>rename returns EACCES or EPERM if the directory containing 'from' is marked sticky, and neither the containing directory nor 'from' are owned by the effective user ID</td>
+<td>No</td>
+</tr>
+<tr>
+<td>10.t</td>
+<td>rename returns EACCES or EPERM if the file pointed at by the 'to' argument exists, the directory containing 'to' is marked sticky, and neither the containing directory nor 'to' are owned by the effective user ID</td>
+<td>No</td>
+</tr>
+<tr>
+<td>11.t</td>
+<td>rename returns ELOOP if too many symbolic links were encountered in translating one of the pathnames</td>
+<td>No</td>
+</tr>
+<tr>
+<td>12.t</td>
+<td>rename returns ENOTDIR if a component of either path prefix is not a directory</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>13.t</td>
+<td>rename returns ENOTDIR when the 'from' argument is a directory, but 'to' is not a directory</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>14.t</td>
+<td>rename returns EISDIR when the 'to' argument is a directory, but 'from' is not a directory</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>15.t</td>
+<td>rename returns EXDEV if the link named by 'to' and the file named by 'from' are on different file systems</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>16.t</td>
+<td>rename returns EROFS if the requested link requires writing in a directory on a read-only file system</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>17.t</td>
+<td>rename returns EFAULT if one of the pathnames specified is outside the process's allocated address space</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>18.t</td>
+<td>rename returns EINVAL when the 'from' argument is a parent directory of 'to'</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>19.t</td>
+<td>rename returns EINVAL/EBUSY when an attempt is made to rename '.' or '..'</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>20.t</td>
+<td>rename returns EEXIST or ENOTEMPTY if the 'to' argument is a directory and is not empty</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>21.t</td>
+<td>write access to subdirectory is required to move it to another directory</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>22.t</td>
+<td>rename changes file ctime</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>23.t</td>
+<td>rename succeeds when to is multiply linked</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>24.t</td>
+<td>rename of a directory updates its .. link</td>
+<td>Yes</td>
+</tr>
+</table>
+</details>
+<details>
+<summary>rmdir <progress value='10' max='16'></progress></summary>
+<table>
+<tr>
+<th>Test</th>
+<th>Description</th>
+<th>Converted</th>
+</tr>
+<tr>
+<td>00.t</td>
+<td>rmdir removes directories</td>
+<td>No</td>
+</tr>
+<tr>
+<td>01.t</td>
+<td>rmdir returns ENOTDIR if a component of the path is not a directory</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>02.t</td>
+<td>rmdir returns ENAMETOOLONG if a component of a pathname exceeded {NAME_MAX} characters</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>03.t</td>
+<td>rmdir returns ENAMETOOLONG if an entire path name exceeded ${PATH_MAX} characters</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>04.t</td>
+<td>rmdir returns ENOENT if the named directory does not exist</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>05.t</td>
+<td>rmdir returns ELOOP if too many symbolic links were encountered in translating the pathname</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>06.t</td>
+<td>rmdir returns EEXIST or ENOTEMPTY the named directory contains files other than '.' and '..' in it</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>07.t</td>
+<td>rmdir returns EACCES when search permission is denied for a component of the path prefix</td>
+<td>No</td>
+</tr>
+<tr>
+<td>08.t</td>
+<td>rmdir returns EACCES when write permission is denied on the directory containing the link to be removed</td>
+<td>No</td>
+</tr>
+<tr>
+<td>09.t</td>
+<td>rmdir returns EPERM if the named directory has its immutable, undeletable or append-only flag set</td>
+<td>No</td>
+</tr>
+<tr>
+<td>10.t</td>
+<td>rmdir returns EPERM if the parent directory of the named file has its immutable or append-only flag set</td>
+<td>No</td>
+</tr>
+<tr>
+<td>11.t</td>
+<td>rmdir returns EACCES or EPERM if the directory containing the directory to be removed is marked sticky, and neither the containing directory nor the directory to be removed are owned by the effective user ID</td>
+<td>No</td>
+</tr>
+<tr>
+<td>12.t</td>
+<td>rmdir returns EINVAL if the last component of the path is '.' and EEXIST or ENOTEMPTY if the last component of the path is '..'</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>13.t</td>
+<td>rmdir returns EBUSY if the directory to be removed is the mount point for a mounted file system</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>14.t</td>
+<td>rmdir returns EROFS if the named file resides on a read-only file system</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>15.t</td>
+<td>rmdir returns EFAULT if the path argument points outside the process's allocated address space</td>
+<td>Yes</td>
+</tr>
+</table>
+</details>
+<details>
+<summary>symlink <progress value='7' max='13'></progress></summary>
+<table>
+<tr>
+<th>Test</th>
+<th>Description</th>
+<th>Converted</th>
+</tr>
+<tr>
+<td>00.t</td>
+<td>symlink creates symbolic links</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>01.t</td>
+<td>symlink returns ENOTDIR if a component of the name2 path prefix is not a directory</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>02.t</td>
+<td>symlink returns ENAMETOOLONG if a component of the name2 pathname exceeded {NAME_MAX} characters</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>03.t</td>
+<td>symlink returns ENAMETOOLONG if an entire length of either path name exceeded {PATH_MAX} characters</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>04.t</td>
+<td>symlink returns ENOENT if a component of the name2 path prefix does not exist</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>05.t</td>
+<td>symlink returns EACCES when a component of the name2 path prefix denies search permission</td>
+<td>No</td>
+</tr>
+<tr>
+<td>06.t</td>
+<td>symlink returns EACCES if the parent directory of the file to be created denies write permission</td>
+<td>No</td>
+</tr>
+<tr>
+<td>07.t</td>
+<td>symlink returns ELOOP if too many symbolic links were encountered in translating the name2 path name</td>
+<td>No</td>
+</tr>
+<tr>
+<td>08.t</td>
+<td>symlink returns EEXIST if the name2 argument already exists</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>09.t</td>
+<td>symlink returns EPERM if the parent directory of the file named by name2 has its immutable flag set</td>
+<td>No</td>
+</tr>
+<tr>
+<td>10.t</td>
+<td>symlink returns EROFS if the file name2 would reside on a read-only file system</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>11.t</td>
+<td>symlink returns ENOSPC if there are no free inodes on the file system on which the symbolic link is being created</td>
+<td>No</td>
+</tr>
+<tr>
+<td>12.t</td>
+<td>symlink returns EFAULT if one of the pathnames specified is outside the process's allocated address space</td>
+<td>No</td>
+</tr>
+</table>
+</details>
+<details>
+<summary>truncate <progress value='11' max='15'></progress></summary>
+<table>
+<tr>
+<th>Test</th>
+<th>Description</th>
+<th>Converted</th>
+</tr>
+<tr>
+<td>00.t</td>
+<td>truncate descrease/increase file size</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>01.t</td>
+<td>truncate returns ENOTDIR if a component of the path prefix is not a directory</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>02.t</td>
+<td>truncate returns ENAMETOOLONG if a component of a pathname exceeded {NAME_MAX} characters</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>03.t</td>
+<td>truncate returns ENAMETOOLONG if an entire path name exceeded {PATH_MAX} characters</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>04.t</td>
+<td>truncate returns ENOENT if the named file does not exist</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>05.t</td>
+<td>truncate returns EACCES when search permission is denied for a component of the path prefix</td>
+<td>No</td>
+</tr>
+<tr>
+<td>06.t</td>
+<td>truncate returns EACCES if the named file is not writable by the user</td>
+<td>No</td>
+</tr>
+<tr>
+<td>07.t</td>
+<td>truncate returns ELOOP if too many symbolic links were encountered in translating the pathname</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>08.t</td>
+<td>truncate returns EPERM if the named file has its immutable or append-only flag set</td>
+<td>No</td>
+</tr>
+<tr>
+<td>09.t</td>
+<td>truncate returns EISDIR if the named file is a directory</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>10.t</td>
+<td>truncate returns EROFS if the named file resides on a read-only file system</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>11.t</td>
+<td>truncate returns ETXTBSY the file is a pure procedure (shared text) file that is being executed</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>12.t</td>
+<td>truncate returns EFBIG or EINVAL if the length argument was greater than the maximum file size</td>
+<td>No</td>
+</tr>
+<tr>
+<td>13.t</td>
+<td>truncate returns EINVAL if the length argument was less than 0</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>14.t</td>
+<td>truncate returns EFAULT if the path argument points outside the process's allocated address space</td>
+<td>Yes</td>
+</tr>
+</table>
+</details>
+<details>
+<summary>unlink <progress value='9' max='15'></progress></summary>
+<table>
+<tr>
+<th>Test</th>
+<th>Description</th>
+<th>Converted</th>
+</tr>
+<tr>
+<td>00.t</td>
+<td>unlink removes regular files, symbolic links, fifos and sockets</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>01.t</td>
+<td>unlink returns ENOTDIR if a component of the path prefix is not a directory</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>02.t</td>
+<td>unlink returns ENAMETOOLONG if a component of a pathname exceeded {NAME_MAX} characters</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>03.t</td>
+<td>unlink returns ENAMETOOLONG if an entire path name exceeded {PATH_MAX} characters</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>04.t</td>
+<td>unlink returns ENOENT if the named file does not exist</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>05.t</td>
+<td>unlink returns EACCES when search permission is denied for a component of the path prefix</td>
+<td>No</td>
+</tr>
+<tr>
+<td>06.t</td>
+<td>unlink returns EACCES when write permission is denied on the directory containing the link to be removed</td>
+<td>No</td>
+</tr>
+<tr>
+<td>07.t</td>
+<td>unlink returns ELOOP if too many symbolic links were encountered in translating the pathname</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>08.t</td>
+<td>unlink may return EPERM if the named file is a directory</td>
+<td>No</td>
+</tr>
+<tr>
+<td>09.t</td>
+<td>unlink returns EPERM if the named file has its immutable, undeletable or append-only flag set</td>
+<td>No</td>
+</tr>
+<tr>
+<td>10.t</td>
+<td>unlink returns EPERM if the parent directory of the named file has its immutable or append-only flag set</td>
+<td>No</td>
+</tr>
+<tr>
+<td>11.t</td>
+<td>unlink returns EACCES or EPERM if the directory containing the file is marked sticky, and neither the containing directory nor the file to be removed are owned by the effective user ID</td>
+<td>No</td>
+</tr>
+<tr>
+<td>12.t</td>
+<td>unlink returns EROFS if the named file resides on a read-only file system</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>13.t</td>
+<td>unlink returns EFAULT if the path argument points outside the process's allocated address space</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>14.t</td>
+<td>An open file will not be immediately freed by unlink</td>
+<td>Yes</td>
+</tr>
+</table>
+</details>
+<details>
+<summary>utimensat <progress value='10' max='10'></progress></summary>
+<table>
+<tr>
+<th>Test</th>
+<th>Description</th>
+<th>Converted</th>
+</tr>
+<tr>
+<td>00.t</td>
+<td>utimensat changes timestamps on any type of file</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>01.t</td>
+<td>utimensat with UTIME_NOW will set the will set typestamps to now</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>02.t</td>
+<td>utimensat with UTIME_OMIT will leave the time unchanged</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>03.t</td>
+<td>utimensat can update birthtimes</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>04.t</td>
+<td>utimensat can set mtime < atime or vice versa</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>05.t</td>
+<td>utimensat can follow symlinks</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>06.t</td>
+<td>utimensat with UTIME_NOW will work if the caller has write permission</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>07.t</td>
+<td>utimensat will work if the caller is the owner or root</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>08.t</td>
+<td>utimensat can set timestamps with subsecond precision</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>09.t</td>
+<td>utimensat is y2038 compliant</td>
+<td>Yes</td>
+</tr>
+</table>
+</details>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="getting-started.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next prefetch" href="configuration-file.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="getting-started.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next prefetch" href="configuration-file.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr.min.js"></script>
+        <script src="mark.min.js"></script>
+        <script src="searcher.js"></script>
+
+        <script src="clipboard.min.js"></script>
+        <script src="highlight.js"></script>
+        <script src="book.js"></script>
+
+        <!-- Custom JS scripts -->
+        <script src="mermaid.min.js"></script>
+        <script src="mermaid-init.js"></script>
+
+
+    </div>
+    </body>
+</html>

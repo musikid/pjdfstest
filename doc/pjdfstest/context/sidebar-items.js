@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["NUM_RAND_CHARS"],"enum":["FileType"],"struct":["DummyAuthEntries","FileBuilder","FileTypeIter","SerializedTestContext","TestContext"]};
