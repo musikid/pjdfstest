@@ -85,6 +85,7 @@ fn failed_chmod_unchanged_ctime(ctx: &mut SerializedTestContext, f_type: FileTyp
     });
 }
 
+// chmod/00.t:L119
 crate::test_case! {
     /// S_ISGID bit shall be cleared upon successful return from chmod of a regular file
     /// if the calling process does not have appropriate privileges, and if
