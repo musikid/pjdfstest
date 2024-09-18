@@ -126,7 +126,7 @@
 
 <span class="kw">use </span>nix::{
     errno::Errno,
-    fcntl::{open, OFlag},
+    fcntl::OFlag,
     sys::stat::{lstat, Mode},
     unistd::ftruncate,
 };
@@ -136,7 +136,7 @@
     context::FileType,
     test::{SerializedTestContext, TestContext},
     tests::{assert_ctime_changed, assert_ctime_unchanged},
-    utils::chmod,
+    utils::{chmod, open},
 };
 
 <span class="macro">crate::test_case!</span> {

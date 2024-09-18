@@ -160,7 +160,11 @@
 <a href="#160" id="160">160</a>
 <a href="#161" id="161">161</a>
 <a href="#162" id="162">162</a>
-</pre></div><pre class="rust"><code><span class="kw">use </span>nix::{sys::stat::fstat, unistd::unlink};
+<a href="#163" id="163">163</a>
+<a href="#164" id="164">164</a>
+</pre></div><pre class="rust"><code><span class="kw">use </span>std::os::fd::AsRawFd;
+
+<span class="kw">use </span>nix::{sys::stat::fstat, unistd::unlink};
 
 <span class="kw">use crate</span>::{
     context::{FileType, SerializedTestContext, TestContext},
@@ -290,15 +294,15 @@
 
     <span class="macro">assert!</span>(unlink(<span class="kw-2">&amp;</span>path).is_ok());
 
-    <span class="kw">let </span>fd_stat = fstat(file).unwrap();
+    <span class="kw">let </span>fd_stat = fstat(file.as_raw_fd()).unwrap();
     <span class="comment">// A deleted file's link count should be 0
     </span><span class="macro">assert_eq!</span>(fd_stat.st_nlink, <span class="number">0</span>);
 
     <span class="comment">// I/O to open but deleted files should work, too
     </span><span class="kw">const </span>EXAMPLE_BYTES: <span class="kw-2">&amp;</span>str = <span class="string">"Hello, World!"</span>;
-    nix::unistd::write(file, EXAMPLE_BYTES.as_bytes()).unwrap();
+    nix::unistd::write(<span class="kw-2">&amp;</span>file, EXAMPLE_BYTES.as_bytes()).unwrap();
     <span class="kw">let </span><span class="kw-2">mut </span>buf = [<span class="number">0</span>; EXAMPLE_BYTES.len()];
-    nix::sys::uio::pread(file, <span class="kw-2">&amp;mut </span>buf, <span class="number">0</span>).unwrap();
+    nix::sys::uio::pread(<span class="kw-2">&amp;</span>file, <span class="kw-2">&amp;mut </span>buf, <span class="number">0</span>).unwrap();
     <span class="macro">assert_eq!</span>(buf, EXAMPLE_BYTES.as_bytes());
 }
 

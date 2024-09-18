@@ -660,21 +660,19 @@
 <a href="#660" id="660">660</a>
 <a href="#661" id="661">661</a>
 <a href="#662" id="662">662</a>
-<a href="#663" id="663">663</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Provides a context for tests through the [`TestContext`] and [`SerializedTestContext`] structs.
 //!
 //! The [`TestContext`] struct allows to create files, directories, get auth entries, and sleep for the amount of time specified in the configuration.
 //! Its [`SerializedTestContext`] counterpart allows to execute functions as another user/group(s) and with another umask.
 
 </span><span class="kw">use </span>nix::{
-    fcntl::{open, OFlag},
+    fcntl::OFlag,
     sys::{
         socket::{bind, socket, SockFlag, UnixAddr},
         stat::{lstat, mknod, mode_t, umask, Mode, SFlag},
     },
     unistd::{
-        close, getgroups, mkdir, mkfifo, pathconf, setegid, seteuid, setgroups, Gid, Group, Uid,
-        User,
+        getgroups, mkdir, mkfifo, pathconf, setegid, seteuid, setgroups, Gid, Group, Uid, User,
     },
 };
 
@@ -683,7 +681,7 @@
     cell::Cell,
     fs::create_dir_all,
     ops::{Deref, DerefMut},
-    os::unix::prelude::RawFd,
+    os::fd::{AsRawFd, OwnedFd},
     panic::{catch_unwind, resume_unwind, AssertUnwindSafe},
     path::{Path, PathBuf},
     thread,
@@ -693,7 +691,7 @@
 
 <span class="kw">use crate</span>::{
     config::{Config, DummyAuthEntry, FeaturesConfig},
-    utils::{chmod, lchmod, symlink},
+    utils::{chmod, lchmod, open, symlink},
 };
 
 <span class="doccomment">/// File type, mainly used with [TestContext::create] and parameterized tests.
@@ -930,7 +928,7 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         oflag: OFlag,
         mode: <span class="prelude-ty">Option</span>&lt;nix::sys::stat::mode_t&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(PathBuf, RawFd), nix::Error&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(PathBuf, OwnedFd), nix::Error&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>file = <span class="self">self</span>.new_file(FileType::Regular);
         <span class="kw">if let </span><span class="prelude-val">Some</span>(mode) = mode {
             file = file.mode(mode);
@@ -1110,7 +1108,7 @@
         <span class="kw">let </span>path = <span class="self">self</span>.final_path();
 
         <span class="kw">match </span><span class="self">self</span>.file_type {
-            FileType::Regular =&gt; open(<span class="kw-2">&amp;</span>path, OFlag::O_CREAT, mode).and_then(close),
+            FileType::Regular =&gt; open(<span class="kw-2">&amp;</span>path, OFlag::O_CREAT, mode).map(drop),
             FileType::Dir =&gt; mkdir(<span class="kw-2">&amp;</span>path, mode),
             FileType::Fifo =&gt; mkfifo(<span class="kw-2">&amp;</span>path, mode),
             FileType::Block =&gt; mknod(<span class="kw-2">&amp;</span>path, SFlag::S_IFBLK, mode, <span class="number">0</span>),
@@ -1123,7 +1121,7 @@
                     <span class="prelude-val">None</span>,
                 )<span class="question-mark">?</span>;
                 <span class="kw">let </span>sockaddr = UnixAddr::new(<span class="kw-2">&amp;</span>path)<span class="question-mark">?</span>;
-                bind(fd, <span class="kw-2">&amp;</span>sockaddr)<span class="question-mark">?</span>;
+                bind(fd.as_raw_fd(), <span class="kw-2">&amp;</span>sockaddr)<span class="question-mark">?</span>;
                 <span class="kw">if let </span><span class="prelude-val">Some</span>(mode) = <span class="self">self</span>.mode {
                     chmod(<span class="kw-2">&amp;</span>path, mode)<span class="question-mark">?</span>;
                 }
@@ -1149,7 +1147,7 @@
 
     <span class="doccomment">/// Create the file according to the provided information and open it.
     /// This function automatically adds [`O_CREAT`](nix::fcntl::OFlag::O_CREAT) to the [`open`] flags when creating a regular file.
-    </span><span class="kw">pub fn </span>open(<span class="kw-2">mut </span><span class="self">self</span>, oflags: OFlag) -&gt; nix::Result&lt;(PathBuf, RawFd)&gt; {
+    </span><span class="kw">pub fn </span>open(<span class="kw-2">mut </span><span class="self">self</span>, oflags: OFlag) -&gt; nix::Result&lt;(PathBuf, OwnedFd)&gt; {
         <span class="kw">match </span><span class="self">self</span>.file_type {
             FileType::Regular =&gt; {
                 <span class="kw">let </span>path = <span class="self">self</span>.final_path();

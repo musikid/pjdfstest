@@ -342,7 +342,9 @@
 <a href="#342" id="342">342</a>
 <a href="#343" id="343">343</a>
 <a href="#344" id="344">344</a>
+<a href="#345" id="345">345</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::fs::{metadata, symlink_metadata, FileType <span class="kw">as </span>StdFileType};
+<span class="kw">use </span>std::os::fd::{FromRawFd, IntoRawFd, OwnedFd};
 <span class="kw">use </span>std::os::unix::prelude::{MetadataExt, RawFd};
 <span class="kw">use </span>std::path::Path;
 
@@ -455,13 +457,13 @@
     <span class="kw">const </span>DATA: <span class="kw-2">&amp;</span>str = <span class="string">"data"</span>;
     <span class="kw">const </span>GB: usize = <span class="number">1024usize</span>.pow(<span class="number">3</span>);
     <span class="kw">let </span>offset = <span class="number">2 </span>* GB <span class="kw">as </span>i64 + <span class="number">1</span>;
-    pwrite(fd, DATA.as_bytes(), offset).unwrap();
+    pwrite(<span class="kw-2">&amp;</span>fd, DATA.as_bytes(), offset).unwrap();
     <span class="kw">let </span>expected_size = offset <span class="kw">as </span>u64 + DATA.len() <span class="kw">as </span>u64;
     <span class="kw">let </span>size = symlink_metadata(<span class="kw-2">&amp;</span>path).unwrap().size();
     <span class="macro">assert_eq!</span>(size, expected_size);
-    close(fd).unwrap();
+    close(fd.into_raw_fd()).unwrap();
 
-    <span class="kw">let </span>fd = open(<span class="kw-2">&amp;</span>path, OFlag::O_RDONLY, Mode::empty()).unwrap();
+    <span class="kw">let </span>fd = <span class="kw">unsafe </span>{ OwnedFd::from_raw_fd(open(<span class="kw-2">&amp;</span>path, OFlag::O_RDONLY, Mode::empty()).unwrap()) };
     <span class="kw">let </span><span class="kw-2">mut </span>buf = [<span class="number">0</span>; DATA.len()];
     nix::sys::uio::pread(fd, <span class="kw-2">&amp;mut </span>buf, offset).unwrap();
     <span class="macro">assert_eq!</span>(buf, DATA.as_bytes());

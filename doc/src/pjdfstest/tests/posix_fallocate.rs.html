@@ -92,7 +92,7 @@
 <a href="#92" id="92">92</a>
 <a href="#93" id="93">93</a>
 <a href="#94" id="94">94</a>
-</pre></div><pre class="rust"><code><span class="kw">use </span>std::{fs::File, io::Write};
+</pre></div><pre class="rust"><code><span class="kw">use </span>std::{fs::File, io::Write, os::fd::AsRawFd};
 
 <span class="kw">use </span>nix::{
     errno::Errno,
@@ -115,7 +115,7 @@
     <span class="kw">let </span>expected_size = <span class="number">567</span>;
 
     <span class="kw">let </span>(path, file) = ctx.create_file(OFlag::O_RDWR, <span class="prelude-val">None</span>).unwrap();
-    <span class="macro">assert!</span>(posix_fallocate(file, <span class="number">0</span>, expected_size).is_ok());
+    <span class="macro">assert!</span>(posix_fallocate(file.as_raw_fd(), <span class="number">0</span>, expected_size).is_ok());
 
     <span class="kw">let </span>size = lstat(<span class="kw-2">&amp;</span>path).unwrap().st_size;
     <span class="macro">assert_eq!</span>(size, expected_size);
@@ -134,7 +134,7 @@
     <span class="kw">let </span>random_data: [u8; <span class="number">1234</span>] = rand::random();
     std_file.write_all(<span class="kw-2">&amp;</span>random_data).unwrap();
 
-    <span class="macro">assert!</span>(posix_fallocate(file, offset, size).is_ok());
+    <span class="macro">assert!</span>(posix_fallocate(file.as_raw_fd(), offset, size).is_ok());
 
     <span class="kw">let </span>actual_size = lstat(<span class="kw-2">&amp;</span>path).unwrap().st_size;
     <span class="macro">assert_eq!</span>(actual_size, offset + size);
@@ -148,7 +148,7 @@
     <span class="kw">let </span>(path, file) = ctx.create_file(OFlag::O_RDWR, <span class="prelude-val">None</span>).unwrap();
 
     assert_ctime_changed(ctx, <span class="kw-2">&amp;</span>path, || {
-        <span class="macro">assert!</span>(posix_fallocate(file, <span class="number">0</span>, <span class="number">123</span>).is_ok());
+        <span class="macro">assert!</span>(posix_fallocate(file.as_raw_fd(), <span class="number">0</span>, <span class="number">123</span>).is_ok());
     })
 }
 
@@ -160,7 +160,7 @@
     <span class="kw">let </span>(path, file) = ctx.create_file(OFlag::O_WRONLY, <span class="prelude-val">None</span>).unwrap();
 
     assert_ctime_unchanged(ctx, <span class="kw-2">&amp;</span>path, || {
-        <span class="macro">assert_eq!</span>(posix_fallocate(file, <span class="number">0</span>, <span class="number">0</span>), <span class="prelude-val">Err</span>(Errno::EINVAL));
+        <span class="macro">assert_eq!</span>(posix_fallocate(file.as_raw_fd(), <span class="number">0</span>, <span class="number">0</span>), <span class="prelude-val">Err</span>(Errno::EINVAL));
     })
 }
 

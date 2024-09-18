@@ -89,16 +89,29 @@
 <a href="#89" id="89">89</a>
 <a href="#90" id="90">90</a>
 <a href="#91" id="91">91</a>
+<a href="#92" id="92">92</a>
+<a href="#93" id="93">93</a>
+<a href="#94" id="94">94</a>
+<a href="#95" id="95">95</a>
+<a href="#96" id="96">96</a>
+<a href="#97" id="97">97</a>
+<a href="#98" id="98">98</a>
+<a href="#99" id="99">99</a>
+<a href="#100" id="100">100</a>
+<a href="#101" id="101">101</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Utility functions for filesystem operations.
 //! 
 //! This module provides utility functions for filesystem operations which are not available in the standard library.
 
-</span><span class="kw">use </span>std::path::Path;
+</span><span class="kw">use </span>std::{
+    os::fd::{FromRawFd, OwnedFd},
+    path::Path,
+};
 
 <span class="kw">use </span>nix::{
-    fcntl::renameat,
-    sys::stat::{fchmodat, lstat, FchmodatFlags},
-    unistd::{fchownat, linkat, symlinkat, FchownatFlags, Gid, LinkatFlags, Uid},
+    fcntl::{renameat, AtFlags, OFlag},
+    sys::stat::{fchmodat, lstat, FchmodatFlags, Mode},
+    unistd::{fchownat, linkat, symlinkat, Gid, Uid},
 };
 
 <span class="kw">pub mod </span>dev;
@@ -119,7 +132,7 @@
     owner: <span class="prelude-ty">Option</span>&lt;Uid&gt;,
     group: <span class="prelude-ty">Option</span>&lt;Gid&gt;,
 ) -&gt; nix::Result&lt;()&gt; {
-    fchownat(<span class="prelude-val">None</span>, path, owner, group, FchownatFlags::NoFollowSymlink)
+    fchownat(<span class="prelude-val">None</span>, path, owner, group, AtFlags::AT_SYMLINK_NOFOLLOW)
 }
 
 <span class="doccomment">/// Wrapper for `rmdir`.
@@ -137,7 +150,7 @@
 
 <span class="doccomment">/// Wrapper for `linkat(None, old_path, None, new_path)`.
 </span><span class="kw">pub fn </span>link&lt;P: <span class="question-mark">?</span>Sized + nix::NixPath&gt;(old_path: <span class="kw-2">&amp;</span>P, new_path: <span class="kw-2">&amp;</span>P) -&gt; nix::Result&lt;()&gt; {
-    linkat(<span class="prelude-val">None</span>, old_path, <span class="prelude-val">None</span>, new_path, LinkatFlags::NoSymlinkFollow)
+    linkat(<span class="prelude-val">None</span>, old_path, <span class="prelude-val">None</span>, new_path, AtFlags::empty())
 }
 
 <span class="doccomment">/// Wrapper for `symlinkat(path1, None, path2)`.
@@ -179,5 +192,12 @@
         path.with_nix_path(|cstr| <span class="kw">unsafe </span>{ nix::libc::lchflags(cstr.as_ptr(), flags.bits()) })<span class="question-mark">?</span>;
 
     Errno::result(res).map(drop)
+}
+
+<span class="doccomment">/// Wrapper for open which returns [`Ownedfd`] instead of [`RawFd`].
+</span><span class="kw">pub fn </span>open&lt;P: <span class="question-mark">?</span>Sized + nix::NixPath&gt;(path: <span class="kw-2">&amp;</span>P, oflag: OFlag, mode: Mode) -&gt; nix::Result&lt;OwnedFd&gt; {
+    <span class="comment">// SAFETY: The file descriptor was initialized only by open and isn't used anywhere else, 
+    // leaving the ownership to the caller.
+    </span>nix::fcntl::open(path, oflag, mode).map(|fd| <span class="kw">unsafe </span>{ OwnedFd::from_raw_fd(fd) })
 }
 </code></pre></div></section></main></body></html>
