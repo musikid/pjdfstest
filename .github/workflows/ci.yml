@@ -1,0 +1,22 @@
+on:
+  push:
+
+jobs:
+  format_lint_check:
+    runs-on: ubuntu-latest
+    env:
+      RUSTFLAGS: -D warnings
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check formatting
+        working-directory: rust
+        run: cargo fmt --all --check
+
+      - name: Check clippy
+        working-directory: rust
+        run: cargo clippy --all-targets --all-features
+
+      - name: Check doc
+        working-directory: rust
+        run: cargo doc --no-deps --all-features
