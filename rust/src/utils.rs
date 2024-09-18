@@ -2,12 +2,15 @@
 //! 
 //! This module provides utility functions for filesystem operations which are not available in the standard library.
 
-use std::path::Path;
+use std::{
+    os::fd::{FromRawFd, OwnedFd},
+    path::Path,
+};
 
 use nix::{
-    fcntl::renameat,
-    sys::stat::{fchmodat, lstat, FchmodatFlags},
-    unistd::{fchownat, linkat, symlinkat, FchownatFlags, Gid, LinkatFlags, Uid},
+    fcntl::{renameat, AtFlags, OFlag},
+    sys::stat::{fchmodat, lstat, FchmodatFlags, Mode},
+    unistd::{fchownat, linkat, symlinkat, Gid, Uid},
 };
 
 pub mod dev;
@@ -28,7 +31,7 @@ pub fn lchown<P: ?Sized + nix::NixPath>(
     owner: Option<Uid>,
     group: Option<Gid>,
 ) -> nix::Result<()> {
-    fchownat(None, path, owner, group, FchownatFlags::NoFollowSymlink)
+    fchownat(None, path, owner, group, AtFlags::AT_SYMLINK_NOFOLLOW)
 }
 
 /// Wrapper for `rmdir`.
@@ -46,7 +49,7 @@ pub fn rename<P: ?Sized + nix::NixPath>(old_path: &P, new_path: &P) -> nix::Resu
 
 /// Wrapper for `linkat(None, old_path, None, new_path)`.
 pub fn link<P: ?Sized + nix::NixPath>(old_path: &P, new_path: &P) -> nix::Result<()> {
-    linkat(None, old_path, None, new_path, LinkatFlags::NoSymlinkFollow)
+    linkat(None, old_path, None, new_path, AtFlags::empty())
 }
 
 /// Wrapper for `symlinkat(path1, None, path2)`.
@@ -88,4 +91,11 @@ pub fn lchflags<P: ?Sized + nix::NixPath>(
         path.with_nix_path(|cstr| unsafe { nix::libc::lchflags(cstr.as_ptr(), flags.bits()) })?;
 
     Errno::result(res).map(drop)
+}
+
+/// Wrapper for open which returns [`Ownedfd`] instead of [`RawFd`].
+pub fn open<P: ?Sized + nix::NixPath>(path: &P, oflag: OFlag, mode: Mode) -> nix::Result<OwnedFd> {
+    // SAFETY: The file descriptor was initialized only by open and isn't used anywhere else, 
+    // leaving the ownership to the caller.
+    nix::fcntl::open(path, oflag, mode).map(|fd| unsafe { OwnedFd::from_raw_fd(fd) })
 }
