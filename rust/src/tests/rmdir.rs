@@ -103,8 +103,8 @@ fn has_mount_cap(_: &Config, _: &Path) -> anyhow::Result<()> {
     if !Uid::effective().is_root() && ctl.value()? == CtlValue::Int(0) {
         anyhow::bail!("process doesn't have the rights to mount the dummy file system")
     }
-    if !Uid::effective().is_root() &&
-        !OsStr::from_bytes(&Command::new("lsvfs").output().unwrap().stdout)
+    if !Uid::effective().is_root()
+        && !OsStr::from_bytes(&Command::new("lsvfs").output().unwrap().stdout)
             .to_string_lossy()
             .contains("nullfs")
     {
