@@ -2,6 +2,7 @@
 
 use serde::{Deserialize, Serialize};
 
+/// Define a set of flags for a given enum and implement `From` for `nix::sys::stat::FileFlag`.
 macro_rules! flags {
     ( $( #[$enum_attrs: meta] )* pub enum $enum: ident { $(#[cfg($cfg: meta)] $(#[$attr: meta])* $flag: ident ),* $(,)?} ) => {
         $(#[$enum_attrs])*
