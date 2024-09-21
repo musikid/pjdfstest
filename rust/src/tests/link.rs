@@ -186,6 +186,7 @@ fn has_reasonable_link_max(_: &Config, base_path: &Path) -> anyhow::Result<()> {
 
 crate::test_case! {
     /// link returns EMLINK if the link count of the file named by name1 would exceed {LINK_MAX}
+    // link/05.t
     link_count_max; has_reasonable_link_max
 }
 fn link_count_max(ctx: &mut TestContext) {
@@ -233,6 +234,7 @@ fn enoent_source_not_exists(ctx: &mut TestContext) {
 
 crate::test_case! {
     /// link returns EEXIST if the destination file exists
+    // link/10.t
     eexist_dest_exists => [Regular, Dir, Fifo, Block, Char, Socket, Symlink(None)]
 }
 fn eexist_dest_exists(ctx: &mut TestContext, ft: FileType) {

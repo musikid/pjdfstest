@@ -22,6 +22,7 @@ crate::test_case! {
     /// POSIX: The file permission bits of the new FIFO shall be initialized from
     /// mode. The file permission bits of the mode argument shall be modified by the
     /// process' file creation mask.
+    // mknod/00.t
     permission_bits_from_mode, serialized
 }
 fn permission_bits_from_mode(ctx: &mut SerializedTestContext) {
@@ -32,6 +33,7 @@ crate::test_case! {
     /// POSIX: The FIFO's user ID shall be set to the process' effective user ID.
     /// The FIFO's group ID shall be set to the group ID of the parent directory or to
     /// the effective group ID of the process.
+    // mknod/00.t
     uid_gid_eq_euid_egid, serialized, root
 }
 fn uid_gid_eq_euid_egid(ctx: &mut SerializedTestContext) {
@@ -43,6 +45,7 @@ crate::test_case! {
     /// st_ctime, and st_mtime fields of the file. Also, the st_ctime and
     /// st_mtime fields of the directory that contains the new entry shall be marked
     /// for update.
+    // mknod/00.t
     changed_time_fields_success
 }
 fn changed_time_fields_success(ctx: &mut TestContext) {
@@ -59,16 +62,17 @@ fn changed_time_fields_success(ctx: &mut TestContext) {
 // mknod/01.t
 enotdir_comp_test_case!(mknod(~path, SFlag::S_IFIFO, Mode::empty(), 0));
 
+// TODO: Move to privileged module
 crate::test_case! {
     /// mknod returns ENOTDIR if a component of the path prefix is not a directory
     /// when trying to create char/block files
+    // mknod/01.t
     enotdir_comp_char_block, root => [Regular, Fifo, Block, Char, Socket]
 }
 fn enotdir_comp_char_block(ctx: &mut TestContext, ft: FileType) {
     let base_path = ctx.create(ft).unwrap();
     let path = base_path.join("previous_not_dir");
 
-    // mknod/01.t
     assert_eq!(
         mknod(&path, SFlag::S_IFCHR, Mode::empty(), 0).unwrap_err(),
         Errno::ENOTDIR
@@ -125,10 +129,12 @@ fn device_files(ctx: &mut TestContext, ft: FileType) {
     assert!(check(&stat.file_type()));
 }
 
+// TODO: Move to privileged module and precise that it concerns only block and char
 crate::test_case! {
     /// mknod changes st_ctime and st_mtime of the parent directory
     /// and marks for update the st_atime, st_ctime and st_mtime fields
     /// of the new file
+    // mknod/00.t
     changed_times_success, root => [Block, Char]
 }
 fn changed_times_success(ctx: &mut TestContext, ft: FileType) {
@@ -157,7 +163,8 @@ fn changed_times_success(ctx: &mut TestContext, ft: FileType) {
 
 #[cfg(target_os = "illumos")]
 crate::test_case! {
-    /// mknod creates devices with old and new numbers
+    /// mknod creates devices with old and new-style numbers
+    // mknod/11.t
     create_old_new_device, root
 }
 #[cfg(target_os = "illumos")]

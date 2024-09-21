@@ -79,6 +79,7 @@ fn get_flags(ctx: &TestContext) -> (FileFlag, FileFlag, FileFlag) {
 
 crate::test_case! {
     /// chflags(2) set the flags provided for the file.
+    // chflags/00.t
     set_flags, root, FileSystemFeature::Chflags => [Regular, Dir, Fifo, Block, Char, Socket]
 }
 fn set_flags(ctx: &mut TestContext, ft: FileType) {
@@ -110,6 +111,7 @@ fn set_flags(ctx: &mut TestContext, ft: FileType) {
 
 crate::test_case! {
     /// chflags changes flags while following symlinks
+    // chflags/00.t
     set_flags_symlink, root, FileSystemFeature::Chflags
 }
 fn set_flags_symlink(ctx: &mut TestContext) {
@@ -133,6 +135,7 @@ fn set_flags_symlink(ctx: &mut TestContext) {
 #[cfg(lchflags)]
 crate::test_case! {
     /// lchflags changes flags without following symlinks
+    // chflags/00.t
     lchflags_set_flags_no_follow_symlink, root, FileSystemFeature::Chflags
 }
 #[cfg(lchflags)]
@@ -155,7 +158,8 @@ fn lchflags_set_flags_no_follow_symlink(ctx: &mut TestContext) {
 }
 
 crate::test_case! {
-    // successful chflags(2) updates ctime
+    /// successful chflags(2) updates ctime
+    // chflags/00.t
     changed_ctime_success, root => [Regular, Dir, Fifo, Block, Char, Socket]
 }
 fn changed_ctime_success(ctx: &mut TestContext, ft: FileType) {
@@ -185,7 +189,8 @@ fn changed_ctime_success(ctx: &mut TestContext, ft: FileType) {
     }
 }
 crate::test_case! {
-    // unsuccessful chflags(2) does not update ctime
+    /// unsuccessful chflags(2) does not update ctime
+    // chflags/00.t
     unchanged_ctime_failed, serialized, root => [Regular, Dir, Fifo, Block, Char, Socket]
 }
 fn unchanged_ctime_failed(ctx: &mut SerializedTestContext, ft: FileType) {
@@ -226,6 +231,8 @@ enotdir_comp_test_case!(chflags(~path, FileFlag::empty()));
 
 // chflags/02.t
 enametoolong_comp_test_case!(chflags(~path, FileFlag::empty()));
+
+// chflags/03.t
 enametoolong_path_test_case!(chflags(~path, FileFlag::empty()));
 
 // chflags/04.t

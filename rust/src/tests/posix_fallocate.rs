@@ -15,6 +15,7 @@ use crate::{
 
 crate::test_case! {
     /// posix_fallocate should allocate even if the file is empty
+    // posix_fallocate/00.t
     increase_empty, FileSystemFeature::PosixFallocate
 }
 fn increase_empty(ctx: &mut TestContext) {
@@ -29,6 +30,7 @@ fn increase_empty(ctx: &mut TestContext) {
 
 crate::test_case! {
     /// posix_fallocate should allocate even if the file is not empty
+    // posix_fallocate/00.t
     increase_not_empty, FileSystemFeature::PosixFallocate
 }
 fn increase_not_empty(ctx: &mut TestContext) {
@@ -48,6 +50,7 @@ fn increase_not_empty(ctx: &mut TestContext) {
 
 crate::test_case! {
     /// posix_fallocate should update ctime when it succeeds
+    // posix_fallocate/00.t
     update_ctime_success, FileSystemFeature::PosixFallocate
 }
 fn update_ctime_success(ctx: &mut TestContext) {
@@ -60,6 +63,7 @@ fn update_ctime_success(ctx: &mut TestContext) {
 
 crate::test_case! {
     /// posix_fallocate should not update ctime when it fails
+    // posix_fallocate/00.t
     no_update_ctime_fail, FileSystemFeature::PosixFallocate
 }
 fn no_update_ctime_fail(ctx: &mut TestContext) {
@@ -74,6 +78,7 @@ crate::test_case! {
     /// The file mode of a newly created file should not affect whether
     /// posix_fallocate will work, only the create args
     /// https://bugs.freebsd.org/bugzilla/show_bug.cgi?id=154873
+    // posix_fallocate/00.t
     affected_only_create_flags, serialized, root, FileSystemFeature::PosixFallocate
 }
 fn affected_only_create_flags(ctx: &mut SerializedTestContext) {

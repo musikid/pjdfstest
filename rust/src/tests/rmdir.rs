@@ -20,6 +20,7 @@ use super::{
 
 crate::test_case! {
     /// rmdir remove directory
+    // rmdir/00.t
     remove_dir
 }
 fn remove_dir(ctx: &mut TestContext) {
@@ -31,6 +32,7 @@ fn remove_dir(ctx: &mut TestContext) {
 
 crate::test_case! {
     /// rmdir updates parent ctime and mtime on success
+    // rmdir/00.t
     changed_time_parent_success
 }
 fn changed_time_parent_success(ctx: &mut TestContext) {

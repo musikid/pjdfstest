@@ -17,6 +17,7 @@ use crate::{
 
 crate::test_case! {
     /// ftruncate should extend a file, and shrink a sparse file
+    // ftruncate/00.t
     extend_file_shrink_sparse
 }
 fn extend_file_shrink_sparse(ctx: &mut TestContext) {
@@ -37,6 +38,7 @@ fn extend_file_shrink_sparse(ctx: &mut TestContext) {
 
 crate::test_case! {
     /// ftruncate should shrink the file if the specified size is less than the actual one
+    // ftruncate/00.t
     shrink_not_empty
 }
 fn shrink_not_empty(ctx: &mut TestContext) {
@@ -62,6 +64,7 @@ fn shrink_not_empty(ctx: &mut TestContext) {
 
 crate::test_case! {
     /// ftruncate should update ctime if it succeeds
+    // ftruncate/00.t
     update_ctime_success
 }
 fn update_ctime_success(ctx: &mut TestContext) {
@@ -74,6 +77,7 @@ fn update_ctime_success(ctx: &mut TestContext) {
 
 crate::test_case! {
     /// ftruncate should not update ctime if it fails
+    // ftruncate/00.t
     unchanged_ctime_failed
 }
 fn unchanged_ctime_failed(ctx: &mut TestContext) {
@@ -88,6 +92,7 @@ crate::test_case! {
     /// The file mode of a newly created file should not affect whether ftruncate
     /// will work, only the create args
     /// https://bugs.freebsd.org/bugzilla/show_bug.cgi?id=154873
+    // ftruncate/00.t
     affected_create_flags_only, serialized, root
 }
 fn affected_create_flags_only(ctx: &mut SerializedTestContext) {

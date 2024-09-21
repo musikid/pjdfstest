@@ -21,7 +21,6 @@ use super::errors::etxtbsy::etxtbsy_test_case;
 use super::mksyscalls::{assert_perms_from_mode_and_umask, assert_uid_gid};
 use super::{assert_times_changed, assert_times_unchanged, ATIME, CTIME, MTIME};
 
-// open/00.t
 
 fn open_wrapper(path: &Path, mode: Mode) -> nix::Result<()> {
     open(path, OFlag::O_CREAT | OFlag::O_WRONLY, mode).and_then(close)
@@ -34,6 +33,7 @@ crate::test_case! {
     /// on the file-mode bits and the corresponding bits in the complement of the
     /// process' file mode creation mask. Thus, all bits in the file mode whose
     /// corresponding bit in the file mode creation mask is set are cleared.
+    // open/00.t
     permission_bits_from_mode, serialized
 }
 fn permission_bits_from_mode(ctx: &mut SerializedTestContext) {
@@ -45,6 +45,7 @@ crate::test_case! {
     /// of the file shall be set to the effective user ID of the process; the group ID
     /// of the file shall be set to the group ID of the file's parent directory or to
     /// the effective group ID of the process [...]
+    // open/00.t
     uid_gid_eq_euid_egid, serialized, root
 }
 fn uid_gid_eq_euid_egid(ctx: &mut SerializedTestContext) {
@@ -56,6 +57,7 @@ crate::test_case! {
     /// st_ctime, and st_mtime fields of the directory. Also, the st_ctime and
     /// st_mtime fields of the directory that contains the new entry shall be marked
     /// for update.
+    // open/00.t
     changed_time_fields_success
 }
 fn changed_time_fields_success(ctx: &mut TestContext) {
@@ -72,6 +74,7 @@ fn changed_time_fields_success(ctx: &mut TestContext) {
 crate::test_case! {
     /// open do not update parent directory ctime and mtime fields if
     /// the file previously existed.
+    // open/00.t
     exists_no_update
 }
 fn exists_no_update(ctx: &mut TestContext) {
@@ -86,6 +89,7 @@ fn exists_no_update(ctx: &mut TestContext) {
 
 crate::test_case! {
     /// open with O_TRUNC should truncate an exisiting file.
+    // open/00.t
     open_trunc
 }
 fn open_trunc(ctx: &mut TestContext) {
@@ -125,6 +129,7 @@ fn interact_2gb(ctx: &mut TestContext) {
 }
 
 // POSIX states that open should return ELOOP, but FreeBSD returns EMLINK instead
+// open/16.t
 #[cfg(not(target_os = "freebsd"))]
 crate::test_case! {
     /// open returns ELOOP when O_NOFOLLOW was specified and the target is a symbolic link
@@ -169,6 +174,7 @@ crate::test_case! {
 #[cfg(target_os = "linux")]
 crate::test_case! {
     /// open returns ENXIO when trying to open UNIX domain socket
+    // open/24.t
     socket_error
 }
 fn socket_error(ctx: &mut TestContext) {
@@ -191,6 +197,7 @@ fn socket_error(ctx: &mut TestContext) {
 crate::test_case! {
     /// open returns ENXIO when O_NONBLOCK is set, the named file is a fifo, O_WRONLY is set,
     /// and no process has the file open for reading
+    // open/17.t
     fifo_nonblock_wronly
 }
 fn fifo_nonblock_wronly(ctx: &mut TestContext) {
@@ -228,7 +235,7 @@ erofs_named_test_case!(
 // open/15.t
 erofs_new_file_test_case!(
     open,
-    open_flag_wrapper_ctx(OFlag::O_RDONLY | OFlag::O_CREAT,)
+    open_flag_wrapper_ctx(OFlag::O_RDONLY | OFlag::O_CREAT)
 );
 
 // open/12.t
@@ -236,12 +243,12 @@ eloop_comp_test_case!(open(~path, OFlag::empty(), Mode::empty()));
 
 crate::test_case! {
     /// open returns EISDIR if the named file is a directory
+    // open/13.t
     eisdir
 }
 fn eisdir(ctx: &mut TestContext) {
     let path = ctx.create(FileType::Dir).unwrap();
 
-    // open/13.t
     assert_eq!(
         open(&path, OFlag::O_WRONLY, Mode::empty()),
         Err(Errno::EISDIR)

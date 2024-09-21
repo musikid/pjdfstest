@@ -85,6 +85,7 @@ fn failed_chmod_unchanged_ctime(ctx: &mut SerializedTestContext, f_type: FileTyp
     });
 }
 
+// chmod/00.t:L119
 crate::test_case! {
     /// S_ISGID bit shall be cleared upon successful return from chmod of a regular file
     /// if the calling process does not have appropriate privileges, and if
@@ -149,7 +150,7 @@ crate::test_case! {
     /// chmod returns EFTYPE if the effective user ID is not the super-user,
     /// the mode includes the sticky bit (S_ISVTX),
     /// and path does not refer to a directory
-    // chmod/12.t
+    // chmod/11.t
     eftype, serialized, root => [Regular, Fifo, Block, Char, Socket]
 }
 #[cfg(any(target_os = "freebsd", target_os = "dragonfly"))]
@@ -198,7 +199,10 @@ fn eftype(ctx: &mut SerializedTestContext, ft: FileType) {
 mod lchmod {
     use super::*;
 
+    // chmod/01.t
     enotdir_comp_test_case!(lchmod(~path, Mode::empty()));
+
+    // chmod/04.t
     enoent_named_file_test_case!(lchmod(~path, Mode::empty()));
     enoent_comp_test_case!(lchmod(~path, Mode::empty()));
 

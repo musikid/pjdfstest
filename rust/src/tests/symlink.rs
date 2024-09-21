@@ -72,6 +72,7 @@ fn create_symlink_to_symlink(ctx: &mut TestContext) {
 
 crate::test_case! {
     /// symlink should update parent's ctime and mtime on success
+    // symlink/00.t
     changed_parent_time_success
 }
 fn changed_parent_time_success(ctx: &mut TestContext) {
@@ -103,5 +104,5 @@ eexist_file_exists_test_case!(symlink(Path::new("test"), ~path));
 // symlink/10.t
 erofs_new_file_test_case!(symlink(Path::new("test"), ~path));
 
-// symlink/13.t
+// symlink/12.t
 efault_either_test_case!(symlink, nix::libc::symlink);

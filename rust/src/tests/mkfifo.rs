@@ -18,6 +18,7 @@ crate::test_case! {
     /// POSIX: The file permission bits of the new FIFO shall be initialized from
     /// mode. The file permission bits of the mode argument shall be modified by the
     /// process' file creation mask.
+    // mkfifo/00.t
     permission_bits_from_mode, serialized
 }
 fn permission_bits_from_mode(ctx: &mut SerializedTestContext) {
@@ -28,6 +29,7 @@ crate::test_case! {
     /// POSIX: The FIFO's user ID shall be set to the process' effective user ID.
     /// The FIFO's group ID shall be set to the group ID of the parent directory or to
     /// the effective group ID of the process.
+    // mkfifo/00.t
     uid_gid_eq_euid_egid, serialized, root
 }
 fn uid_gid_eq_euid_egid(ctx: &mut SerializedTestContext) {
@@ -39,6 +41,7 @@ crate::test_case! {
     /// st_ctime, and st_mtime fields of the file. Also, the st_ctime and
     /// st_mtime fields of the directory that contains the new entry shall be marked
     /// for update.
+    // mkfifo/00.t
     changed_time_fields_success
 }
 fn changed_time_fields_success(ctx: &mut TestContext) {
