@@ -281,7 +281,7 @@ in addition of supplementary tests.</p>
 <h2 id="missing-tests"><a class="header" href="#missing-tests">Missing tests</a></h2>
 <p>The test suite is a complete rewrite of the original test suite in Rust. Many tests have been ported, but some tests are still missing.</p>
 <details>
-<summary>chflags <progress value='7' max='14'></progress></summary>
+<summary>chflags <progress value='0' max='5'></progress></summary>
 <table>
 <tr>
 <th>Test</th>
@@ -289,39 +289,9 @@ in addition of supplementary tests.</p>
 <th>Converted</th>
 </tr>
 <tr>
-<td>00.t</td>
-<td>chflags changes flags</td>
-<td>No</td>
-</tr>
-<tr>
-<td>01.t</td>
-<td>chflags returns ENOTDIR if a component of the path prefix is not a directory</td>
-<td>Yes</td>
-</tr>
-<tr>
-<td>02.t</td>
-<td>chflags returns ENAMETOOLONG if a component of a pathname exceeded {NAME_MAX} characters</td>
-<td>Yes</td>
-</tr>
-<tr>
-<td>03.t</td>
-<td>chflags returns ENAMETOOLONG if an entire path name exceeded {PATH_MAX} characters</td>
-<td>No</td>
-</tr>
-<tr>
-<td>04.t</td>
-<td>chflags returns ENOENT if the named file does not exist</td>
-<td>Yes</td>
-</tr>
-<tr>
 <td>05.t</td>
 <td>chflags returns EACCES when search permission is denied for a component of the path prefix</td>
 <td>No</td>
-</tr>
-<tr>
-<td>06.t</td>
-<td>chflags returns ELOOP if too many symbolic links were encountered in translating the pathname</td>
-<td>Yes</td>
 </tr>
 <tr>
 <td>07.t</td>
@@ -334,11 +304,6 @@ in addition of supplementary tests.</p>
 <td>No</td>
 </tr>
 <tr>
-<td>09.t</td>
-<td>chflags returns EPERM when one of SF_IMMUTABLE, SF_APPEND, or SF_NOUNLINK is set and securelevel is greater than 0</td>
-<td>Yes</td>
-</tr>
-<tr>
 <td>10.t</td>
 <td>chflags returns EPERM if non-super-user tries to set one of SF_IMMUTABLE, SF_APPEND, or SF_NOUNLINK</td>
 <td>No</td>
@@ -348,20 +313,10 @@ in addition of supplementary tests.</p>
 <td>chflags returns EPERM if a user tries to set or remove the SF_SNAPSHOT flag</td>
 <td>No</td>
 </tr>
-<tr>
-<td>12.t</td>
-<td>chflags returns EROFS if the named file resides on a read-only file system</td>
-<td>Yes</td>
-</tr>
-<tr>
-<td>13.t</td>
-<td>chflags returns EFAULT if the path argument points outside the process's allocated address space</td>
-<td>Yes</td>
-</tr>
 </table>
 </details>
 <details>
-<summary>chmod <progress value='9' max='13'></progress></summary>
+<summary>chmod <progress value='0' max='4'></progress></summary>
 <table>
 <tr>
 <th>Test</th>
@@ -369,39 +324,9 @@ in addition of supplementary tests.</p>
 <th>Converted</th>
 </tr>
 <tr>
-<td>00.t</td>
-<td>chmod changes permission</td>
-<td>Yes</td>
-</tr>
-<tr>
-<td>01.t</td>
-<td>chmod returns ENOTDIR if a component of the path prefix is not a directory</td>
-<td>Yes</td>
-</tr>
-<tr>
-<td>02.t</td>
-<td>chmod returns ENAMETOOLONG if a component of a pathname exceeded {NAME_MAX} characters</td>
-<td>Yes</td>
-</tr>
-<tr>
-<td>03.t</td>
-<td>chmod returns ENAMETOOLONG if an entire path name exceeded {PATH_MAX} characters</td>
-<td>Yes</td>
-</tr>
-<tr>
-<td>04.t</td>
-<td>chmod returns ENOENT if the named file does not exist</td>
-<td>Yes</td>
-</tr>
-<tr>
 <td>05.t</td>
 <td>chmod returns EACCES when search permission is denied for a component of the path prefix</td>
 <td>No</td>
-</tr>
-<tr>
-<td>06.t</td>
-<td>chmod returns ELOOP if too many symbolic links were encountered in translating the pathname</td>
-<td>Yes</td>
 </tr>
 <tr>
 <td>07.t</td>
@@ -414,29 +339,14 @@ in addition of supplementary tests.</p>
 <td>No</td>
 </tr>
 <tr>
-<td>09.t</td>
-<td>chmod returns EROFS if the named file resides on a read-only file system</td>
-<td>Yes</td>
-</tr>
-<tr>
-<td>10.t</td>
-<td>chmod returns EFAULT if the path argument points outside the process's allocated address space</td>
-<td>Yes</td>
-</tr>
-<tr>
-<td>11.t</td>
-<td>chmod returns EFTYPE if the effective user ID is not the super-user, the mode includes the sticky bit (S_ISVTX), and path does not refer to a directory</td>
-<td>No</td>
-</tr>
-<tr>
 <td>12.t</td>
 <td>verify SUID/SGID bit behaviour</td>
-<td>Yes</td>
+<td>No</td>
 </tr>
 </table>
 </details>
 <details>
-<summary>chown <progress value='6' max='11'></progress></summary>
+<summary>chown <progress value='0' max='4'></progress></summary>
 <table>
 <tr>
 <th>Test</th>
@@ -449,34 +359,9 @@ in addition of supplementary tests.</p>
 <td>No</td>
 </tr>
 <tr>
-<td>01.t</td>
-<td>chown returns ENOTDIR if a component of the path prefix is not a directory</td>
-<td>No</td>
-</tr>
-<tr>
-<td>02.t</td>
-<td>chown returns ENAMETOOLONG if a component of a pathname exceeded ${NAME_MAX} characters</td>
-<td>Yes</td>
-</tr>
-<tr>
-<td>03.t</td>
-<td>chown returns ENAMETOOLONG if an entire path name exceeded {PATH_MAX} characters</td>
-<td>Yes</td>
-</tr>
-<tr>
-<td>04.t</td>
-<td>chown returns ENOENT if the named file does not exist</td>
-<td>Yes</td>
-</tr>
-<tr>
 <td>05.t</td>
 <td>chown returns EACCES when search permission is denied for a component of the path prefix</td>
 <td>No</td>
-</tr>
-<tr>
-<td>06.t</td>
-<td>chown returns ELOOP if too many symbolic links were encountered in translating the pathname</td>
-<td>Yes</td>
 </tr>
 <tr>
 <td>07.t</td>
@@ -488,30 +373,15 @@ in addition of supplementary tests.</p>
 <td>chown returns EPERM if the named file has its immutable or append-only flag set</td>
 <td>No</td>
 </tr>
-<tr>
-<td>09.t</td>
-<td>chown returns EROFS if the named file resides on a read-only file system</td>
-<td>Yes</td>
-</tr>
-<tr>
-<td>10.t</td>
-<td>chown returns EFAULT if the path argument points outside the process's allocated address space</td>
-<td>Yes</td>
-</tr>
 </table>
 </details>
 <details>
-<summary>ftruncate <progress value='1' max='15'></progress></summary>
+<summary>ftruncate <progress value='0' max='13'></progress></summary>
 <table>
 <tr>
 <th>Test</th>
 <th>Description</th>
 <th>Converted</th>
-</tr>
-<tr>
-<td>00.t</td>
-<td>ftruncate descrease/increase file size</td>
-<td>No</td>
 </tr>
 <tr>
 <td>01.t</td>
@@ -572,11 +442,6 @@ in addition of supplementary tests.</p>
 <td>12.t</td>
 <td>truncate returns EFBIG or EINVAL if the length argument was greater than the maximum file size</td>
 <td>No</td>
-</tr>
-<tr>
-<td>13.t</td>
-<td>ftruncate returns EINVAL if the length argument was less than 0</td>
-<td>Yes</td>
 </tr>
 <tr>
 <td>14.t</td>
@@ -631,42 +496,12 @@ in addition of supplementary tests.</p>
 </table>
 </details>
 <details>
-<summary>link <progress value='14' max='18'></progress></summary>
+<summary>link <progress value='3' max='6'></progress></summary>
 <table>
 <tr>
 <th>Test</th>
 <th>Description</th>
 <th>Converted</th>
-</tr>
-<tr>
-<td>00.t</td>
-<td>link creates hardlinks</td>
-<td>Yes</td>
-</tr>
-<tr>
-<td>01.t</td>
-<td>link returns ENOTDIR if a component of either path prefix is not a directory</td>
-<td>Yes</td>
-</tr>
-<tr>
-<td>02.t</td>
-<td>link returns ENAMETOOLONG if a component of either pathname exceeded {NAME_MAX} characters</td>
-<td>Yes</td>
-</tr>
-<tr>
-<td>03.t</td>
-<td>link returns ENAMETOOLONG if an entire length of either path name exceeded {PATH_MAX} characters</td>
-<td>Yes</td>
-</tr>
-<tr>
-<td>04.t</td>
-<td>link returns ENOENT if a component of either path prefix does not exist</td>
-<td>Yes</td>
-</tr>
-<tr>
-<td>05.t</td>
-<td>link returns EMLINK if the link count of the file named by name1 would exceed 32767</td>
-<td>No</td>
 </tr>
 <tr>
 <td>06.t</td>
@@ -676,21 +511,6 @@ in addition of supplementary tests.</p>
 <tr>
 <td>07.t</td>
 <td>link returns EACCES when the requested link requires writing in a directory with a mode that denies write permission</td>
-<td>Yes</td>
-</tr>
-<tr>
-<td>08.t</td>
-<td>link returns ELOOP if too many symbolic links were encountered in translating one of the pathnames</td>
-<td>Yes</td>
-</tr>
-<tr>
-<td>09.t</td>
-<td>link returns ENOENT if the source file does not exist</td>
-<td>Yes</td>
-</tr>
-<tr>
-<td>10.t</td>
-<td>link returns EEXIST if the destination file does exist</td>
 <td>Yes</td>
 </tr>
 <tr>
@@ -709,59 +529,19 @@ in addition of supplementary tests.</p>
 <td>Yes</td>
 </tr>
 <tr>
-<td>14.t</td>
-<td>link returns EXDEV if the source and the destination files are on different file systems</td>
-<td>Yes</td>
-</tr>
-<tr>
 <td>15.t</td>
 <td>link returns ENOSPC if the directory in which the entry for the new link is being placed cannot be extended because there is no space left on the file system containing the directory</td>
 <td>No</td>
 </tr>
-<tr>
-<td>16.t</td>
-<td>link returns EROFS if the requested link requires writing in a directory on a read-only file system</td>
-<td>Yes</td>
-</tr>
-<tr>
-<td>17.t</td>
-<td>link returns EFAULT if one of the pathnames specified is outside the process's allocated address space</td>
-<td>Yes</td>
-</tr>
 </table>
 </details>
 <details>
-<summary>mkdir <progress value='7' max='13'></progress></summary>
+<summary>mkdir <progress value='0' max='4'></progress></summary>
 <table>
 <tr>
 <th>Test</th>
 <th>Description</th>
 <th>Converted</th>
-</tr>
-<tr>
-<td>00.t</td>
-<td>mkdir creates directories</td>
-<td>No</td>
-</tr>
-<tr>
-<td>01.t</td>
-<td>mkdir returns ENOTDIR if a component of the path prefix is not a directory</td>
-<td>No</td>
-</tr>
-<tr>
-<td>02.t</td>
-<td>mkdir returns ENAMETOOLONG if a component of a pathname exceeded {NAME_MAX} characters</td>
-<td>Yes</td>
-</tr>
-<tr>
-<td>03.t</td>
-<td>mkdir returns ENAMETOOLONG if an entire path name exceeded {PATH_MAX} characters</td>
-<td>Yes</td>
-</tr>
-<tr>
-<td>04.t</td>
-<td>mkdir returns ENOENT if a component of the path prefix does not exist</td>
-<td>Yes</td>
 </tr>
 <tr>
 <td>05.t</td>
@@ -774,69 +554,24 @@ in addition of supplementary tests.</p>
 <td>No</td>
 </tr>
 <tr>
-<td>07.t</td>
-<td>mkdir returns ELOOP if too many symbolic links were encountered in translating the pathname</td>
-<td>Yes</td>
-</tr>
-<tr>
 <td>08.t</td>
 <td>mkdir returns EPERM if the parent directory of the directory to be created has its immutable flag set</td>
 <td>No</td>
-</tr>
-<tr>
-<td>09.t</td>
-<td>mkdir returns EROFS if the named file resides on a read-only file system</td>
-<td>Yes</td>
-</tr>
-<tr>
-<td>10.t</td>
-<td>mkdir returns EEXIST if the named file exists</td>
-<td>Yes</td>
 </tr>
 <tr>
 <td>11.t</td>
 <td>mkdir returns ENOSPC if there are no free inodes on the file system on which the directory is being created</td>
 <td>No</td>
 </tr>
-<tr>
-<td>12.t</td>
-<td>mkdir returns EFAULT if the path argument points outside the process's allocated address space</td>
-<td>Yes</td>
-</tr>
 </table>
 </details>
 <details>
-<summary>mkfifo <progress value='8' max='13'></progress></summary>
+<summary>mkfifo <progress value='0' max='4'></progress></summary>
 <table>
 <tr>
 <th>Test</th>
 <th>Description</th>
 <th>Converted</th>
-</tr>
-<tr>
-<td>00.t</td>
-<td>mkfifo creates fifo files</td>
-<td>No</td>
-</tr>
-<tr>
-<td>01.t</td>
-<td>mkfifo returns ENOTDIR if a component of the path prefix is not a directory</td>
-<td>Yes</td>
-</tr>
-<tr>
-<td>02.t</td>
-<td>mkfifo returns ENAMETOOLONG if a component of a pathname exceeded {NAME_MAX} characters</td>
-<td>Yes</td>
-</tr>
-<tr>
-<td>03.t</td>
-<td>mkfifo returns ENAMETOOLONG if an entire path name exceeded {PATH_MAX} characters</td>
-<td>Yes</td>
-</tr>
-<tr>
-<td>04.t</td>
-<td>mkfifo returns ENOENT if a component of the path prefix does not exist</td>
-<td>Yes</td>
 </tr>
 <tr>
 <td>05.t</td>
@@ -849,21 +584,6 @@ in addition of supplementary tests.</p>
 <td>No</td>
 </tr>
 <tr>
-<td>07.t</td>
-<td>mkfifo returns ELOOP if too many symbolic links were encountered in translating the pathname</td>
-<td>Yes</td>
-</tr>
-<tr>
-<td>08.t</td>
-<td>mkfifo returns EROFS if the named file resides on a read-only file system</td>
-<td>Yes</td>
-</tr>
-<tr>
-<td>09.t</td>
-<td>mkfifo returns EEXIST if the named file exists</td>
-<td>Yes</td>
-</tr>
-<tr>
 <td>10.t</td>
 <td>mkfifo returns EPERM if the parent directory of the file to be created has its immutable flag set</td>
 <td>No</td>
@@ -873,45 +593,15 @@ in addition of supplementary tests.</p>
 <td>mkfifo returns ENOSPC if there are no free inodes on the file system on which the file is being created</td>
 <td>No</td>
 </tr>
-<tr>
-<td>12.t</td>
-<td>mkfifo returns EFAULT if the path argument points outside the process's allocated address space</td>
-<td>Yes</td>
-</tr>
 </table>
 </details>
 <details>
-<summary>mknod <progress value='8' max='12'></progress></summary>
+<summary>mknod <progress value='0' max='3'></progress></summary>
 <table>
 <tr>
 <th>Test</th>
 <th>Description</th>
 <th>Converted</th>
-</tr>
-<tr>
-<td>00.t</td>
-<td>mknod creates fifo files</td>
-<td>No</td>
-</tr>
-<tr>
-<td>01.t</td>
-<td>mknod returns ENOTDIR if a component of the path prefix is not a directory</td>
-<td>Yes</td>
-</tr>
-<tr>
-<td>02.t</td>
-<td>mknod returns ENAMETOOLONG if a component of a pathname exceeded {NAME_MAX} characters</td>
-<td>Yes</td>
-</tr>
-<tr>
-<td>03.t</td>
-<td>mknod returns ENAMETOOLONG if an entire path name exceeded {PATH_MAX} characters</td>
-<td>Yes</td>
-</tr>
-<tr>
-<td>04.t</td>
-<td>mknod returns ENOENT if a component of the path prefix does not exist</td>
-<td>Yes</td>
 </tr>
 <tr>
 <td>05.t</td>
@@ -924,34 +614,14 @@ in addition of supplementary tests.</p>
 <td>No</td>
 </tr>
 <tr>
-<td>07.t</td>
-<td>mknod returns ELOOP if too many symbolic links were encountered in translating the pathname</td>
-<td>Yes</td>
-</tr>
-<tr>
-<td>08.t</td>
-<td>mknod returns EEXIST if the named file exists</td>
-<td>Yes</td>
-</tr>
-<tr>
 <td>09.t</td>
 <td>mknod returns EPERM if the parent directory of the file to be created has its immutable flag set</td>
 <td>No</td>
 </tr>
-<tr>
-<td>10.t</td>
-<td>mknod returns EFAULT if the path argument points outside the process's allocated address space</td>
-<td>Yes</td>
-</tr>
-<tr>
-<td>11.t</td>
-<td>mknod creates device files</td>
-<td>Yes</td>
-</tr>
 </table>
 </details>
 <details>
-<summary>open <progress value='14' max='26'></progress></summary>
+<summary>open <progress value='0' max='9'></progress></summary>
 <table>
 <tr>
 <th>Test</th>
@@ -959,29 +629,9 @@ in addition of supplementary tests.</p>
 <th>Converted</th>
 </tr>
 <tr>
-<td>00.t</td>
-<td>open opens (and eventually creates) a file</td>
-<td>Yes</td>
-</tr>
-<tr>
 <td>01.t</td>
 <td>open returns ENOTDIR if a component of the path prefix is not a directory</td>
 <td>No</td>
-</tr>
-<tr>
-<td>02.t</td>
-<td>open returns ENAMETOOLONG if a component of a pathname exceeded {NAME_MAX} characters</td>
-<td>Yes</td>
-</tr>
-<tr>
-<td>03.t</td>
-<td>open returns ENAMETOOLONG if an entire path name exceeded ${PATH_MAX} characters</td>
-<td>Yes</td>
-</tr>
-<tr>
-<td>04.t</td>
-<td>open returns ENOENT if a component of the path name that must exist does not exist or O_CREAT is not set and the named file does not exist</td>
-<td>Yes</td>
 </tr>
 <tr>
 <td>05.t</td>
@@ -1019,119 +669,19 @@ in addition of supplementary tests.</p>
 <td>No</td>
 </tr>
 <tr>
-<td>12.t</td>
-<td>open returns ELOOP if too many symbolic links were encountered in translating the pathname</td>
-<td>Yes</td>
-</tr>
-<tr>
-<td>13.t</td>
-<td>open returns EISDIR when trying to open a directory for writing</td>
-<td>Yes</td>
-</tr>
-<tr>
-<td>14.t</td>
-<td>open returns EROFS if the named file resides on a read-only file system, and the file is to be modified</td>
-<td>Yes</td>
-</tr>
-<tr>
-<td>15.t</td>
-<td>open returns EROFS when O_CREAT is specified and the named file would reside on a read-only file system</td>
-<td>Yes</td>
-</tr>
-<tr>
-<td>16.t</td>
-<td>open returns $error when O_NOFOLLOW was specified and the target is a symbolic link</td>
-<td>No</td>
-</tr>
-<tr>
-<td>17.t</td>
-<td>open returns ENXIO when O_NONBLOCK is set, the named file is a fifo, O_WRONLY is set, and no process has the file open for reading</td>
-<td>No</td>
-</tr>
-<tr>
-<td>18.t</td>
-<td>open returns EWOULDBLOCK when O_NONBLOCK and one of O_SHLOCK or O_EXLOCK is specified and the file is locked</td>
-<td>Yes</td>
-</tr>
-<tr>
 <td>19.t</td>
 <td>open returns ENOSPC when O_CREAT is specified, the file does not exist, and there are no free inodes on the file system on which the file is being created</td>
 <td>No</td>
 </tr>
-<tr>
-<td>20.t</td>
-<td>open returns ETXTBSY when the file is a pure procedure (shared text) file that is being executed and the open() system call requests write access</td>
-<td>Yes</td>
-</tr>
-<tr>
-<td>21.t</td>
-<td>open returns EFAULT if the path argument points outside the process's allocated address space</td>
-<td>Yes</td>
-</tr>
-<tr>
-<td>22.t</td>
-<td>open returns EEXIST when O_CREAT and O_EXCL were specified and the file exists</td>
-<td>Yes</td>
-</tr>
-<tr>
-<td>23.t</td>
-<td>open may return EINVAL when an attempt was made to open a descriptor with an illegal combination of O_RDONLY, O_WRONLY, and O_RDWR</td>
-<td>Yes</td>
-</tr>
-<tr>
-<td>24.t</td>
-<td>open returns $expected_error when trying to open UNIX domain socket</td>
-<td>No</td>
-</tr>
-<tr>
-<td>25.t</td>
-<td>interact with > 2 GB files</td>
-<td>Yes</td>
-</tr>
 </table>
 </details>
 <details>
-<summary>posix_fallocate <progress value='0' max='1'></progress></summary>
+<summary>rename <progress value='0' max='7'></progress></summary>
 <table>
 <tr>
 <th>Test</th>
 <th>Description</th>
 <th>Converted</th>
-</tr>
-<tr>
-<td>00.t</td>
-<td>posix_fallocate descrease/increase file size</td>
-<td>No</td>
-</tr>
-</table>
-</details>
-<details>
-<summary>rename <progress value='17' max='25'></progress></summary>
-<table>
-<tr>
-<th>Test</th>
-<th>Description</th>
-<th>Converted</th>
-</tr>
-<tr>
-<td>00.t</td>
-<td>rename changes file name</td>
-<td>Yes</td>
-</tr>
-<tr>
-<td>01.t</td>
-<td>rename returns ENAMETOOLONG if a component of either pathname exceeded {NAME_MAX} characters</td>
-<td>Yes</td>
-</tr>
-<tr>
-<td>02.t</td>
-<td>rename returns ENAMETOOLONG if an entire length of either path name exceeded {PATH_MAX} characters</td>
-<td>Yes</td>
-</tr>
-<tr>
-<td>03.t</td>
-<td>rename returns ENOENT if a component of the 'from' path does not exist, or a path prefix of 'to' does not exist</td>
-<td>Yes</td>
 </tr>
 <tr>
 <td>04.t</td>
@@ -1168,120 +718,15 @@ in addition of supplementary tests.</p>
 <td>rename returns EACCES or EPERM if the file pointed at by the 'to' argument exists, the directory containing 'to' is marked sticky, and neither the containing directory nor 'to' are owned by the effective user ID</td>
 <td>No</td>
 </tr>
-<tr>
-<td>11.t</td>
-<td>rename returns ELOOP if too many symbolic links were encountered in translating one of the pathnames</td>
-<td>No</td>
-</tr>
-<tr>
-<td>12.t</td>
-<td>rename returns ENOTDIR if a component of either path prefix is not a directory</td>
-<td>Yes</td>
-</tr>
-<tr>
-<td>13.t</td>
-<td>rename returns ENOTDIR when the 'from' argument is a directory, but 'to' is not a directory</td>
-<td>Yes</td>
-</tr>
-<tr>
-<td>14.t</td>
-<td>rename returns EISDIR when the 'to' argument is a directory, but 'from' is not a directory</td>
-<td>Yes</td>
-</tr>
-<tr>
-<td>15.t</td>
-<td>rename returns EXDEV if the link named by 'to' and the file named by 'from' are on different file systems</td>
-<td>Yes</td>
-</tr>
-<tr>
-<td>16.t</td>
-<td>rename returns EROFS if the requested link requires writing in a directory on a read-only file system</td>
-<td>Yes</td>
-</tr>
-<tr>
-<td>17.t</td>
-<td>rename returns EFAULT if one of the pathnames specified is outside the process's allocated address space</td>
-<td>Yes</td>
-</tr>
-<tr>
-<td>18.t</td>
-<td>rename returns EINVAL when the 'from' argument is a parent directory of 'to'</td>
-<td>Yes</td>
-</tr>
-<tr>
-<td>19.t</td>
-<td>rename returns EINVAL/EBUSY when an attempt is made to rename '.' or '..'</td>
-<td>Yes</td>
-</tr>
-<tr>
-<td>20.t</td>
-<td>rename returns EEXIST or ENOTEMPTY if the 'to' argument is a directory and is not empty</td>
-<td>Yes</td>
-</tr>
-<tr>
-<td>21.t</td>
-<td>write access to subdirectory is required to move it to another directory</td>
-<td>Yes</td>
-</tr>
-<tr>
-<td>22.t</td>
-<td>rename changes file ctime</td>
-<td>Yes</td>
-</tr>
-<tr>
-<td>23.t</td>
-<td>rename succeeds when to is multiply linked</td>
-<td>Yes</td>
-</tr>
-<tr>
-<td>24.t</td>
-<td>rename of a directory updates its .. link</td>
-<td>Yes</td>
-</tr>
 </table>
 </details>
 <details>
-<summary>rmdir <progress value='10' max='16'></progress></summary>
+<summary>rmdir <progress value='0' max='5'></progress></summary>
 <table>
 <tr>
 <th>Test</th>
 <th>Description</th>
 <th>Converted</th>
-</tr>
-<tr>
-<td>00.t</td>
-<td>rmdir removes directories</td>
-<td>No</td>
-</tr>
-<tr>
-<td>01.t</td>
-<td>rmdir returns ENOTDIR if a component of the path is not a directory</td>
-<td>Yes</td>
-</tr>
-<tr>
-<td>02.t</td>
-<td>rmdir returns ENAMETOOLONG if a component of a pathname exceeded {NAME_MAX} characters</td>
-<td>Yes</td>
-</tr>
-<tr>
-<td>03.t</td>
-<td>rmdir returns ENAMETOOLONG if an entire path name exceeded ${PATH_MAX} characters</td>
-<td>Yes</td>
-</tr>
-<tr>
-<td>04.t</td>
-<td>rmdir returns ENOENT if the named directory does not exist</td>
-<td>Yes</td>
-</tr>
-<tr>
-<td>05.t</td>
-<td>rmdir returns ELOOP if too many symbolic links were encountered in translating the pathname</td>
-<td>Yes</td>
-</tr>
-<tr>
-<td>06.t</td>
-<td>rmdir returns EEXIST or ENOTEMPTY the named directory contains files other than '.' and '..' in it</td>
-<td>Yes</td>
 </tr>
 <tr>
 <td>07.t</td>
@@ -1308,60 +753,15 @@ in addition of supplementary tests.</p>
 <td>rmdir returns EACCES or EPERM if the directory containing the directory to be removed is marked sticky, and neither the containing directory nor the directory to be removed are owned by the effective user ID</td>
 <td>No</td>
 </tr>
-<tr>
-<td>12.t</td>
-<td>rmdir returns EINVAL if the last component of the path is '.' and EEXIST or ENOTEMPTY if the last component of the path is '..'</td>
-<td>Yes</td>
-</tr>
-<tr>
-<td>13.t</td>
-<td>rmdir returns EBUSY if the directory to be removed is the mount point for a mounted file system</td>
-<td>Yes</td>
-</tr>
-<tr>
-<td>14.t</td>
-<td>rmdir returns EROFS if the named file resides on a read-only file system</td>
-<td>Yes</td>
-</tr>
-<tr>
-<td>15.t</td>
-<td>rmdir returns EFAULT if the path argument points outside the process's allocated address space</td>
-<td>Yes</td>
-</tr>
 </table>
 </details>
 <details>
-<summary>symlink <progress value='7' max='13'></progress></summary>
+<summary>symlink <progress value='0' max='5'></progress></summary>
 <table>
 <tr>
 <th>Test</th>
 <th>Description</th>
 <th>Converted</th>
-</tr>
-<tr>
-<td>00.t</td>
-<td>symlink creates symbolic links</td>
-<td>Yes</td>
-</tr>
-<tr>
-<td>01.t</td>
-<td>symlink returns ENOTDIR if a component of the name2 path prefix is not a directory</td>
-<td>Yes</td>
-</tr>
-<tr>
-<td>02.t</td>
-<td>symlink returns ENAMETOOLONG if a component of the name2 pathname exceeded {NAME_MAX} characters</td>
-<td>Yes</td>
-</tr>
-<tr>
-<td>03.t</td>
-<td>symlink returns ENAMETOOLONG if an entire length of either path name exceeded {PATH_MAX} characters</td>
-<td>Yes</td>
-</tr>
-<tr>
-<td>04.t</td>
-<td>symlink returns ENOENT if a component of the name2 path prefix does not exist</td>
-<td>Yes</td>
 </tr>
 <tr>
 <td>05.t</td>
@@ -1379,64 +779,24 @@ in addition of supplementary tests.</p>
 <td>No</td>
 </tr>
 <tr>
-<td>08.t</td>
-<td>symlink returns EEXIST if the name2 argument already exists</td>
-<td>Yes</td>
-</tr>
-<tr>
 <td>09.t</td>
 <td>symlink returns EPERM if the parent directory of the file named by name2 has its immutable flag set</td>
 <td>No</td>
-</tr>
-<tr>
-<td>10.t</td>
-<td>symlink returns EROFS if the file name2 would reside on a read-only file system</td>
-<td>Yes</td>
 </tr>
 <tr>
 <td>11.t</td>
 <td>symlink returns ENOSPC if there are no free inodes on the file system on which the symbolic link is being created</td>
 <td>No</td>
 </tr>
-<tr>
-<td>12.t</td>
-<td>symlink returns EFAULT if one of the pathnames specified is outside the process's allocated address space</td>
-<td>No</td>
-</tr>
 </table>
 </details>
 <details>
-<summary>truncate <progress value='11' max='15'></progress></summary>
+<summary>truncate <progress value='0' max='4'></progress></summary>
 <table>
 <tr>
 <th>Test</th>
 <th>Description</th>
 <th>Converted</th>
-</tr>
-<tr>
-<td>00.t</td>
-<td>truncate descrease/increase file size</td>
-<td>Yes</td>
-</tr>
-<tr>
-<td>01.t</td>
-<td>truncate returns ENOTDIR if a component of the path prefix is not a directory</td>
-<td>Yes</td>
-</tr>
-<tr>
-<td>02.t</td>
-<td>truncate returns ENAMETOOLONG if a component of a pathname exceeded {NAME_MAX} characters</td>
-<td>Yes</td>
-</tr>
-<tr>
-<td>03.t</td>
-<td>truncate returns ENAMETOOLONG if an entire path name exceeded {PATH_MAX} characters</td>
-<td>Yes</td>
-</tr>
-<tr>
-<td>04.t</td>
-<td>truncate returns ENOENT if the named file does not exist</td>
-<td>Yes</td>
 </tr>
 <tr>
 <td>05.t</td>
@@ -1449,79 +809,24 @@ in addition of supplementary tests.</p>
 <td>No</td>
 </tr>
 <tr>
-<td>07.t</td>
-<td>truncate returns ELOOP if too many symbolic links were encountered in translating the pathname</td>
-<td>Yes</td>
-</tr>
-<tr>
 <td>08.t</td>
 <td>truncate returns EPERM if the named file has its immutable or append-only flag set</td>
 <td>No</td>
-</tr>
-<tr>
-<td>09.t</td>
-<td>truncate returns EISDIR if the named file is a directory</td>
-<td>Yes</td>
-</tr>
-<tr>
-<td>10.t</td>
-<td>truncate returns EROFS if the named file resides on a read-only file system</td>
-<td>Yes</td>
-</tr>
-<tr>
-<td>11.t</td>
-<td>truncate returns ETXTBSY the file is a pure procedure (shared text) file that is being executed</td>
-<td>Yes</td>
 </tr>
 <tr>
 <td>12.t</td>
 <td>truncate returns EFBIG or EINVAL if the length argument was greater than the maximum file size</td>
 <td>No</td>
 </tr>
-<tr>
-<td>13.t</td>
-<td>truncate returns EINVAL if the length argument was less than 0</td>
-<td>Yes</td>
-</tr>
-<tr>
-<td>14.t</td>
-<td>truncate returns EFAULT if the path argument points outside the process's allocated address space</td>
-<td>Yes</td>
-</tr>
 </table>
 </details>
 <details>
-<summary>unlink <progress value='9' max='15'></progress></summary>
+<summary>unlink <progress value='0' max='6'></progress></summary>
 <table>
 <tr>
 <th>Test</th>
 <th>Description</th>
 <th>Converted</th>
-</tr>
-<tr>
-<td>00.t</td>
-<td>unlink removes regular files, symbolic links, fifos and sockets</td>
-<td>Yes</td>
-</tr>
-<tr>
-<td>01.t</td>
-<td>unlink returns ENOTDIR if a component of the path prefix is not a directory</td>
-<td>Yes</td>
-</tr>
-<tr>
-<td>02.t</td>
-<td>unlink returns ENAMETOOLONG if a component of a pathname exceeded {NAME_MAX} characters</td>
-<td>Yes</td>
-</tr>
-<tr>
-<td>03.t</td>
-<td>unlink returns ENAMETOOLONG if an entire path name exceeded {PATH_MAX} characters</td>
-<td>Yes</td>
-</tr>
-<tr>
-<td>04.t</td>
-<td>unlink returns ENOENT if the named file does not exist</td>
-<td>Yes</td>
 </tr>
 <tr>
 <td>05.t</td>
@@ -1532,11 +837,6 @@ in addition of supplementary tests.</p>
 <td>06.t</td>
 <td>unlink returns EACCES when write permission is denied on the directory containing the link to be removed</td>
 <td>No</td>
-</tr>
-<tr>
-<td>07.t</td>
-<td>unlink returns ELOOP if too many symbolic links were encountered in translating the pathname</td>
-<td>Yes</td>
 </tr>
 <tr>
 <td>08.t</td>
@@ -1557,81 +857,6 @@ in addition of supplementary tests.</p>
 <td>11.t</td>
 <td>unlink returns EACCES or EPERM if the directory containing the file is marked sticky, and neither the containing directory nor the file to be removed are owned by the effective user ID</td>
 <td>No</td>
-</tr>
-<tr>
-<td>12.t</td>
-<td>unlink returns EROFS if the named file resides on a read-only file system</td>
-<td>Yes</td>
-</tr>
-<tr>
-<td>13.t</td>
-<td>unlink returns EFAULT if the path argument points outside the process's allocated address space</td>
-<td>Yes</td>
-</tr>
-<tr>
-<td>14.t</td>
-<td>An open file will not be immediately freed by unlink</td>
-<td>Yes</td>
-</tr>
-</table>
-</details>
-<details>
-<summary>utimensat <progress value='10' max='10'></progress></summary>
-<table>
-<tr>
-<th>Test</th>
-<th>Description</th>
-<th>Converted</th>
-</tr>
-<tr>
-<td>00.t</td>
-<td>utimensat changes timestamps on any type of file</td>
-<td>Yes</td>
-</tr>
-<tr>
-<td>01.t</td>
-<td>utimensat with UTIME_NOW will set the will set typestamps to now</td>
-<td>Yes</td>
-</tr>
-<tr>
-<td>02.t</td>
-<td>utimensat with UTIME_OMIT will leave the time unchanged</td>
-<td>Yes</td>
-</tr>
-<tr>
-<td>03.t</td>
-<td>utimensat can update birthtimes</td>
-<td>Yes</td>
-</tr>
-<tr>
-<td>04.t</td>
-<td>utimensat can set mtime < atime or vice versa</td>
-<td>Yes</td>
-</tr>
-<tr>
-<td>05.t</td>
-<td>utimensat can follow symlinks</td>
-<td>Yes</td>
-</tr>
-<tr>
-<td>06.t</td>
-<td>utimensat with UTIME_NOW will work if the caller has write permission</td>
-<td>Yes</td>
-</tr>
-<tr>
-<td>07.t</td>
-<td>utimensat will work if the caller is the owner or root</td>
-<td>Yes</td>
-</tr>
-<tr>
-<td>08.t</td>
-<td>utimensat can set timestamps with subsecond precision</td>
-<td>Yes</td>
-</tr>
-<tr>
-<td>09.t</td>
-<td>utimensat is y2038 compliant</td>
-<td>Yes</td>
 </tr>
 </table>
 </details>

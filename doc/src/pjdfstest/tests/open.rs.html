@@ -343,6 +343,13 @@
 <a href="#343" id="343">343</a>
 <a href="#344" id="344">344</a>
 <a href="#345" id="345">345</a>
+<a href="#346" id="346">346</a>
+<a href="#347" id="347">347</a>
+<a href="#348" id="348">348</a>
+<a href="#349" id="349">349</a>
+<a href="#350" id="350">350</a>
+<a href="#351" id="351">351</a>
+<a href="#352" id="352">352</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::fs::{metadata, symlink_metadata, FileType <span class="kw">as </span>StdFileType};
 <span class="kw">use </span>std::os::fd::{FromRawFd, IntoRawFd, OwnedFd};
 <span class="kw">use </span>std::os::unix::prelude::{MetadataExt, RawFd};
@@ -366,9 +373,8 @@
 <span class="kw">use </span><span class="kw">super</span>::mksyscalls::{assert_perms_from_mode_and_umask, assert_uid_gid};
 <span class="kw">use super</span>::{assert_times_changed, assert_times_unchanged, ATIME, CTIME, MTIME};
 
-<span class="comment">// open/00.t
 
-</span><span class="kw">fn </span>open_wrapper(path: <span class="kw-2">&amp;</span>Path, mode: Mode) -&gt; nix::Result&lt;()&gt; {
+<span class="kw">fn </span>open_wrapper(path: <span class="kw-2">&amp;</span>Path, mode: Mode) -&gt; nix::Result&lt;()&gt; {
     open(path, OFlag::O_CREAT | OFlag::O_WRONLY, mode).and_then(close)
 }
 
@@ -379,6 +385,7 @@
     /// on the file-mode bits and the corresponding bits in the complement of the
     /// process' file mode creation mask. Thus, all bits in the file mode whose
     /// corresponding bit in the file mode creation mask is set are cleared.
+    </span><span class="comment">// open/00.t
     </span>permission_bits_from_mode, serialized
 }
 <span class="kw">fn </span>permission_bits_from_mode(ctx: <span class="kw-2">&amp;mut </span>SerializedTestContext) {
@@ -390,6 +397,7 @@
     /// of the file shall be set to the effective user ID of the process; the group ID
     /// of the file shall be set to the group ID of the file's parent directory or to
     /// the effective group ID of the process [...]
+    </span><span class="comment">// open/00.t
     </span>uid_gid_eq_euid_egid, serialized, root
 }
 <span class="kw">fn </span>uid_gid_eq_euid_egid(ctx: <span class="kw-2">&amp;mut </span>SerializedTestContext) {
@@ -401,6 +409,7 @@
     /// st_ctime, and st_mtime fields of the directory. Also, the st_ctime and
     /// st_mtime fields of the directory that contains the new entry shall be marked
     /// for update.
+    </span><span class="comment">// open/00.t
     </span>changed_time_fields_success
 }
 <span class="kw">fn </span>changed_time_fields_success(ctx: <span class="kw-2">&amp;mut </span>TestContext) {
@@ -417,6 +426,7 @@
 <span class="macro">crate::test_case!</span> {
     <span class="doccomment">/// open do not update parent directory ctime and mtime fields if
     /// the file previously existed.
+    </span><span class="comment">// open/00.t
     </span>exists_no_update
 }
 <span class="kw">fn </span>exists_no_update(ctx: <span class="kw-2">&amp;mut </span>TestContext) {
@@ -431,6 +441,7 @@
 
 <span class="macro">crate::test_case!</span> {
     <span class="doccomment">/// open with O_TRUNC should truncate an exisiting file.
+    </span><span class="comment">// open/00.t
     </span>open_trunc
 }
 <span class="kw">fn </span>open_trunc(ctx: <span class="kw-2">&amp;mut </span>TestContext) {
@@ -470,6 +481,7 @@
 }
 
 <span class="comment">// POSIX states that open should return ELOOP, but FreeBSD returns EMLINK instead
+// open/16.t
 </span><span class="attr">#[cfg(not(target_os = <span class="string">"freebsd"</span>))]
 </span><span class="macro">crate::test_case!</span> {
     <span class="doccomment">/// open returns ELOOP when O_NOFOLLOW was specified and the target is a symbolic link
@@ -514,6 +526,7 @@
 <span class="attr">#[cfg(target_os = <span class="string">"linux"</span>)]
 </span><span class="macro">crate::test_case!</span> {
     <span class="doccomment">/// open returns ENXIO when trying to open UNIX domain socket
+    </span><span class="comment">// open/24.t
     </span>socket_error
 }
 <span class="kw">fn </span>socket_error(ctx: <span class="kw-2">&amp;mut </span>TestContext) {
@@ -536,6 +549,7 @@
 <span class="macro">crate::test_case!</span> {
     <span class="doccomment">/// open returns ENXIO when O_NONBLOCK is set, the named file is a fifo, O_WRONLY is set,
     /// and no process has the file open for reading
+    </span><span class="comment">// open/17.t
     </span>fifo_nonblock_wronly
 }
 <span class="kw">fn </span>fifo_nonblock_wronly(ctx: <span class="kw-2">&amp;mut </span>TestContext) {
@@ -573,7 +587,7 @@
 <span class="comment">// open/15.t
 </span><span class="macro">erofs_new_file_test_case!</span>(
     open,
-    open_flag_wrapper_ctx(OFlag::O_RDONLY | OFlag::O_CREAT,)
+    open_flag_wrapper_ctx(OFlag::O_RDONLY | OFlag::O_CREAT)
 );
 
 <span class="comment">// open/12.t
@@ -581,13 +595,13 @@
 
 <span class="macro">crate::test_case!</span> {
     <span class="doccomment">/// open returns EISDIR if the named file is a directory
+    </span><span class="comment">// open/13.t
     </span>eisdir
 }
 <span class="kw">fn </span>eisdir(ctx: <span class="kw-2">&amp;mut </span>TestContext) {
     <span class="kw">let </span>path = ctx.create(FileType::Dir).unwrap();
 
-    <span class="comment">// open/13.t
-    </span><span class="macro">assert_eq!</span>(
+    <span class="macro">assert_eq!</span>(
         open(<span class="kw-2">&amp;</span>path, OFlag::O_WRONLY, Mode::empty()),
         <span class="prelude-val">Err</span>(Errno::EISDIR)
     );

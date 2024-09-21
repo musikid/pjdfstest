@@ -105,6 +105,7 @@
 <a href="#105" id="105">105</a>
 <a href="#106" id="106">106</a>
 <a href="#107" id="107">107</a>
+<a href="#108" id="108">108</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::{
     fs::{metadata, remove_dir, remove_file, symlink_metadata},
     os::unix::prelude::FileTypeExt,
@@ -179,6 +180,7 @@
 
 <span class="macro">crate::test_case!</span> {
     <span class="doccomment">/// symlink should update parent's ctime and mtime on success
+    </span><span class="comment">// symlink/00.t
     </span>changed_parent_time_success
 }
 <span class="kw">fn </span>changed_parent_time_success(ctx: <span class="kw-2">&amp;mut </span>TestContext) {
@@ -210,6 +212,6 @@
 <span class="comment">// symlink/10.t
 </span><span class="macro">erofs_new_file_test_case!</span>(symlink(Path::new(<span class="string">"test"</span>), ~path));
 
-<span class="comment">// symlink/13.t
+<span class="comment">// symlink/12.t
 </span><span class="macro">efault_either_test_case!</span>(symlink, nix::libc::symlink);
 </code></pre></div></section></main></body></html>

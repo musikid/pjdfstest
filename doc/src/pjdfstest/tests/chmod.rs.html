@@ -220,6 +220,10 @@
 <a href="#220" id="220">220</a>
 <a href="#221" id="221">221</a>
 <a href="#222" id="222">222</a>
+<a href="#223" id="223">223</a>
+<a href="#224" id="224">224</a>
+<a href="#225" id="225">225</a>
+<a href="#226" id="226">226</a>
 </pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
     context::{FileType, SerializedTestContext},
     test::TestContext,
@@ -307,7 +311,8 @@
     });
 }
 
-<span class="macro">crate::test_case!</span> {
+<span class="comment">// chmod/00.t:L119
+</span><span class="macro">crate::test_case!</span> {
     <span class="doccomment">/// S_ISGID bit shall be cleared upon successful return from chmod of a regular file
     /// if the calling process does not have appropriate privileges, and if
     /// the group ID of the file does not match the effective group ID or one of the
@@ -371,7 +376,7 @@
     <span class="doccomment">/// chmod returns EFTYPE if the effective user ID is not the super-user,
     /// the mode includes the sticky bit (S_ISVTX),
     /// and path does not refer to a directory
-    </span><span class="comment">// chmod/12.t
+    </span><span class="comment">// chmod/11.t
     </span>eftype, serialized, root =&gt; [Regular, Fifo, Block, Char, Socket]
 }
 <span class="attr">#[cfg(any(target_os = <span class="string">"freebsd"</span>, target_os = <span class="string">"dragonfly"</span>))]
@@ -420,8 +425,11 @@
 </span><span class="kw">mod </span>lchmod {
     <span class="kw">use super</span>::<span class="kw-2">*</span>;
 
-    <span class="macro">enotdir_comp_test_case!</span>(lchmod(~path, Mode::empty()));
-    <span class="macro">enoent_named_file_test_case!</span>(lchmod(~path, Mode::empty()));
+    <span class="comment">// chmod/01.t
+    </span><span class="macro">enotdir_comp_test_case!</span>(lchmod(~path, Mode::empty()));
+
+    <span class="comment">// chmod/04.t
+    </span><span class="macro">enoent_named_file_test_case!</span>(lchmod(~path, Mode::empty()));
     <span class="macro">enoent_comp_test_case!</span>(lchmod(~path, Mode::empty()));
 
     <span class="comment">// chmod/06.t#L25

@@ -376,6 +376,7 @@
 <a href="#376" id="376">376</a>
 <a href="#377" id="377">377</a>
 <a href="#378" id="378">378</a>
+<a href="#379" id="379">379</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::fs::symlink_metadata;
 
 <span class="kw">use </span>nix::{
@@ -645,7 +646,8 @@
 
     <span class="macro">assert!</span>(rename(<span class="kw-2">&amp;</span>src, <span class="kw-2">&amp;</span>dst).is_ok());
 
-    <span class="kw">let </span>src_parent_stat = lstat(<span class="kw-2">&amp;</span>src_parent).unwrap();
+    <span class="comment">// The .. link and parents' nlinks values should be updated
+    </span><span class="kw">let </span>src_parent_stat = lstat(<span class="kw-2">&amp;</span>src_parent).unwrap();
     <span class="kw">let </span>dst_parent_stat = lstat(<span class="kw-2">&amp;</span>dst_parent).unwrap();
     <span class="macro">assert_eq!</span>(src_parent_stat.st_nlink, <span class="number">2</span>);
     <span class="macro">assert_eq!</span>(dst_parent_stat.st_nlink, <span class="number">3</span>);
@@ -660,9 +662,9 @@
     <span class="doccomment">/// rename returns ENOTDIR when the 'from' argument is a directory,
     /// but 'to' is not a directory
     </span><span class="comment">// rename/13.t
-    </span>enotdir_from_to =&gt; [Regular, Fifo, Block, Char, Socket]
+    </span>enotdir_from_dir_to_not_dir =&gt; [Regular, Fifo, Block, Char, Socket]
 }
-<span class="kw">fn </span>enotdir_from_to(ctx: <span class="kw-2">&amp;mut </span>TestContext, ft: FileType) {
+<span class="kw">fn </span>enotdir_from_dir_to_not_dir(ctx: <span class="kw-2">&amp;mut </span>TestContext, ft: FileType) {
     <span class="kw">let </span>path = ctx.create(ft).unwrap();
     <span class="kw">let </span>dir = ctx.create(FileType::Dir).unwrap();
 
@@ -678,7 +680,7 @@
 <span class="comment">// rename/03.t
 </span><span class="macro">enoent_either_named_file_test_case!</span>(rename);
 
-<span class="comment">// reanme/11.t
+<span class="comment">// rename/11.t
 </span><span class="macro">eloop_either_test_case!</span>(rename);
 
 <span class="macro">crate::test_case!</span> {

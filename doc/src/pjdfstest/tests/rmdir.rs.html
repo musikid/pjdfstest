@@ -198,6 +198,8 @@
 <a href="#198" id="198">198</a>
 <a href="#199" id="199">199</a>
 <a href="#200" id="200">200</a>
+<a href="#201" id="201">201</a>
+<a href="#202" id="202">202</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::{
     ffi::OsStr,
     fs::metadata,
@@ -220,6 +222,7 @@
 
 <span class="macro">crate::test_case!</span> {
     <span class="doccomment">/// rmdir remove directory
+    </span><span class="comment">// rmdir/00.t
     </span>remove_dir
 }
 <span class="kw">fn </span>remove_dir(ctx: <span class="kw-2">&amp;mut </span>TestContext) {
@@ -231,6 +234,7 @@
 
 <span class="macro">crate::test_case!</span> {
     <span class="doccomment">/// rmdir updates parent ctime and mtime on success
+    </span><span class="comment">// rmdir/00.t
     </span>changed_time_parent_success
 }
 <span class="kw">fn </span>changed_time_parent_success(ctx: <span class="kw-2">&amp;mut </span>TestContext) {

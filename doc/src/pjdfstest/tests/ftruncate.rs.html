@@ -122,6 +122,11 @@
 <a href="#122" id="122">122</a>
 <a href="#123" id="123">123</a>
 <a href="#124" id="124">124</a>
+<a href="#125" id="125">125</a>
+<a href="#126" id="126">126</a>
+<a href="#127" id="127">127</a>
+<a href="#128" id="128">128</a>
+<a href="#129" id="129">129</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::{fs::File, io::Write};
 
 <span class="kw">use </span>nix::{
@@ -141,6 +146,7 @@
 
 <span class="macro">crate::test_case!</span> {
     <span class="doccomment">/// ftruncate should extend a file, and shrink a sparse file
+    </span><span class="comment">// ftruncate/00.t
     </span>extend_file_shrink_sparse
 }
 <span class="kw">fn </span>extend_file_shrink_sparse(ctx: <span class="kw-2">&amp;mut </span>TestContext) {
@@ -161,6 +167,7 @@
 
 <span class="macro">crate::test_case!</span> {
     <span class="doccomment">/// ftruncate should shrink the file if the specified size is less than the actual one
+    </span><span class="comment">// ftruncate/00.t
     </span>shrink_not_empty
 }
 <span class="kw">fn </span>shrink_not_empty(ctx: <span class="kw-2">&amp;mut </span>TestContext) {
@@ -186,6 +193,7 @@
 
 <span class="macro">crate::test_case!</span> {
     <span class="doccomment">/// ftruncate should update ctime if it succeeds
+    </span><span class="comment">// ftruncate/00.t
     </span>update_ctime_success
 }
 <span class="kw">fn </span>update_ctime_success(ctx: <span class="kw-2">&amp;mut </span>TestContext) {
@@ -198,6 +206,7 @@
 
 <span class="macro">crate::test_case!</span> {
     <span class="doccomment">/// ftruncate should not update ctime if it fails
+    </span><span class="comment">// ftruncate/00.t
     </span>unchanged_ctime_failed
 }
 <span class="kw">fn </span>unchanged_ctime_failed(ctx: <span class="kw-2">&amp;mut </span>TestContext) {
@@ -212,6 +221,7 @@
     <span class="doccomment">/// The file mode of a newly created file should not affect whether ftruncate
     /// will work, only the create args
     /// https://bugs.freebsd.org/bugzilla/show_bug.cgi?id=154873
+    </span><span class="comment">// ftruncate/00.t
     </span>affected_create_flags_only, serialized, root
 }
 <span class="kw">fn </span>affected_create_flags_only(ctx: <span class="kw-2">&amp;mut </span>SerializedTestContext) {

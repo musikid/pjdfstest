@@ -73,6 +73,10 @@
 <a href="#73" id="73">73</a>
 <a href="#74" id="74">74</a>
 <a href="#75" id="75">75</a>
+<a href="#76" id="76">76</a>
+<a href="#77" id="77">77</a>
+<a href="#78" id="78">78</a>
+<a href="#79" id="79">79</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::fs::FileType;
 
 <span class="kw">use </span>nix::{sys::stat::Mode, unistd::mkdir};
@@ -92,6 +96,7 @@
     <span class="doccomment">/// POSIX: The file permission bits of the new directory shall be initialized from
     /// mode. These file permission bits of the mode argument shall be modified by the
     /// process' file creation mask.
+    </span><span class="comment">// mkdir/00.t
     </span>permission_bits_from_mode, serialized
 }
 <span class="kw">fn </span>permission_bits_from_mode(ctx: <span class="kw-2">&amp;mut </span>SerializedTestContext) {
@@ -102,6 +107,7 @@
     <span class="doccomment">/// POSIX: The directory's user ID shall be set to the process' effective user ID.
     /// The directory's group ID shall be set to the group ID of the parent directory
     /// or to the effective group ID of the process.
+    </span><span class="comment">// mkdir/00.t
     </span>uid_gid_eq_euid_egid, serialized, root
 }
 <span class="kw">fn </span>uid_gid_eq_euid_egid(ctx: <span class="kw-2">&amp;mut </span>SerializedTestContext) {
@@ -113,6 +119,7 @@
     /// st_ctime, and st_mtime fields of the directory. Also, the st_ctime and
     /// st_mtime fields of the directory that contains the new entry shall be marked
     /// for update.
+    </span><span class="comment">// mkdir/00.t
     </span>changed_time_fields_success
 }
 <span class="kw">fn </span>changed_time_fields_success(ctx: <span class="kw-2">&amp;mut </span>TestContext) {
@@ -126,7 +133,8 @@
         });
 }
 
-<span class="macro">enotdir_comp_test_case!</span>(mkdir(~path, Mode::empty()));
+<span class="comment">// mkdir/01.t
+</span><span class="macro">enotdir_comp_test_case!</span>(mkdir(~path, Mode::empty()));
 
 <span class="comment">// mkdir/02.t
 </span><span class="macro">enametoolong_comp_test_case!</span>(mkdir(~path, Mode::empty()));

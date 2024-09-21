@@ -72,6 +72,13 @@
 <a href="#72" id="72">72</a>
 <a href="#73" id="73">73</a>
 <a href="#74" id="74">74</a>
+<a href="#75" id="75">75</a>
+<a href="#76" id="76">76</a>
+<a href="#77" id="77">77</a>
+<a href="#78" id="78">78</a>
+<a href="#79" id="79">79</a>
+<a href="#80" id="80">80</a>
+<a href="#81" id="81">81</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>nix::unistd::chown;
 
 <span class="kw">use crate</span>::{context::TestContext, utils::lchown};
@@ -90,7 +97,14 @@
     chown(path, <span class="prelude-val">Some</span>(user.uid), <span class="prelude-val">None</span>)
 }
 
-<span class="macro">enotdir_comp_test_case!</span>(chown, chown_wrapper);
+<span class="comment">// chown/01.t
+</span><span class="macro">enotdir_comp_test_case!</span>(chown, chown_wrapper);
+
+<span class="comment">// chown/02.t
+</span><span class="macro">enametoolong_comp_test_case!</span>(chown, chown_wrapper);
+
+<span class="comment">// chown/03.t
+</span><span class="macro">enametoolong_path_test_case!</span>(chown, chown_wrapper);
 
 <span class="comment">// chown/04.t
 </span><span class="macro">enoent_named_file_test_case!</span>(chown, chown_wrapper);
@@ -106,12 +120,6 @@
 
 <span class="comment">// chown/06.t
 </span><span class="macro">eloop_final_comp_test_case!</span>(chown, chown_wrapper);
-
-<span class="comment">// chown/02.t
-</span><span class="macro">enametoolong_comp_test_case!</span>(chown, chown_wrapper);
-
-<span class="comment">// chown/03.t
-</span><span class="macro">enametoolong_path_test_case!</span>(chown, chown_wrapper);
 
 <span class="comment">// chown/09.t
 </span><span class="macro">erofs_named_test_case!</span>(chown, chown_wrapper);
@@ -130,15 +138,21 @@
         lchown(path, <span class="prelude-val">Some</span>(user.uid), <span class="prelude-val">Some</span>(user.gid))
     }
 
-    <span class="macro">enotdir_comp_test_case!</span>(lchown, lchown_wrapper);
-    <span class="macro">enoent_named_file_test_case!</span>(lchown, lchown_wrapper);
+    <span class="comment">// chown/01.t
+    </span><span class="macro">enotdir_comp_test_case!</span>(lchown, lchown_wrapper);
+
+    <span class="comment">// chown/04.t
+    </span><span class="macro">enoent_named_file_test_case!</span>(lchown, lchown_wrapper);
     <span class="macro">enoent_comp_test_case!</span>(lchown, lchown_wrapper);
 
     <span class="comment">// chown/06.t#L25
     </span><span class="macro">eloop_comp_test_case!</span>(lchown, lchown_wrapper);
+    
+    <span class="comment">// chown/02.t
+    </span><span class="macro">enametoolong_comp_test_case!</span>(lchown, lchown_wrapper);
 
-    <span class="macro">enametoolong_comp_test_case!</span>(lchown, lchown_wrapper);
-    <span class="macro">enametoolong_path_test_case!</span>(lchown, lchown_wrapper);
+    <span class="comment">// chown/03.t
+    </span><span class="macro">enametoolong_path_test_case!</span>(lchown, lchown_wrapper);
 
     <span class="comment">// chown/09.t
     </span><span class="macro">erofs_named_test_case!</span>(lchown, lchown_wrapper);

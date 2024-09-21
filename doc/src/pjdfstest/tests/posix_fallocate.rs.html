@@ -92,6 +92,11 @@
 <a href="#92" id="92">92</a>
 <a href="#93" id="93">93</a>
 <a href="#94" id="94">94</a>
+<a href="#95" id="95">95</a>
+<a href="#96" id="96">96</a>
+<a href="#97" id="97">97</a>
+<a href="#98" id="98">98</a>
+<a href="#99" id="99">99</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::{fs::File, io::Write, os::fd::AsRawFd};
 
 <span class="kw">use </span>nix::{
@@ -109,6 +114,7 @@
 
 <span class="macro">crate::test_case!</span> {
     <span class="doccomment">/// posix_fallocate should allocate even if the file is empty
+    </span><span class="comment">// posix_fallocate/00.t
     </span>increase_empty, FileSystemFeature::PosixFallocate
 }
 <span class="kw">fn </span>increase_empty(ctx: <span class="kw-2">&amp;mut </span>TestContext) {
@@ -123,6 +129,7 @@
 
 <span class="macro">crate::test_case!</span> {
     <span class="doccomment">/// posix_fallocate should allocate even if the file is not empty
+    </span><span class="comment">// posix_fallocate/00.t
     </span>increase_not_empty, FileSystemFeature::PosixFallocate
 }
 <span class="kw">fn </span>increase_not_empty(ctx: <span class="kw-2">&amp;mut </span>TestContext) {
@@ -142,6 +149,7 @@
 
 <span class="macro">crate::test_case!</span> {
     <span class="doccomment">/// posix_fallocate should update ctime when it succeeds
+    </span><span class="comment">// posix_fallocate/00.t
     </span>update_ctime_success, FileSystemFeature::PosixFallocate
 }
 <span class="kw">fn </span>update_ctime_success(ctx: <span class="kw-2">&amp;mut </span>TestContext) {
@@ -154,6 +162,7 @@
 
 <span class="macro">crate::test_case!</span> {
     <span class="doccomment">/// posix_fallocate should not update ctime when it fails
+    </span><span class="comment">// posix_fallocate/00.t
     </span>no_update_ctime_fail, FileSystemFeature::PosixFallocate
 }
 <span class="kw">fn </span>no_update_ctime_fail(ctx: <span class="kw-2">&amp;mut </span>TestContext) {
@@ -168,6 +177,7 @@
     <span class="doccomment">/// The file mode of a newly created file should not affect whether
     /// posix_fallocate will work, only the create args
     /// https://bugs.freebsd.org/bugzilla/show_bug.cgi?id=154873
+    </span><span class="comment">// posix_fallocate/00.t
     </span>affected_only_create_flags, serialized, root, FileSystemFeature::PosixFallocate
 }
 <span class="kw">fn </span>affected_only_create_flags(ctx: <span class="kw-2">&amp;mut </span>SerializedTestContext) {

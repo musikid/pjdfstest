@@ -247,6 +247,8 @@
 <a href="#247" id="247">247</a>
 <a href="#248" id="248">248</a>
 <a href="#249" id="249">249</a>
+<a href="#250" id="250">250</a>
+<a href="#251" id="251">251</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>nix::{
     errno::Errno,
     sys::stat::{lstat, Mode},
@@ -435,6 +437,7 @@
 
 <span class="macro">crate::test_case!</span> {
     <span class="doccomment">/// link returns EMLINK if the link count of the file named by name1 would exceed {LINK_MAX}
+    </span><span class="comment">// link/05.t
     </span>link_count_max; has_reasonable_link_max
 }
 <span class="kw">fn </span>link_count_max(ctx: <span class="kw-2">&amp;mut </span>TestContext) {
@@ -482,6 +485,7 @@
 
 <span class="macro">crate::test_case!</span> {
     <span class="doccomment">/// link returns EEXIST if the destination file exists
+    </span><span class="comment">// link/10.t
     </span>eexist_dest_exists =&gt; [Regular, Dir, Fifo, Block, Char, Socket, Symlink(<span class="prelude-val">None</span>)]
 }
 <span class="kw">fn </span>eexist_dest_exists(ctx: <span class="kw-2">&amp;mut </span>TestContext, ft: FileType) {

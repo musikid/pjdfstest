@@ -136,6 +136,9 @@
 <a href="#136" id="136">136</a>
 <a href="#137" id="137">137</a>
 <a href="#138" id="138">138</a>
+<a href="#139" id="139">139</a>
+<a href="#140" id="140">140</a>
+<a href="#141" id="141">141</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::{fs::File, io::Write};
 
 <span class="kw">use </span>nix::{errno::Errno, sys::stat::lstat, unistd::truncate};
@@ -157,10 +160,10 @@
     etxtbsy::etxtbsy_test_case,
 };
 
-<span class="comment">// tests/truncate/00.t
 
-</span><span class="macro">crate::test_case!</span> {
+<span class="macro">crate::test_case!</span> {
     <span class="doccomment">/// truncate should extend a file, and shrink a sparse file
+    </span><span class="comment">// truncate/00.t
     </span>extend_file_shrink_sparse
 }
 <span class="kw">fn </span>extend_file_shrink_sparse(ctx: <span class="kw-2">&amp;mut </span>TestContext) {
@@ -180,6 +183,7 @@
 
 <span class="macro">crate::test_case!</span> {
     <span class="doccomment">/// truncate should shrink the file if the specified size is less than the actual one
+    </span><span class="comment">// truncate/00.t
     </span>shrink_not_empty
 }
 <span class="kw">fn </span>shrink_not_empty(ctx: <span class="kw-2">&amp;mut </span>TestContext) {
@@ -203,6 +207,7 @@
 
 <span class="macro">crate::test_case!</span> {
     <span class="doccomment">/// truncate should update ctime if it succeeds
+    </span><span class="comment">// truncate/00.t
     </span>update_ctime_success
 }
 <span class="kw">fn </span>update_ctime_success(ctx: <span class="kw-2">&amp;mut </span>TestContext) {
@@ -215,6 +220,7 @@
 
 <span class="macro">crate::test_case!</span> {
     <span class="doccomment">/// truncate should not update ctime if it fails
+    </span><span class="comment">// truncate/00.t
     </span>unchanged_ctime_failed, serialized, root
 }
 <span class="kw">fn </span>unchanged_ctime_failed(ctx: <span class="kw-2">&amp;mut </span>SerializedTestContext) {
