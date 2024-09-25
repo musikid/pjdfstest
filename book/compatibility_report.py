@@ -2,15 +2,13 @@
 
 from dataclasses import dataclass
 from os import path, walk
-from posixpath import basename
 from typing import Iterable
 
 
-def get_tests_filenames_from_subdir(tests_dir: str):
-    for root, _, files in walk(tests_dir):
-        for file in files:
-            if file.endswith(".t"):
-                yield path.join(basename(root), file)
+def get_tests_filenames_from_spec(tests_list: str):
+    with open(tests_list, "r") as file:
+        for line in file:
+            yield tuple(line.split("\t"))
 
 
 def get_rust_files(rust_dir: str):
@@ -58,22 +56,22 @@ class Test:
 
 def main():
     rust_dir = "../../rust/src/tests"
-    tests_dir = "../../tests"
-    tests_files = set(get_tests_filenames_from_subdir(tests_dir))
+    tests_dir = "../old_testcases.tsv"
+    tests_files = set(get_tests_filenames_from_spec(tests_dir))
     tests_with_rust_files, _ = (
-        get_tests_with_and_without_rust_files(rust_dir, tests_files)
+        get_tests_with_and_without_rust_files(rust_dir, map(lambda v: v[0], tests_files))
     )
     syscalls: dict[str, list[Test]] = {}
-    for tests_file in tests_files:
-        syscall, test_name = tests_file.split("/")
+    for testfile, desc in tests_files:
+        syscall, test_name = testfile.split("/")
         if syscall not in syscalls:
             syscalls[syscall] = []
 
         syscalls[syscall].append(
             Test(
                 test_name,
-                tests_file in tests_with_rust_files,
-                find_file_description(path.join(tests_dir, tests_file)),
+                testfile in tests_with_rust_files,
+                desc,
             )
         )
 

@@ -1,0 +1,237 @@
+chflags/00.t	chflags changes flags
+chflags/01.t	chflags returns ENOTDIR if a component of the path prefix is not a directory
+chflags/02.t	chflags returns ENAMETOOLONG if a component of a pathname exceeded {NAME_MAX} characters
+chflags/03.t	chflags returns ENAMETOOLONG if an entire path name exceeded {PATH_MAX} characters
+chflags/04.t	chflags returns ENOENT if the named file does not exist
+chflags/05.t	chflags returns EACCES when search permission is denied for a component of the path prefix
+chflags/06.t	chflags returns ELOOP if too many symbolic links were encountered in translating the pathname
+chflags/07.t	chflags returns EPERM when the effective user ID does not match the owner of the file and the effective user ID is not the super-user
+chflags/08.t	chflags returns EPERM when one of SF_IMMUTABLE, SF_APPEND, or SF_NOUNLINK is set and the user is not the super-user
+chflags/09.t	chflags returns EPERM when one of SF_IMMUTABLE, SF_APPEND, or SF_NOUNLINK is set and securelevel is greater than 0
+chflags/10.t	chflags returns EPERM if non-super-user tries to set one of SF_IMMUTABLE, SF_APPEND, or SF_NOUNLINK
+chflags/11.t	chflags returns EPERM if a user tries to set or remove the SF_SNAPSHOT flag
+chflags/12.t	chflags returns EROFS if the named file resides on a read-only file system
+chflags/13.t	chflags returns EFAULT if the path argument points outside the process's allocated address space
+chmod/00.t	chmod changes permission
+chmod/01.t	chmod returns ENOTDIR if a component of the path prefix is not a directory
+chmod/02.t	chmod returns ENAMETOOLONG if a component of a pathname exceeded {NAME_MAX} characters
+chmod/03.t	chmod returns ENAMETOOLONG if an entire path name exceeded {PATH_MAX} characters
+chmod/04.t	chmod returns ENOENT if the named file does not exist
+chmod/05.t	chmod returns EACCES when search permission is denied for a component of the path prefix
+chmod/06.t	chmod returns ELOOP if too many symbolic links were encountered in translating the pathname
+chmod/07.t	chmod returns EPERM if the operation would change the ownership, but the effective user ID is not the super-user
+chmod/08.t	chmod returns EPERM if the named file has its immutable or append-only flag set
+chmod/09.t	chmod returns EROFS if the named file resides on a read-only file system
+chmod/10.t	chmod returns EFAULT if the path argument points outside the process's allocated address space
+chmod/11.t	chmod returns EFTYPE if the effective user ID is not the super-user, the mode includes the sticky bit (S_ISVTX), and path does not refer to a directory
+chmod/12.t	verify SUID/SGID bit behaviour
+chown/00.t	chown changes ownership
+chown/01.t	chown returns ENOTDIR if a component of the path prefix is not a directory
+chown/02.t	chown returns ENAMETOOLONG if a component of a pathname exceeded ${NAME_MAX} characters
+chown/03.t	chown returns ENAMETOOLONG if an entire path name exceeded {PATH_MAX} characters
+chown/04.t	chown returns ENOENT if the named file does not exist
+chown/05.t	chown returns EACCES when search permission is denied for a component of the path prefix
+chown/06.t	chown returns ELOOP if too many symbolic links were encountered in translating the pathname
+chown/07.t	chown returns EPERM if the operation would change the ownership, but the effective user ID is not the super-user and the process is not an owner of the file
+chown/08.t	chown returns EPERM if the named file has its immutable or append-only flag set
+chown/09.t	chown returns EROFS if the named file resides on a read-only file system
+chown/10.t	chown returns EFAULT if the path argument points outside the process's allocated address space
+ftruncate/00.t	ftruncate descrease/increase file size
+ftruncate/01.t	truncate returns ENOTDIR if a component of the path prefix is not a directory
+ftruncate/02.t	truncate returns ENAMETOOLONG if a component of a pathname exceeded {NAME_MAX} characters
+ftruncate/03.t	truncate returns ENAMETOOLONG if an entire path name exceeded {PATH_MAX} characters
+ftruncate/04.t	truncate returns ENOENT if the named file does not exist
+ftruncate/05.t	truncate returns EACCES when search permission is denied for a component of the path prefix
+ftruncate/06.t	truncate returns EACCES if the named file is not writable by the user
+ftruncate/07.t	truncate returns ELOOP if too many symbolic links were encountered in translating the pathname
+ftruncate/08.t	truncate returns EPERM if the named file has its immutable or append-only flag set
+ftruncate/09.t	truncate returns EISDIR if the named file is a directory
+ftruncate/10.t	truncate returns EROFS if the named file resides on a read-only file system
+ftruncate/11.t	truncate returns ETXTBSY the file is a pure procedure (shared text) file that is being executed
+ftruncate/12.t	truncate returns EFBIG or EINVAL if the length argument was greater than the maximum file size
+ftruncate/13.t	ftruncate returns EINVAL if the length argument was less than 0
+ftruncate/14.t	truncate returns EFAULT if the path argument points outside the process's allocated address space
+granular/00.t	NFSv4 granular permissions checking - WRITE_DATA vs APPEND_DATA on directories
+granular/01.t	NFSv4 granular permissions checking - ACL_READ_ATTRIBUTES and ACL_WRITE_ATTRIBUTES
+granular/02.t	NFSv4 granular permissions checking - ACL_READ_ACL and ACL_WRITE_ACL
+granular/03.t	NFSv4 granular permissions checking - DELETE and DELETE_CHILD
+granular/04.t	NFSv4 granular permissions checking - ACL_WRITE_OWNER
+granular/05.t	NFSv4 granular permissions checking - DELETE and DELETE_CHILD with directories
+granular/06.t	NFSv4 granular permissions checking - setuid and setgid are cleared when non-owner calls chown
+link/00.t	link creates hardlinks
+link/01.t	link returns ENOTDIR if a component of either path prefix is not a directory
+link/02.t	link returns ENAMETOOLONG if a component of either pathname exceeded {NAME_MAX} characters
+link/03.t	link returns ENAMETOOLONG if an entire length of either path name exceeded {PATH_MAX} characters
+link/04.t	link returns ENOENT if a component of either path prefix does not exist
+link/05.t	link returns EMLINK if the link count of the file named by name1 would exceed 32767
+link/06.t	link returns EACCES when a component of either path prefix denies search permission
+link/07.t	link returns EACCES when the requested link requires writing in a directory with a mode that denies write permission
+link/08.t	link returns ELOOP if too many symbolic links were encountered in translating one of the pathnames
+link/09.t	link returns ENOENT if the source file does not exist
+link/10.t	link returns EEXIST if the destination file does exist
+link/11.t	link returns EPERM if the source file is a directory
+link/12.t	link returns EPERM if the source file has its immutable or append-only flag set
+link/13.t	link returns EPERM if the parent directory of the destination file has its immutable flag set
+link/14.t	link returns EXDEV if the source and the destination files are on different file systems
+link/15.t	link returns ENOSPC if the directory in which the entry for the new link is being placed cannot be extended because there is no space left on the file system containing the directory
+link/16.t	link returns EROFS if the requested link requires writing in a directory on a read-only file system
+link/17.t	link returns EFAULT if one of the pathnames specified is outside the process's allocated address space
+mkdir/00.t	mkdir creates directories
+mkdir/01.t	mkdir returns ENOTDIR if a component of the path prefix is not a directory
+mkdir/02.t	mkdir returns ENAMETOOLONG if a component of a pathname exceeded {NAME_MAX} characters
+mkdir/03.t	mkdir returns ENAMETOOLONG if an entire path name exceeded {PATH_MAX} characters
+mkdir/04.t	mkdir returns ENOENT if a component of the path prefix does not exist
+mkdir/05.t	mkdir returns EACCES when search permission is denied for a component of the path prefix
+mkdir/06.t	mkdir returns EACCES when write permission is denied on the parent directory of the directory to be created
+mkdir/07.t	mkdir returns ELOOP if too many symbolic links were encountered in translating the pathname
+mkdir/08.t	mkdir returns EPERM if the parent directory of the directory to be created has its immutable flag set
+mkdir/09.t	mkdir returns EROFS if the named file resides on a read-only file system
+mkdir/10.t	mkdir returns EEXIST if the named file exists
+mkdir/11.t	mkdir returns ENOSPC if there are no free inodes on the file system on which the directory is being created
+mkdir/12.t	mkdir returns EFAULT if the path argument points outside the process's allocated address space
+mkfifo/00.t	mkfifo creates fifo files
+mkfifo/01.t	mkfifo returns ENOTDIR if a component of the path prefix is not a directory
+mkfifo/02.t	mkfifo returns ENAMETOOLONG if a component of a pathname exceeded {NAME_MAX} characters
+mkfifo/03.t	mkfifo returns ENAMETOOLONG if an entire path name exceeded {PATH_MAX} characters
+mkfifo/04.t	mkfifo returns ENOENT if a component of the path prefix does not exist
+mkfifo/05.t	mkfifo returns EACCES when search permission is denied for a component of the path prefix
+mkfifo/06.t	mkfifo returns EACCES when write permission is denied on the parent directory of the file to be created
+mkfifo/07.t	mkfifo returns ELOOP if too many symbolic links were encountered in translating the pathname
+mkfifo/08.t	mkfifo returns EROFS if the named file resides on a read-only file system
+mkfifo/09.t	mkfifo returns EEXIST if the named file exists
+mkfifo/10.t	mkfifo returns EPERM if the parent directory of the file to be created has its immutable flag set
+mkfifo/11.t	mkfifo returns ENOSPC if there are no free inodes on the file system on which the file is being created
+mkfifo/12.t	mkfifo returns EFAULT if the path argument points outside the process's allocated address space
+mknod/00.t	mknod creates fifo files
+mknod/01.t	mknod returns ENOTDIR if a component of the path prefix is not a directory
+mknod/02.t	mknod returns ENAMETOOLONG if a component of a pathname exceeded {NAME_MAX} characters
+mknod/03.t	mknod returns ENAMETOOLONG if an entire path name exceeded {PATH_MAX} characters
+mknod/04.t	mknod returns ENOENT if a component of the path prefix does not exist
+mknod/05.t	mknod returns EACCES when search permission is denied for a component of the path prefix
+mknod/06.t	mknod returns EACCES when write permission is denied on the parent directory of the file to be created
+mknod/07.t	mknod returns ELOOP if too many symbolic links were encountered in translating the pathname
+mknod/08.t	mknod returns EEXIST if the named file exists
+mknod/09.t	mknod returns EPERM if the parent directory of the file to be created has its immutable flag set
+mknod/10.t	mknod returns EFAULT if the path argument points outside the process's allocated address space
+mknod/11.t	mknod creates device files
+open/00.t	open opens (and eventually creates) a file
+open/01.t	open returns ENOTDIR if a component of the path prefix is not a directory
+open/02.t	open returns ENAMETOOLONG if a component of a pathname exceeded {NAME_MAX} characters
+open/03.t	open returns ENAMETOOLONG if an entire path name exceeded ${PATH_MAX} characters
+open/04.t	open returns ENOENT if a component of the path name that must exist does not exist or O_CREAT is not set and the named file does not exist
+open/05.t	open returns EACCES when search permission is denied for a component of the path prefix
+open/06.t	open returns EACCES when the required permissions (for reading and/or writing) are denied for the given flags
+open/07.t	open returns EACCES when O_TRUNC is specified and write permission is denied
+open/08.t	open returns EACCES when O_CREAT is specified, the file does not exist, and the directory in which it is to be created does not permit writing
+open/09.t	O_CREAT is specified, the file does not exist, and the directory in which it is to be created has its immutable flag set
+open/10.t	open returns EPERM when the named file has its immutable flag set and the file is to be modified
+open/11.t	open returns EPERM when the named file has its append-only flag set, the file is to be modified, and O_TRUNC is specified or O_APPEND is not specified
+open/12.t	open returns ELOOP if too many symbolic links were encountered in translating the pathname
+open/13.t	open returns EISDIR when trying to open a directory for writing
+open/14.t	open returns EROFS if the named file resides on a read-only file system, and the file is to be modified
+open/15.t	open returns EROFS when O_CREAT is specified and the named file would reside on a read-only file system
+open/16.t	open returns $error when O_NOFOLLOW was specified and the target is a symbolic link
+open/17.t	open returns ENXIO when O_NONBLOCK is set, the named file is a fifo, O_WRONLY is set, and no process has the file open for reading
+open/18.t	open returns EWOULDBLOCK when O_NONBLOCK and one of O_SHLOCK or O_EXLOCK is specified and the file is locked
+open/19.t	open returns ENOSPC when O_CREAT is specified, the file does not exist, and there are no free inodes on the file system on which the file is being created
+open/20.t	open returns ETXTBSY when the file is a pure procedure (shared text) file that is being executed and the open() system call requests write access
+open/21.t	open returns EFAULT if the path argument points outside the process's allocated address space
+open/22.t	open returns EEXIST when O_CREAT and O_EXCL were specified and the file exists
+open/23.t	open may return EINVAL when an attempt was made to open a descriptor with an illegal combination of O_RDONLY, O_WRONLY, and O_RDWR
+open/24.t	open returns $expected_error when trying to open UNIX domain socket
+open/25.t	interact with > 2 GB files
+posix_fallocate/00.t	posix_fallocate descrease/increase file size
+rename/00.t	rename changes file name
+rename/01.t	rename returns ENAMETOOLONG if a component of either pathname exceeded {NAME_MAX} characters
+rename/02.t	rename returns ENAMETOOLONG if an entire length of either path name exceeded {PATH_MAX} characters
+rename/03.t	rename returns ENOENT if a component of the 'from' path does not exist, or a path prefix of 'to' does not exist
+rename/04.t	rename returns EACCES when a component of either path prefix denies search permission
+rename/05.t	rename returns EACCES when the requested link requires writing in a directory with a mode that denies write permission
+rename/06.t	rename returns EPERM if the file pointed at by the 'from' argument has its immutable, undeletable or append-only flag set
+rename/07.t	rename returns EPERM if the parent directory of the file pointed at by the 'from' argument has its immutable or append-only flag set
+rename/08.t	rename returns EPERM if the parent directory of the file pointed at by the 'to' argument has its immutable flag set
+rename/09.t	rename returns EACCES or EPERM if the directory containing 'from' is marked sticky, and neither the containing directory nor 'from' are owned by the effective user ID
+rename/10.t	rename returns EACCES or EPERM if the file pointed at by the 'to' argument exists, the directory containing 'to' is marked sticky, and neither the containing directory nor 'to' are owned by the effective user ID
+rename/11.t	rename returns ELOOP if too many symbolic links were encountered in translating one of the pathnames
+rename/12.t	rename returns ENOTDIR if a component of either path prefix is not a directory
+rename/13.t	rename returns ENOTDIR when the 'from' argument is a directory, but 'to' is not a directory
+rename/14.t	rename returns EISDIR when the 'to' argument is a directory, but 'from' is not a directory
+rename/15.t	rename returns EXDEV if the link named by 'to' and the file named by 'from' are on different file systems
+rename/16.t	rename returns EROFS if the requested link requires writing in a directory on a read-only file system
+rename/17.t	rename returns EFAULT if one of the pathnames specified is outside the process's allocated address space
+rename/18.t	rename returns EINVAL when the 'from' argument is a parent directory of 'to'
+rename/19.t	rename returns EINVAL/EBUSY when an attempt is made to rename '.' or '..'
+rename/20.t	rename returns EEXIST or ENOTEMPTY if the 'to' argument is a directory and is not empty
+rename/21.t	write access to subdirectory is required to move it to another directory
+rename/22.t	rename changes file ctime
+rename/23.t	rename succeeds when to is multiply linked
+rename/24.t	rename of a directory updates its .. link
+rmdir/00.t	rmdir removes directories
+rmdir/01.t	rmdir returns ENOTDIR if a component of the path is not a directory
+rmdir/02.t	rmdir returns ENAMETOOLONG if a component of a pathname exceeded {NAME_MAX} characters
+rmdir/03.t	rmdir returns ENAMETOOLONG if an entire path name exceeded ${PATH_MAX} characters
+rmdir/04.t	rmdir returns ENOENT if the named directory does not exist
+rmdir/05.t	rmdir returns ELOOP if too many symbolic links were encountered in translating the pathname
+rmdir/06.t	rmdir returns EEXIST or ENOTEMPTY the named directory contains files other than '.' and '..' in it
+rmdir/07.t	rmdir returns EACCES when search permission is denied for a component of the path prefix
+rmdir/08.t	rmdir returns EACCES when write permission is denied on the directory containing the link to be removed
+rmdir/09.t	rmdir returns EPERM if the named directory has its immutable, undeletable or append-only flag set
+rmdir/10.t	rmdir returns EPERM if the parent directory of the named file has its immutable or append-only flag set
+rmdir/11.t	rmdir returns EACCES or EPERM if the directory containing the directory to be removed is marked sticky, and neither the containing directory nor the directory to be removed are owned by the effective user ID
+rmdir/12.t	rmdir returns EINVAL if the last component of the path is '.' and EEXIST or ENOTEMPTY if the last component of the path is '..'
+rmdir/13.t	rmdir returns EBUSY if the directory to be removed is the mount point for a mounted file system
+rmdir/14.t	rmdir returns EROFS if the named file resides on a read-only file system
+rmdir/15.t	rmdir returns EFAULT if the path argument points outside the process's allocated address space
+symlink/00.t	symlink creates symbolic links
+symlink/01.t	symlink returns ENOTDIR if a component of the name2 path prefix is not a directory
+symlink/02.t	symlink returns ENAMETOOLONG if a component of the name2 pathname exceeded {NAME_MAX} characters
+symlink/03.t	symlink returns ENAMETOOLONG if an entire length of either path name exceeded {PATH_MAX} characters
+symlink/04.t	symlink returns ENOENT if a component of the name2 path prefix does not exist
+symlink/05.t	symlink returns EACCES when a component of the name2 path prefix denies search permission
+symlink/06.t	symlink returns EACCES if the parent directory of the file to be created denies write permission
+symlink/07.t	symlink returns ELOOP if too many symbolic links were encountered in translating the name2 path name
+symlink/08.t	symlink returns EEXIST if the name2 argument already exists
+symlink/09.t	symlink returns EPERM if the parent directory of the file named by name2 has its immutable flag set
+symlink/10.t	symlink returns EROFS if the file name2 would reside on a read-only file system
+symlink/11.t	symlink returns ENOSPC if there are no free inodes on the file system on which the symbolic link is being created
+symlink/12.t	symlink returns EFAULT if one of the pathnames specified is outside the process's allocated address space
+truncate/00.t	truncate descrease/increase file size
+truncate/01.t	truncate returns ENOTDIR if a component of the path prefix is not a directory
+truncate/02.t	truncate returns ENAMETOOLONG if a component of a pathname exceeded {NAME_MAX} characters
+truncate/03.t	truncate returns ENAMETOOLONG if an entire path name exceeded {PATH_MAX} characters
+truncate/04.t	truncate returns ENOENT if the named file does not exist
+truncate/05.t	truncate returns EACCES when search permission is denied for a component of the path prefix
+truncate/06.t	truncate returns EACCES if the named file is not writable by the user
+truncate/07.t	truncate returns ELOOP if too many symbolic links were encountered in translating the pathname
+truncate/08.t	truncate returns EPERM if the named file has its immutable or append-only flag set
+truncate/09.t	truncate returns EISDIR if the named file is a directory
+truncate/10.t	truncate returns EROFS if the named file resides on a read-only file system
+truncate/11.t	truncate returns ETXTBSY the file is a pure procedure (shared text) file that is being executed
+truncate/12.t	truncate returns EFBIG or EINVAL if the length argument was greater than the maximum file size
+truncate/13.t	truncate returns EINVAL if the length argument was less than 0
+truncate/14.t	truncate returns EFAULT if the path argument points outside the process's allocated address space
+unlink/00.t	unlink removes regular files, symbolic links, fifos and sockets
+unlink/01.t	unlink returns ENOTDIR if a component of the path prefix is not a directory
+unlink/02.t	unlink returns ENAMETOOLONG if a component of a pathname exceeded {NAME_MAX} characters
+unlink/03.t	unlink returns ENAMETOOLONG if an entire path name exceeded {PATH_MAX} characters
+unlink/04.t	unlink returns ENOENT if the named file does not exist
+unlink/05.t	unlink returns EACCES when search permission is denied for a component of the path prefix
+unlink/06.t	unlink returns EACCES when write permission is denied on the directory containing the link to be removed
+unlink/07.t	unlink returns ELOOP if too many symbolic links were encountered in translating the pathname
+unlink/08.t	unlink may return EPERM if the named file is a directory
+unlink/09.t	unlink returns EPERM if the named file has its immutable, undeletable or append-only flag set
+unlink/10.t	unlink returns EPERM if the parent directory of the named file has its immutable or append-only flag set
+unlink/11.t	unlink returns EACCES or EPERM if the directory containing the file is marked sticky, and neither the containing directory nor the file to be removed are owned by the effective user ID
+unlink/12.t	unlink returns EROFS if the named file resides on a read-only file system
+unlink/13.t	unlink returns EFAULT if the path argument points outside the process's allocated address space
+unlink/14.t	An open file will not be immediately freed by unlink
+utimensat/00.t	utimensat changes timestamps on any type of file
+utimensat/01.t	utimensat with UTIME_NOW will set the will set typestamps to now
+utimensat/02.t	utimensat with UTIME_OMIT will leave the time unchanged
+utimensat/03.t	utimensat can update birthtimes
+utimensat/04.t	utimensat can set mtime < atime or vice versa
+utimensat/05.t	utimensat can follow symlinks
+utimensat/06.t	utimensat with UTIME_NOW will work if the caller has write permission
+utimensat/07.t	utimensat will work if the caller is the owner or root
+utimensat/08.t	utimensat can set timestamps with subsecond precision
+utimensat/09.t	utimensat is y2038 compliant
