@@ -1,6 +1,7 @@
-# pjdfstest - Rust rewrite
+# pjdfstest.rs - Rust rewrite
 
-pjdfstest is a test suite that helps exercise POSIX system calls.
+pjdfstest is a file system test suite to assess the correctness of file system implementations in terms of POSIX compliance.
+The test suite has been rewritten in Rust as part of the Google Summer of Code 2022 program.
 
 ## Build
 
