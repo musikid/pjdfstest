@@ -1,4 +1,5 @@
 use std::fs::{metadata, symlink_metadata, FileType as StdFileType};
+use std::os::fd::{FromRawFd, IntoRawFd, OwnedFd};
 use std::os::unix::prelude::{MetadataExt, RawFd};
 use std::path::Path;
 
@@ -111,13 +112,13 @@ fn interact_2gb(ctx: &mut TestContext) {
     const DATA: &str = "data";
     const GB: usize = 1024usize.pow(3);
     let offset = 2 * GB as i64 + 1;
-    pwrite(fd, DATA.as_bytes(), offset).unwrap();
+    pwrite(&fd, DATA.as_bytes(), offset).unwrap();
     let expected_size = offset as u64 + DATA.len() as u64;
     let size = symlink_metadata(&path).unwrap().size();
     assert_eq!(size, expected_size);
-    close(fd).unwrap();
+    close(fd.into_raw_fd()).unwrap();
 
-    let fd = open(&path, OFlag::O_RDONLY, Mode::empty()).unwrap();
+    let fd = unsafe { OwnedFd::from_raw_fd(open(&path, OFlag::O_RDONLY, Mode::empty()).unwrap()) };
     let mut buf = [0; DATA.len()];
     nix::sys::uio::pread(fd, &mut buf, offset).unwrap();
     assert_eq!(buf, DATA.as_bytes());

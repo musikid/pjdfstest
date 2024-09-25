@@ -1,4 +1,5 @@
 use nix::{errno::Errno, sys::stat::fstat, unistd::unlink};
+use std::os::fd::AsRawFd;
 
 use crate::{
     context::{FileType, SerializedTestContext, TestContext},
@@ -128,15 +129,15 @@ fn open_file_not_freed(ctx: &mut TestContext) {
 
     assert!(unlink(&path).is_ok());
 
-    let fd_stat = fstat(file).unwrap();
+    let fd_stat = fstat(file.as_raw_fd()).unwrap();
     // A deleted file's link count should be 0
     assert_eq!(fd_stat.st_nlink, 0);
 
     // I/O to open but deleted files should work, too
     const EXAMPLE_BYTES: &str = "Hello, World!";
-    nix::unistd::write(file, EXAMPLE_BYTES.as_bytes()).unwrap();
+    nix::unistd::write(&file, EXAMPLE_BYTES.as_bytes()).unwrap();
     let mut buf = [0; EXAMPLE_BYTES.len()];
-    nix::sys::uio::pread(file, &mut buf, 0).unwrap();
+    nix::sys::uio::pread(&file, &mut buf, 0).unwrap();
     assert_eq!(buf, EXAMPLE_BYTES.as_bytes());
 }
 

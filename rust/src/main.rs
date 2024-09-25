@@ -1,5 +1,21 @@
-// https://github.com/rust-lang/rust-clippy/issues/1553
-#![allow(clippy::redundant_closure_call)]
+//! This is the main entry point for the test suite. It is responsible for parsing
+//! command line arguments, reading the configuration file, and running the tests.
+//! The test suite is composed of a set of test cases, each of which is a function
+//! that takes a [`TestContext`] as an argument. The [`TestContext`] provides access to
+//! the configuration, the dummy authentication entries, and a temporary directory
+//! for the test to use.
+//!
+//! The test suite is built using the `inventory` crate, which
+//! allows test cases to be registered at compile time. The test suite is run by
+//! iterating over the registered test cases and running each one in turn.
+//!
+//! The [`TestContext`] is created for each test case, and the test case function is called
+//! with the [`TestContext`] as an argument. The test case function can then use the
+//! [`TestContext`] to access the configuration, the dummy authentication entries, and
+//! the temporary directory. The test case function can perform whatever tests are
+//! necessary, and panic if the test fails. The test suite catches the panic, prints
+//! an error message, and continues running the remaining test cases. At the end of
+//! the test suite, the number of failed, skipped, and passed tests is printed.
 
 use std::{
     backtrace::{Backtrace, BacktraceStatus},
@@ -29,7 +45,10 @@ mod config;
 mod context;
 mod features;
 mod flags;
+
 mod macros;
+pub(crate) use macros::*;
+
 mod test;
 mod tests;
 mod utils;

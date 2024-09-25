@@ -11,47 +11,50 @@ For example:
 
 ```rust,ignore
 // chmod/00.t:L58
-crate::test_case! {ctime => [Regular, Fifo, Block, Char, Socket]}
-fn ctime(ctx: &mut TestContext, f_type: FileType) {
+crate::test_case! {
+    /// chmod updates ctime when it succeeds
+    update_ctime => [Regular, Dir, Fifo, Block, Char, Socket]
+}
+fn update_ctime(ctx: &mut TestContext, f_type: FileType) {
     let path = ctx.create(f_type).unwrap();
-    let ctime_before = stat(&path).unwrap().st_ctime;
-
-    ctx.nap();
-
-    chmod(&path, Mode::from_bits_truncate(0o111)).unwrap();
-
-    let ctime_after = stat(&path).unwrap().st_ctime;
-    assert!(ctime_after > ctime_before);
+    assert_ctime_changed(ctx, &path, || {
+        assert!(chmod(&path, Mode::from_bits_truncate(0o111)).is_ok());
+    });
 }
 ```
 
 All the structures and functions needed are documented in the `pjdfstest` crate,
 which you can obtain by running `cargo doc --open` in the `rust` directory
-or by visiting the [online documentation](/doc/pjdfstest).
+or by visiting the [documentation](/doc/pjdfstest).
 
 ## Test context
 
-The `TestContext` struct is a helper struct which provides methods
-to create files, sleep, change user, etc.
+The [`TestContext`](doc/pjdfstest/context/struct.TestContext.html)
+struct is a helper struct which provides methods to create files,
+sleep, change user, etc.
 It is passed as a parameter to the test functions and should be used
 to interact with the system in order to ensure that the tests are isolated
 and do not interfere with each other.
 
 ### Serialization
 
-When a test case needs to be run in a serialized manner, the `SerializedTestContext` struct should be used instead.
-It provides additional methods to change the user, group, supplementary groups, or umask of the process.
+When a test case needs to be run in a serialized manner, the
+[`SerializedTestContext`](doc/pjdfstest/context/struct.SerializedTestContext.html)
+struct should be used instead.
+It provides additional methods to change the user, group,
+supplementary groups, or umask of the process.
 Please see the [Serialized test cases](#serialized-test-cases) section for more information.
 
 ## Assertions
 
 The `assert` and `assert_eq` macros should be used to check the results of the tests.
 The `assert` macro should be used when the test is checking a condition,
-while the `assert_eq` macro should be used when the test is checking that two values are equal.
-In addition to these macros, the suite provides some additional assertion macros which
+while the `assert_eq` macro should be used when the test is checking
+that two values are equal.
+In addition to these macros, the suite provides some additional assertion functions which
 should be used when appropriate.
-`assert_ctime_changed` should be used when checking that the ctime of a file has changed,
-and `assert_mtime_changed` should be used when checking that the mtime of a file has changed.
+The tests [module](doc/pjdfstest/tests/index.html#functions) documentation provides
+a list of these functions.
 
 ## Description
 
@@ -159,8 +162,7 @@ The test function should also accept a `FileType` parameter to operate on.
 For example:
 
 ```rust,ignore
-crate::test_case! {change_perm, root, FileSystemFeature::Chflags; FileFlags::SF_IMMUTABLE, FileFlags::UF_IMMUTABLE
-=> [Regular, Fifo, Block, Char, Socket]}
+crate::test_case! {change_perm, root, FileSystemFeature::Chflags => [Regular, Fifo, Block, Char, Socket]}
 fn change_perm(ctx: &mut TestContext, f_type: FileType) {
 ```
 
@@ -196,23 +198,34 @@ With `lchmod`, we would get:
 Some test cases need functions only available when they are run serialized,
 especially when they affect the whole process.
 An example is changing user (`SerializedTestContext::as_user`).
-To have access to these functions, the test should be declared with a `SerializedTestContext`
-parameter in place of `TestContext` and the `serialized` keyword should be prepended before features.
+To have access to these functions, the test should be declared with a
+[`SerializedTestContext`](doc/pjdfstest/context/struct.SerializedTestContext.html)
+parameter in place of `TestContext` and the `serialized` keyword
+should be prepended before features and `root` requirement.
 
 For example:
 
 ```rust,ignore
 crate::test_case! {
-    /// The file mode of a newly created file should not affect whether
-    /// posix_fallocate will work, only the create args
-    /// https://bugs.freebsd.org/bugzilla/show_bug.cgi?id=154873
-    affected_only_create_flags, serialized, root, FileSystemFeature::PosixFallocate
+    /// link changes neither ctime of file nor ctime or mtime of parent when it fails
+    // link/00.t#77
+    unchanged_ctime_fails, serialized, root => [Regular, Fifo, Block, Char, Socket]
 }
-fn affected_only_create_flags(ctx: &mut SerializedTestContext) {
-    ctx.as_user(Some(Uid::from_raw(65534)), None, || {
-        let path = subdir.join("test1");
-        let file = open(&path, OFlag::O_CREAT | OFlag::O_RDWR, Mode::empty()).unwrap();
-        assert!(posix_fallocate(file, 0, 1).is_ok());
-    });
+fn unchanged_ctime_fails(ctx: &mut SerializedTestContext, ft: FileType) {
+    let file = ctx.create(ft).unwrap();
+    let new_path = ctx.gen_path();
+
+    let user = ctx.get_new_user();
+    assert_times_unchanged()
+        .path(&file, CTIME)
+        .path(ctx.base_path(), CTIME | MTIME)
+        .execute(ctx, false, || {
+            ctx.as_user(user, None, || {
+                assert!(matches!(
+                    link(&file, &new_path),
+                    Err(Errno::EPERM | Errno::EACCES)
+                ));
+            })
+        });
 }
 ```

@@ -103,7 +103,7 @@ impl Serialize for DummyAuthEntry {
 /// Stores configuration for authentication.
 #[derive(Debug, Deserialize, Serialize)]
 pub struct DummyAuthConfig {
-    /// Auth entries, which are composed of a [`User`](nix::unistd::User) and its associated [`Group`](nix::unistd::Group).
+    /// Auth entries, which are composed of a [`User`] and its associated [`Group`].
     /// The user should be part of the associated group.
     /// They are used when a test requires switching to different users.
     pub entries: [DummyAuthEntry; 3],

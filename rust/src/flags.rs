@@ -1,3 +1,5 @@
+//! File flags (see <https://docs.freebsd.org/en/books/handbook/basics/#permissions>).
+
 use serde::{Deserialize, Serialize};
 
 macro_rules! flags {
@@ -38,7 +40,7 @@ flags! {
     Serialize,
     Deserialize,
 )]
-/// File flags (see https://docs.freebsd.org/en/books/handbook/basics/#permissions).
+/// File flags (see <https://docs.freebsd.org/en/books/handbook/basics/#permissions>).
 pub enum FileFlags {
     #[cfg(any(
         target_os = "openbsd",
