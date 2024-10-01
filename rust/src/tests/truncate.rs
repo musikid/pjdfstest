@@ -19,7 +19,6 @@ use super::errors::{
     etxtbsy::etxtbsy_test_case,
 };
 
-
 crate::test_case! {
     /// truncate should extend a file, and shrink a sparse file
     // truncate/00.t
