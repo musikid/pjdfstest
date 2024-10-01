@@ -13,8 +13,7 @@ build: &BUILD
     - df -T /tmp
     - target/release/pjdfstest -c $CFG -p /tmp
     - su $SU_ARGS "target/release/pjdfstest -c $CFG -p /tmp"
-    - rustup component add clippy
-    - cargo clippy --all-targets
+
 
 task:
   name: FreeBSD

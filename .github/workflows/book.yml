@@ -30,11 +30,12 @@ jobs:
         with:
           crate: mdbook-cmdrun
       
-      - uses: dtolnay/rust-toolchain@stable
       - name: Build the suite to retrieve its features
-        run: cd rust && cargo build
+        working-directory: rust
+        run: cargo build
 
-      - run: cd book && ./build.sh
+      - working-directory: book
+        run: ./build.sh
 
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v4

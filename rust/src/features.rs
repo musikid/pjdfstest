@@ -21,7 +21,7 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "snake_case")]
 #[strum(serialize_all = "snake_case")]
 pub enum FileSystemFeature {
-    /// The [`chflags`](https://man.freebsd.org/cgi/man.cgi?chflags(1)) command is available
+    /// The [`chflags`](https://man.freebsd.org/cgi/man.cgi?chflags(1)) syscall is available
     Chflags,
     /// NFSv4 style Access Control Lists are available
     Nfsv4Acls,

@@ -1,15 +1,15 @@
 //! Macros for defining test cases.
-//! 
-//! The `test_case` macro is used to define test cases for a test suite. 
+//!
+//! The `test_case` macro is used to define test cases for a test suite.
 
 /// Macro for defining test cases, which are automatically registered with the test suite.
-/// 
+///
 /// A test case can be serialized or non-serialized, require root privileges, and be run on specific file types.
 /// It can also require specific features to be enabled, and have guards which are run before the test case is executed to determine if conditions are met.
-/// 
+///
 /// The macro supports mutiple parameters which can be combined in a specific order,
 /// for example:
-/// 
+///
 /// ```rust
 /// // Non-serialized test case
 /// test_case! {
@@ -18,7 +18,7 @@
 /// }
 /// fn basic(_: &mut crate::test::TestContext) {}
 /// ```
-/// 
+///
 /// ```rust
 /// // Non-serialized test case with required features, guards, and root privileges
 /// test_case! {
@@ -27,7 +27,7 @@
 /// }
 /// fn features(_: &mut crate::test::TestContext) {}
 /// ```
-/// 
+///
 /// ```rust
 /// // Serialized test case with root privileges
 /// test_case! {
@@ -36,7 +36,7 @@
 /// }
 /// fn serialized(_: &mut crate::test::SerializedTestContext) {}
 /// ```
-/// 
+///
 /// ```rust
 /// // Serialized test case with required features
 /// test_case! {
@@ -45,12 +45,12 @@
 /// }
 /// fn serialized_features(_: &mut crate::test::SerializedTestContext) {}
 /// ```
-/// 
+///
 /// ```rust
 /// // Serialized test case with required features, guards, root privileges, and file types
 /// test_case! {
 /// /// description
-/// serialized_types, serialized, FileSystemFeature::Chflags, FileSystemFeature::PosixFallocate; guard_example, root => [Regular, Fifo]
+/// serialized_types, serialized, root, FileSystemFeature::Chflags, FileSystemFeature::PosixFallocate; guard_example, root => [Regular, Fifo]
 /// }
 /// fn serialized_types(_: &mut crate::test::SerializedTestContext, _: crate::context::FileType) {}
 /// ```
