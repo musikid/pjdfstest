@@ -187,11 +187,13 @@
 <a href="#187" id="187">187</a>
 <a href="#188" id="188">188</a>
 <a href="#189" id="189">189</a>
+<a href="#190" id="190">190</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! File flags (see &lt;https://docs.freebsd.org/en/books/handbook/basics/#permissions&gt;).
 
 </span><span class="kw">use </span>serde::{Deserialize, Serialize};
 
-<span class="macro">macro_rules!</span> flags {
+<span class="doccomment">/// Define a set of flags for a given enum and implement `From` for `nix::sys::stat::FileFlag`.
+</span><span class="macro">macro_rules!</span> flags {
     ( $( <span class="attr">#[<span class="macro-nonterminal">$enum_attrs</span>: meta] </span>)* <span class="kw">pub enum </span><span class="macro-nonterminal">$</span><span class="kw">enum</span>: <span class="macro-nonterminal">ident </span>{ $(<span class="attr">#[cfg(<span class="macro-nonterminal">$cfg</span>: meta)] </span>$(<span class="attr">#[<span class="macro-nonterminal">$attr</span>: meta]</span>)* <span class="macro-nonterminal">$flag</span>: ident ),* $(,)<span class="question-mark">?</span>} ) =&gt; {
         $(<span class="attr">#[<span class="macro-nonterminal">$enum_attrs</span>]</span>)*
         <span class="kw">pub enum </span><span class="macro-nonterminal">$</span><span class="kw">enum </span>{

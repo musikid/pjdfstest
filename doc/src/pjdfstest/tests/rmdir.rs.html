@@ -307,8 +307,8 @@
     <span class="kw">if </span>!Uid::effective().is_root() &amp;&amp; ctl.value()<span class="question-mark">? </span>== CtlValue::Int(<span class="number">0</span>) {
         <span class="macro">anyhow::bail!</span>(<span class="string">"process doesn't have the rights to mount the dummy file system"</span>)
     }
-    <span class="kw">if </span>!Uid::effective().is_root() &amp;&amp;
-        !OsStr::from_bytes(<span class="kw-2">&amp;</span>Command::new(<span class="string">"lsvfs"</span>).output().unwrap().stdout)
+    <span class="kw">if </span>!Uid::effective().is_root()
+        &amp;&amp; !OsStr::from_bytes(<span class="kw-2">&amp;</span>Command::new(<span class="string">"lsvfs"</span>).output().unwrap().stdout)
             .to_string_lossy()
             .contains(<span class="string">"nullfs"</span>)
     {

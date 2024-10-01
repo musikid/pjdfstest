@@ -156,8 +156,8 @@
 <a href="#156" id="156">156</a>
 <a href="#157" id="157">157</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::error::Error;
-<span class="kw">use </span>std::{borrow::Cow, fmt::Display};
 <span class="kw">use </span>std::process::exit;
+<span class="kw">use </span>std::{borrow::Cow, fmt::Display};
 
 <span class="kw">use </span>nix::unistd::{Group, User};
 <span class="kw">use </span>serde::{de::Visitor, ser::SerializeTuple, Deserialize, Serialize};
@@ -302,11 +302,11 @@
                 },
                 DummyAuthEntry {
                     user: upjdfstest,
-                    group: gpjdfstest
+                    group: gpjdfstest,
                 },
                 DummyAuthEntry {
                     user: utests,
-                    group: gtests
+                    group: gtests,
                 },
             ],
         }

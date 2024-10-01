@@ -100,7 +100,7 @@
 <a href="#100" id="100">100</a>
 <a href="#101" id="101">101</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Utility functions for filesystem operations.
-//! 
+//!
 //! This module provides utility functions for filesystem operations which are not available in the standard library.
 
 </span><span class="kw">use </span>std::{
@@ -196,7 +196,7 @@
 
 <span class="doccomment">/// Wrapper for open which returns [`Ownedfd`] instead of [`RawFd`].
 </span><span class="kw">pub fn </span>open&lt;P: <span class="question-mark">?</span>Sized + nix::NixPath&gt;(path: <span class="kw-2">&amp;</span>P, oflag: OFlag, mode: Mode) -&gt; nix::Result&lt;OwnedFd&gt; {
-    <span class="comment">// SAFETY: The file descriptor was initialized only by open and isn't used anywhere else, 
+    <span class="comment">// SAFETY: The file descriptor was initialized only by open and isn't used anywhere else,
     // leaving the ownership to the caller.
     </span>nix::fcntl::open(path, oflag, mode).map(|fd| <span class="kw">unsafe </span>{ OwnedFd::from_raw_fd(fd) })
 }
