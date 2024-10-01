@@ -21,7 +21,6 @@ use super::errors::etxtbsy::etxtbsy_test_case;
 use super::mksyscalls::{assert_perms_from_mode_and_umask, assert_uid_gid};
 use super::{assert_times_changed, assert_times_unchanged, ATIME, CTIME, MTIME};
 
-
 fn open_wrapper(path: &Path, mode: Mode) -> nix::Result<()> {
     open(path, OFlag::O_CREAT | OFlag::O_WRONLY, mode).and_then(close)
 }

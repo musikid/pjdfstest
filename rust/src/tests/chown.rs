@@ -66,7 +66,7 @@ mod lchown {
 
     // chown/06.t#L25
     eloop_comp_test_case!(lchown, lchown_wrapper);
-    
+
     // chown/02.t
     enametoolong_comp_test_case!(lchown, lchown_wrapper);
 
