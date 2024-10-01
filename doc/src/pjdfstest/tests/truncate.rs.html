@@ -138,7 +138,6 @@
 <a href="#138" id="138">138</a>
 <a href="#139" id="139">139</a>
 <a href="#140" id="140">140</a>
-<a href="#141" id="141">141</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::{fs::File, io::Write};
 
 <span class="kw">use </span>nix::{errno::Errno, sys::stat::lstat, unistd::truncate};
@@ -159,7 +158,6 @@
     erofs::erofs_named_test_case,
     etxtbsy::etxtbsy_test_case,
 };
-
 
 <span class="macro">crate::test_case!</span> {
     <span class="doccomment">/// truncate should extend a file, and shrink a sparse file

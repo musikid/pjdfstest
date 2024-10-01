@@ -349,7 +349,6 @@
 <a href="#349" id="349">349</a>
 <a href="#350" id="350">350</a>
 <a href="#351" id="351">351</a>
-<a href="#352" id="352">352</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::fs::{metadata, symlink_metadata, FileType <span class="kw">as </span>StdFileType};
 <span class="kw">use </span>std::os::fd::{FromRawFd, IntoRawFd, OwnedFd};
 <span class="kw">use </span>std::os::unix::prelude::{MetadataExt, RawFd};
@@ -372,7 +371,6 @@
 <span class="kw">use </span><span class="kw">super</span>::errors::etxtbsy::etxtbsy_test_case;
 <span class="kw">use </span><span class="kw">super</span>::mksyscalls::{assert_perms_from_mode_and_umask, assert_uid_gid};
 <span class="kw">use super</span>::{assert_times_changed, assert_times_unchanged, ATIME, CTIME, MTIME};
-
 
 <span class="kw">fn </span>open_wrapper(path: <span class="kw-2">&amp;</span>Path, mode: Mode) -&gt; nix::Result&lt;()&gt; {
     open(path, OFlag::O_CREAT | OFlag::O_WRONLY, mode).and_then(close)
